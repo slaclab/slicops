@@ -1,0 +1,36 @@
+[build-system]
+requires = ["chronver", "setuptools>=66"]
+build-backend = "setuptools.build_meta"
+
+[project]
+authors = [
+    { name = "The Board of Trustees of the Leland Stanford Junior University, through SLAC National Accelerator Laboratory (subject to receipt of any required approvals from the U.S. Dept. of Energy)", email = "pip@radiasoft.net" },
+]
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: Other/Proprietary License",
+    "Natural Language :: English",
+    "Programming Language :: Python",
+    "Topic :: Utilities",
+]
+dependencies = [
+    "pykern",
+]
+description = "SlicOps: Library and UI for beam physics control systems"
+dynamic = ["version"]
+name = "slicops"
+readme = "README.md"
+
+[project.scripts]
+slicops = "slicops.slicops_console:main"
+
+[project.urls]
+Homepage = "https://github.com/slaclab/slicops"
+
+[tool.setuptools.package-data]
+slicops = ["package_data/**"]
+
+[tool.setuptools.packages.find]
+include = ["slicops*"]
