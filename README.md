@@ -1,6 +1,12 @@
-### slicops
+### SlicOps: Beam Physics Control Interface
 
-slicops
+SlicOps controls particle accelerators and beamlines. The web
+interface is comprised of SlicLets, componentized applications, which
+allow operators to read and write EPICS controls.  The Python library
+can be used standalone to control accelerators and beamlines
+programmatically.
+
+Learn more at https://github.com/slaclab/slicops.
 
 Learn more at https://github.com/slaclab/slicops.
 
