@@ -4,7 +4,7 @@ import { AppDataService } from './app-data.service';
 @Component({
     selector: 'app-root',
     template: `
-<app-profile-montior></app-profile-montior>
+<app-profile-monitor></app-profile-monitor>
     `,
     styles: [],
 })

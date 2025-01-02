@@ -3,7 +3,7 @@ import { AppDataService } from '../app-data.service';
 import { FormGroup, FormControl, Validators } from '@angular/forms';
 
 @Component({
-    selector: 'app-profile-montior',
+    selector: 'app-profile-monitor',
     template: `
 <div class="container-fluid">
   <div class="row">
@@ -109,7 +109,7 @@ import { FormGroup, FormControl, Validators } from '@angular/forms';
     `,
     styles: [],
 })
-export class ProfileMontiorComponent {
+export class ProfileMonitorComponent {
     heatmapData: number[][];
     form = new FormGroup({
         beamPath: new FormControl(''),

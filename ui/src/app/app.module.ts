@@ -8,7 +8,7 @@ import { LineChartComponent } from './line-chart/line-chart.component';
 import { HeatmapComponent } from './heatmap/heatmap.component';
 import { HeatmapWithLineoutsComponent } from './heatmap-with-lineouts/heatmap-with-lineouts.component';
 import { HeatmapCanvasComponent } from './heatmap-with-lineouts/heatmap-canvas.component';
-import { ProfileMontiorComponent } from './profile-montior/profile-montior.component';
+import { ProfileMonitorComponent } from './profile-monitor/profile-monitor.component';
 
 @NgModule({
     declarations: [
@@ -17,7 +17,7 @@ import { ProfileMontiorComponent } from './profile-montior/profile-montior.compo
         HeatmapComponent,
         HeatmapWithLineoutsComponent,
         HeatmapCanvasComponent,
-        ProfileMontiorComponent
+        ProfileMonitorComponent
     ],
     imports: [
         BrowserModule,
