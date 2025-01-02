@@ -11,7 +11,7 @@ import slicops.pkcli
 
 class Commands(slicops.pkcli.CommandsBase):
 
-    def ui(self):
+    def ui_api(self):
         """Start UI API web server.
 
         This web server provides a friendly and secure API for the
@@ -23,5 +23,10 @@ class Commands(slicops.pkcli.CommandsBase):
         http.server_start(
             attr_classes=quest.attr_classes(),
             api_classes=(ui_api.UIAPI,),
-            http_config=config.cfg().ui_api,
+            http_config=config.cfg()
+            .ui_api.copy()
+            .pkupdate(
+                # Turn off authentication and version checking
+                auth_secret=False,
+            ),
         )
