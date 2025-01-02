@@ -1,0 +1,30 @@
+/* You can add global styles to this file, and also import other style files */
+
+body {
+  margin: 1em;
+}
+
+g.tick text {
+  font-size: 13px;
+}
+
+.sr-x-axis-grid, .sr-y-axis-grid {
+  stroke-opacity: 0.1;
+}
+
+.sr-x-axis-grid text, .sr-y-axis-grid text {
+  display: none;
+}
+
+.sr-x-axis line, .sr-y-axis line, .sr-x-axis-grid line, .sr-y-axis-grid line {
+  shape-rendering: crispEdges;
+}
+
+.sr-x-axis-label, .sr-y-axis-label {
+  font-size: 14px;
+}
+
+.sr-mouse-rect-xy, .sr-mouse-rect-x, .sr-mouse-rect-y {
+  pointer-events: all;
+  fill: none;
+}
