@@ -1,15 +1,28 @@
+// Profile Monitor SlicLet
+//
+// Copyright (c) 2024 The Board of Trustees of the Leland Stanford Junior University, through SLAC National Accelerator Laboratory (subject to receipt of any required approvals from the U.S. Dept. of Energy).  All Rights Reserved.
+// http://github.com/slaclab/slicops/LICENSE
+
 import { Component } from '@angular/core';
 import { AppDataService } from '../app-data.service';
 import { FormGroup, FormControl, Validators } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
+import { APIService } from '../api.service';
 
 @Component({
-    selector: 'app-profile-monitor',
+    selector: 'app-screen',
     template: `
 <div class="container-fluid">
   <div class="row">
     <div class="col-sm-3 ">
 
       <form>
+<!--
+        <div class="mb-3">
+          <button type="button" (click)="echoCall()">Echo</button>
+          <p>{{ echoReply }}</p>
+        </div>
+-->
         <div class="mb-3">
           <label class="form-label">Beam Path</label>
           <select class="form-select form-control-sm">
@@ -61,8 +74,7 @@ import { FormGroup, FormControl, Validators } from '@angular/forms';
     </div>
 
     <div class="col-sm-9 col-xxl-7">
-      <app-heatmap-with-lineouts *ngIf="showLineouts" [data]="heatmapData"></app-heatmap-with-lineouts>
-      <app-heatmap *ngIf="! showLineouts" [data]="heatmapData"></app-heatmap>
+      <app-heatmap-with-lineouts [data]="heatmapData"></app-heatmap-with-lineouts>
     </div>
 
 
@@ -73,29 +85,8 @@ import { FormGroup, FormControl, Validators } from '@angular/forms';
         <div class="mb-3">
           <div class="row">
             <div class="col-sm-3">
-              <div class="form-check">
-                <input id="lineoutCheckbox" class="form-check-input" type="checkbox" value="" checked (click)=toggleLineouts()/>
-                <label class="form-check-label" for="lineoutCheckbox">
-                  Show Lineouts
-                </label>
-              </div>
-            </div>
-            <div class="col-sm-3">
-              <div class="form-check">
-                <input id="colorbarCheckbox" class="form-check-input" type="checkbox" value="" />
-                <label class="form-check-label" for="colorbarCheckbox">
-                  Show Colorbar
-                </label>
-              </div>
-            </div>
-            <div class="col-sm-3">
               <select class="form-select form-control-sm">
                 <option *ngFor="let cm of colormaps" [value]="cm">{{ cm }}</option>
-              </select>
-            </div>
-            <div class="col-sm-3">
-              <select class="form-select form-control-sm">
-                <option *ngFor="let bd of bitdepth" [value]="bd">{{ bd }}</option>
               </select>
             </div>
           </div>
@@ -109,18 +100,9 @@ import { FormGroup, FormControl, Validators } from '@angular/forms';
     `,
     styles: [],
 })
-export class ProfileMonitorComponent {
+export class ScreenComponent {
     heatmapData: number[][];
-    form = new FormGroup({
-        beamPath: new FormControl(''),
-        camera: new FormControl(''),
-        cameraPV: new FormControl('OTRS:LI21:291'),
-        calcStats: new FormControl(''),
-        curveMethod: new FormControl(''),
-        xSig: new FormControl(''),
-        ySig: new FormControl(''),
-    });
-    showLineouts = true;
+    echoReply: string = "";
     showStats = true;
     beamPaths = [
         'CU_HXR',
@@ -149,12 +131,24 @@ export class ProfileMonitorComponent {
         8, 9, 10, 11, 12, 13, 14, 15, 16,
     ];
 
-    constructor(dataService: AppDataService) {
+    constructor(dataService: AppDataService, private apiService: APIService) {
+        console.log("constructor ScreenComponent");
         this.heatmapData = dataService.heatmapData;
+        this.apiService = apiService;
     }
 
-    toggleLineouts() {
-        this.showLineouts = ! this.showLineouts;
+    echoCall() {
+        console.log("echoCall");
+        this.apiService.call('echo', 'hello').subscribe({
+            next: (result) => {
+                this.echoReply = result;
+                console.log('reply', result);
+            },
+            error: (err) => {
+                this.echoReply = "error=" + err;
+                console.log('error', err);
+            },
+        });
     }
 
     toggleStats() {
