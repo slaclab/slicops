@@ -4,12 +4,12 @@ import { AppDataService } from './app-data.service';
 @Component({
     selector: 'app-root',
     template: `
-<app-profile-monitor></app-profile-monitor>
+<app-screen></app-screen>
     `,
     styles: [],
 })
 export class AppComponent {
-    title = 'screen';
+    title = 'slicops';
 
     oldHeatmapData: number[][] = [
         [0, 4, 0, 0],
