@@ -12,7 +12,6 @@ import { APIService } from '../api.service';
 @Component({
     selector: 'app-screen',
     template: `
-<div class="container-fluid">
   <div class="row">
     <div class="col-sm-3 ">
 
@@ -96,11 +95,11 @@ import { APIService } from '../api.service';
     </div>
 
   </div>
-</div>
     `,
     styles: [],
 })
 export class ScreenComponent {
+    readonly APP_NAME: string = 'screen';
     heatmapData: number[][];
     echoReply: string = "";
     showStats = true;
@@ -135,20 +134,34 @@ export class ScreenComponent {
         console.log("constructor ScreenComponent");
         this.heatmapData = dataService.heatmapData;
         this.apiService = apiService;
+
+        this.apiService.call('init_app', {
+            app_name: this.APP_NAME,
+        }).subscribe({
+            next: (result) => {
+                console.log('init_app result:', result);
+            },
+            error: this.handleError,
+        });
+
     }
 
     echoCall() {
         console.log("echoCall");
-        this.apiService.call('echo', 'hello').subscribe({
+        this.apiService.call('echo', {
+            app_name: this.APP_NAME,
+            value: 'hello',
+        }).subscribe({
             next: (result) => {
                 this.echoReply = result;
                 console.log('reply', result);
             },
-            error: (err) => {
-                this.echoReply = "error=" + err;
-                console.log('error', err);
-            },
+            error: this.handleError,
         });
+    }
+
+    handleError(err: any) {
+        console.log('error:', err);
     }
 
     toggleStats() {

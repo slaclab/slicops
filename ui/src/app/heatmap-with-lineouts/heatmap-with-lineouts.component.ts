@@ -279,16 +279,31 @@ export class HeatmapWithLineoutsComponent {
         this.select('.sr-y-axis').call(d3.axisRight(this.yZoomScale).ticks(5));
         this.select('.sr-y-axis-grid').call(d3.axisRight(this.yZoomScale).ticks(5).tickSize(-(this.canvasWidth + this.lineoutSize)));
 
+        //TODO(pjm): this will move to the server
+        const xLineout = [...this.data[0]];
+        for (let i = 1; i < this.data.length; i++) {
+            for (let j = 0; j < this.data[0].length; j++) {
+                xLineout[j] += this.data[i][j];
+            }
+        }
+        const yLineout = this.data.map((r) => r[0]);
+        for (let i = 0; i < this.data.length; i++) {
+            for (let j = 1; j < this.data[0].length; j++) {
+                yLineout[i] += this.data[i][j];
+            }
+        }
+
         this.yxScale
         //TODO(pjm): data min/max
-            .domain([0, 260])
+            .domain([0, d3.max(yLineout) as number])
             .range([this.lineoutSize - this.lineoutPad, 0]);
         this.select('.sr-yx-axis').call(d3.axisBottom(this.yxScale).ticks(3).tickFormat(d3.format('.1e')));
 
         this.xyScale
-            .domain([0, 260])
+            .domain([0, d3.max(xLineout) as number])
             .range([this.lineoutSize - this.lineoutPad, 0]);
         this.select('.sr-xy-axis').call(d3.axisLeft(this.xyScale).ticks(5).tickFormat(d3.format('.1e')));
+
 
         const xd = this.domain(0);
         // offset by half pixel width
@@ -296,12 +311,14 @@ export class HeatmapWithLineoutsComponent {
         const xline = d3.line()
               .x((d) => this.xZoomScale(d[0] + xoff))
               .y((d) => this.xyScale(d[1]));
-        const xdata = this.data[Math.round(this.data.length / 2)].map((v, idx) => {
+        //const xdata = this.data[Math.round(this.data.length / 2)].map((v, idx) => {
+        const xdata = xLineout.map((v, idx) => {
             return [
                 this.domain(0)[0] + (idx / this.data[0].length) * (this.domain(0)[1] - this.domain(0)[0]),
                 v,
             ];
         });
+
         this.select('.sr-x-overlay path').datum(xdata).attr('d', xline);
 
         //TODO(pjm): consolidate with x above
@@ -310,10 +327,12 @@ export class HeatmapWithLineoutsComponent {
         const yline = d3.line()
               .x((d) => this.yxScale(d[1]))
               .y((d) => this.yZoomScale(d[0] + yoff));
-        const ydata = this.data.map((v, idx) => {
+        //const ydata = this.data.map((v, idx) => {
+        const ydata = yLineout.map((v, idx) => {
             return [
                 this.domain(1)[0] + (idx / this.data.length) * (this.domain(1)[1] - this.domain(1)[0]),
-                v[Math.round(v.length / 2)],
+                //v[Math.round(v.length / 2)],
+                v,
             ];
         });
         this.select('.sr-y-overlay path').datum(ydata).attr('d', yline);
