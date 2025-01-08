@@ -21,8 +21,10 @@ class UIAPI(slicops.quest.API):
     """
 
     def _app_implementation(self, api_args):
-        assert 'app_name' in api_args
-        return importlib.import_module(f'slicops.app.{api_args.app_name}').new_implementation(
+        assert "app_name" in api_args
+        return importlib.import_module(
+            f"slicops.app.{api_args.app_name}"
+        ).new_implementation(
             PKDict(
                 api_args=api_args,
             )

@@ -4,7 +4,6 @@
 // http://github.com/slaclab/slicops/LICENSE
 
 import { Component } from '@angular/core';
-import { AppDataService } from '../app-data.service';
 import { FormGroup, FormControl, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { APIService } from '../api.service';
@@ -13,6 +12,7 @@ import { APIService } from '../api.service';
     selector: 'app-screen',
     template: `
   <div class="row">
+    <div *ngIf="errorMessage" class="alert alert-warning">{{ errorMessage }}</div>
     <div class="col-sm-3 ">
 
       <form>
@@ -51,7 +51,9 @@ import { APIService } from '../api.service';
     </div>
 
     <div class="col-sm-9 col-xxl-7">
-      <app-heatmap-with-lineouts [data]="heatmapData"></app-heatmap-with-lineouts>
+      <div *ngIf="heatmapData && heatmapData.length">
+        <app-heatmap-with-lineouts [data]="heatmapData"></app-heatmap-with-lineouts>
+      </div>
     </div>
 
 
@@ -78,17 +80,17 @@ import { APIService } from '../api.service';
 })
 export class ScreenComponent {
     readonly APP_NAME: string = 'screen';
-    heatmapData: number[][];
+    heatmapData: number[][] = [];
     beamPaths: string[] = [];
     cameras = [
         'VCCB',
     ];
     colorMaps: string[] = [];
     methods: any = [];
+    errorMessage: string = "";
 
-    constructor(dataService: AppDataService, private apiService: APIService) {
+    constructor(private apiService: APIService) {
         console.log("constructor ScreenComponent");
-        this.heatmapData = dataService.heatmapData;
         this.apiService = apiService;
 
         this.apiService.call('init_app', {
@@ -100,27 +102,52 @@ export class ScreenComponent {
                 this.beamPaths = result.schema.constants.BeamPath.map((b: any) => b.name);
                 this.methods = result.schema.constants.CurveFitMethod;
                 this.colorMaps = result.schema.constants.ColorMap;
+                this.getImage();
             },
             error: this.handleError,
         });
     }
 
+    getImage() {
+        this.apiService.call('action', {
+            app_name: this.APP_NAME,
+            method: 'get_image',
+        }).subscribe({
+            next: (result) => {
+                console.log('get_image result:', result);
+                this.heatmapData = result.raw_pixels;
+            },
+            error: (err) => {
+                this.heatmapData = [];
+                this.handleError(err);
+            },
+        });
+    }
+
     handleError(err: any) {
-        console.log('error:', err);
+        this.errorMessage = err;
     }
 
     startAcquiringImages() {
+        this.acquireImages(true);
+        this.getImage();
+    }
+
+    stopAcquiringImages() {
+        this.acquireImages(false);
+    }
+
+    private acquireImages(isStart: boolean) {
+        this.errorMessage = "";
         this.apiService.call('action', {
             app_name: this.APP_NAME,
             method: 'acquire_button',
+            is_start: isStart,
         }).subscribe({
             next: (result) => {
                 console.log('acquire_button result:', result);
             },
             error: this.handleError,
         });
-    }
-
-    stopAcquiringImages() {
     }
 }

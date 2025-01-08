@@ -1,5 +1,4 @@
 import { Component } from '@angular/core';
-import { AppDataService } from './app-data.service';
 
 @Component({
     selector: 'app-root',
@@ -11,11 +10,4 @@ import { AppDataService } from './app-data.service';
     styles: [],
 })
 export class AppComponent {
-    title = 'slicops';
-
-    heatmapData: number[][];
-
-    constructor(dataService: AppDataService) {
-        this.heatmapData = dataService.heatmapData;
-    }
 }

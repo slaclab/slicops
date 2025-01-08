@@ -27,12 +27,16 @@ export class HeatmapCanvasComponent implements AfterViewInit, OnChanges {
     ctx: any;
     cacheCanvas: any;
     colorScale: any;
+    oldIntensity: number[][] = [];
 
     initImage() {
+        this.cacheCanvas.width = this.intensity[0].length;
+        this.cacheCanvas.height = this.intensity.length;
+        this.colorScale.domain([this.min(), this.max()]);
         const imageData = this.ctx.getImageData(0, 0, this.cacheCanvas.width, this.cacheCanvas.height);
         const xSize = this.intensity[0].length;
         const ySize = this.intensity.length;
-        for (let yi = ySize - 1, p = -1; yi >= 0; --yi) {
+        for (let yi = 0, p = -1; yi < ySize; ++yi) {
             for (let xi = 0; xi < xSize; ++xi) {
                 const c = d3.rgb(this.colorScale(this.intensity[yi][xi]));
                 imageData.data[++p] = c.r;
@@ -42,6 +46,7 @@ export class HeatmapCanvasComponent implements AfterViewInit, OnChanges {
             }
         }
         this.cacheCanvas.getContext('2d').putImageData(imageData, 0, 0);
+        this.oldIntensity = this.intensity;
     }
 
     max() : number {
@@ -60,14 +65,14 @@ export class HeatmapCanvasComponent implements AfterViewInit, OnChanges {
         this.colorScale = d3.scaleSequential((d3 as any)[this.colorMap]);
         this.ctx = this.canvas.nativeElement.getContext('2d', {});
         this.cacheCanvas = document.createElement('canvas');
-        this.cacheCanvas.width = this.intensity[0].length;
-        this.cacheCanvas.height = this.intensity.length;
-        this.colorScale.domain([this.min(), this.max()]);
         this.initImage();
     }
 
     ngOnChanges(changes: any) {
         if (this.cacheCanvas) {
+            if (this.oldIntensity != this.intensity) {
+                this.initImage();
+            }
             this.refresh();
         }
     }

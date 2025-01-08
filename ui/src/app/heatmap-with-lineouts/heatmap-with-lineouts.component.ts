@@ -287,20 +287,21 @@ export class HeatmapWithLineoutsComponent {
             }
         }
         const yLineout = this.data.map((r) => r[0]);
-        for (let i = 0; i < this.data.length; i++) {
+        const ySize = yLineout.length - 1;
+        for (let i = this.data.length - 1; i >= 0; --i) {
             for (let j = 1; j < this.data[0].length; j++) {
-                yLineout[i] += this.data[i][j];
+                yLineout[ySize - i] += this.data[i][j];
             }
         }
 
         this.yxScale
         //TODO(pjm): data min/max
-            .domain([0, d3.max(yLineout) as number])
+            .domain([d3.min(yLineout) as number, d3.max(yLineout) as number])
             .range([this.lineoutSize - this.lineoutPad, 0]);
         this.select('.sr-yx-axis').call(d3.axisBottom(this.yxScale).ticks(3).tickFormat(d3.format('.1e')));
 
         this.xyScale
-            .domain([0, d3.max(xLineout) as number])
+            .domain([d3.min(xLineout) as number, d3.max(xLineout) as number])
             .range([this.lineoutSize - this.lineoutPad, 0]);
         this.select('.sr-xy-axis').call(d3.axisLeft(this.xyScale).ticks(5).tickFormat(d3.format('.1e')));
 
