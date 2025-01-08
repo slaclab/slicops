@@ -59,7 +59,9 @@ class Screen(PKDict):
                 num = math.floor(random.random() * 10 + 1)
                 return PKDict(
                     raw_pixels=numpy.fromfile(
-                        pkresource.file_path(f"screen/image-640x480-8bit-{num:02d}.bin"),
+                        pkresource.file_path(
+                            f"screen/image-640x480-8bit-{num:02d}.bin"
+                        ),
                         dtype=numpy.uint8,
                     )
                     .reshape((480, 640))
