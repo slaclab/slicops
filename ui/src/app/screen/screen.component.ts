@@ -16,12 +16,6 @@ import { APIService } from '../api.service';
     <div class="col-sm-3 ">
 
       <form>
-<!--
-        <div class="mb-3">
-          <button type="button" (click)="echoCall()">Echo</button>
-          <p>{{ echoReply }}</p>
-        </div>
--->
         <div class="mb-3">
           <label class="form-label">Beam Path</label>
           <select class="form-select form-control-sm">
@@ -38,36 +32,20 @@ import { APIService } from '../api.service';
           <label class="form-label">PV</label>
           <input class="form-control form-control-sm" value="OTRS:LI21:291"/>
         </div>
-        <div class="form-check">
-          <input id="statsCheckbox" class="form-check-input" type="checkbox" value="" checked (click)="toggleStats()"/>
-          <label class="form-check-label" for="statsCheckbox">
-            Calculate Statistics
-          </label>
-        </div>
-        <div class="mb-3" *ngIf="showStats">
+        <div class="mb-3">
           <label class="form-label">Curve Fit Method</label>
           <select class="form-select form-control-sm">
-            <option *ngFor="let m of methods" [value]="m">{{ m }}</option>
+            <option *ngFor="let m of methods" [value]="m[0]">{{ m[1] }}</option>
           </select>
         </div>
-        <div class="mb-3"  *ngIf="showStats">
-          <div class="col">
-            <div class="row">
-              <div class="col-sm-2">
-                <label class="form-label">xSig</label>
-              </div>
-              <div class="col-sm-4">
-            <input class="form-control form-control-sm text-end" value="4.6" />
-              </div>
-              <div class="col-sm-2">
-            <label class="form-label">ySig</label>
-              </div>
-              <div class="col-sm-4">
-            <input class="form-control form-control-sm text-end" value="4.6" />
-              </div>
-            </div>
-          </div>
+
+        <div class="mb-3">
+          <button class="btn btn-primary" type="button" (click)="startAcquiringImages()">Start</button>
         </div>
+        <div class="mb-3">
+          <button class="btn btn-danger" type="button" (click)="stopAcquiringImages()">Stop</button>
+        </div>
+
       </form>
 
     </div>
@@ -85,7 +63,7 @@ import { APIService } from '../api.service';
           <div class="row">
             <div class="col-sm-3">
               <select class="form-select form-control-sm">
-                <option *ngFor="let cm of colormaps" [value]="cm">{{ cm }}</option>
+                <option *ngFor="let cm of colorMaps" [value]="cm">{{ cm }}</option>
               </select>
             </div>
           </div>
@@ -101,34 +79,12 @@ import { APIService } from '../api.service';
 export class ScreenComponent {
     readonly APP_NAME: string = 'screen';
     heatmapData: number[][];
-    echoReply: string = "";
-    showStats = true;
-    beamPaths = [
-        'CU_HXR',
-        'CU_SXR',
-        'SC_DIAG0',
-        'SC_BSYD',
-        'SC_HXR',
-        'SC_SXR',
-    ];
+    beamPaths: string[] = [];
     cameras = [
         'VCCB',
     ];
-    colormaps = [
-        'Inferno',
-        'Viridis',
-    ];
-    methods = [
-        'Gaussian',
-        'Assymetric',
-        'RMS raw',
-        'RMS cut peak',
-        'RMS cut area',
-        'RMS floor',
-    ];
-    bitdepth = [
-        8, 9, 10, 11, 12, 13, 14, 15, 16,
-    ];
+    colorMaps: string[] = [];
+    methods: any = [];
 
     constructor(dataService: AppDataService, private apiService: APIService) {
         console.log("constructor ScreenComponent");
@@ -140,21 +96,10 @@ export class ScreenComponent {
         }).subscribe({
             next: (result) => {
                 console.log('init_app result:', result);
-            },
-            error: this.handleError,
-        });
-
-    }
-
-    echoCall() {
-        console.log("echoCall");
-        this.apiService.call('echo', {
-            app_name: this.APP_NAME,
-            value: 'hello',
-        }).subscribe({
-            next: (result) => {
-                this.echoReply = result;
-                console.log('reply', result);
+                //TODO(pjm): these details move to field editors
+                this.beamPaths = result.schema.constants.BeamPath.map((b: any) => b.name);
+                this.methods = result.schema.constants.CurveFitMethod;
+                this.colorMaps = result.schema.constants.ColorMap;
             },
             error: this.handleError,
         });
@@ -164,7 +109,18 @@ export class ScreenComponent {
         console.log('error:', err);
     }
 
-    toggleStats() {
-        this.showStats = ! this.showStats;
+    startAcquiringImages() {
+        this.apiService.call('action', {
+            app_name: this.APP_NAME,
+            method: 'acquire_button',
+        }).subscribe({
+            next: (result) => {
+                console.log('acquire_button result:', result);
+            },
+            error: this.handleError,
+        });
+    }
+
+    stopAcquiringImages() {
     }
 }

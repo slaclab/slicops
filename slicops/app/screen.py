@@ -16,7 +16,10 @@ class Screen(PKDict):
         super().__init__(**kwargs)
 
     def action(self):
-        pass
+        #TODO(pjm): setup epics camera and return 1st image
+        return PKDict(
+            status='ok',
+        )
 
     def default_instance(self):
         #TODO(pjm): dummy data
@@ -74,6 +77,7 @@ class Screen(PKDict):
                         ],
                     ),
                 ],
+                ColorMap=['Inferno', 'Viridis'],
                 CurveFitMethod=[
                     ['gaussian', 'Gaussian'],
                     ['assymetric', 'Assymetric'],

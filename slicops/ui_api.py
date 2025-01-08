@@ -29,7 +29,7 @@ class UIAPI(slicops.quest.API):
         )
 
     async def api_action(self, api_args):
-        return _app_implementation(api_args).action()
+        return self._app_implementation(api_args).action()
 
     async def api_echo(self, api_args):
         return self._app_implementation(api_args).api_args.value
