@@ -40,7 +40,7 @@ class SVG {
     <app-heatmap-canvas
       [width]="canvasWidth"
       [height]="canvasHeight"
-      [intensity]="data"
+      [intensity]="data.raw_pixels"
       [zoomOffsets]="zoomOffsets"
       [colorMap]="colorMap"
     ></app-heatmap-canvas>
@@ -128,7 +128,7 @@ export class HeatmapWithLineoutsComponent {
     //  yDomain
     //  colormap
 
-    @Input() data: number[][] = [];
+    @Input() data: any = null;
     SVG = SVG;
 
     xScale = d3.scaleLinear();
@@ -255,7 +255,7 @@ export class HeatmapWithLineoutsComponent {
         const prevSize = [this.canvasWidth, this.canvasHeight];
         this.lineoutSize = Math.floor((w - (this.margin.left + this.margin.right)) / 4);
         this.canvasWidth = w - (this.margin.left + this.lineoutSize + this.margin.right);
-        this.canvasHeight = Math.floor(this.canvasWidth * (this.data.length / this.data[0].length));
+        this.canvasHeight = Math.floor(this.canvasWidth * (this.data.raw_pixels.length / this.data.raw_pixels[0].length));
 
         this.xScale.range([0, this.canvasWidth]);
         this.xZoomScale.range([0, this.canvasWidth]);
@@ -279,23 +279,10 @@ export class HeatmapWithLineoutsComponent {
         this.select('.sr-y-axis').call(d3.axisRight(this.yZoomScale).ticks(5));
         this.select('.sr-y-axis-grid').call(d3.axisRight(this.yZoomScale).ticks(5).tickSize(-(this.canvasWidth + this.lineoutSize)));
 
-        //TODO(pjm): this will move to the server
-        const xLineout = [...this.data[0]];
-        for (let i = 1; i < this.data.length; i++) {
-            for (let j = 0; j < this.data[0].length; j++) {
-                xLineout[j] += this.data[i][j];
-            }
-        }
-        const yLineout = this.data.map((r) => r[0]);
-        const ySize = yLineout.length - 1;
-        for (let i = this.data.length - 1; i >= 0; --i) {
-            for (let j = 1; j < this.data[0].length; j++) {
-                yLineout[ySize - i] += this.data[i][j];
-            }
-        }
+        const xLineout = this.data.x_lineout as number[];
+        const yLineout = this.data.y_lineout as number[];
 
         this.yxScale
-        //TODO(pjm): data min/max
             .domain([d3.min(yLineout) as number, d3.max(yLineout) as number])
             .range([this.lineoutSize - this.lineoutPad, 0]);
         this.select('.sr-yx-axis').call(d3.axisBottom(this.yxScale).ticks(3).tickFormat(d3.format('.1e')));
@@ -308,14 +295,13 @@ export class HeatmapWithLineoutsComponent {
 
         const xd = this.domain(0);
         // offset by half pixel width
-        const xoff = (xd[1] - xd[0]) / this.data[0].length / 2;
+        const xoff = (xd[1] - xd[0]) / this.data.raw_pixels[0].length / 2;
         const xline = d3.line()
               .x((d) => this.xZoomScale(d[0] + xoff))
               .y((d) => this.xyScale(d[1]));
-        //const xdata = this.data[Math.round(this.data.length / 2)].map((v, idx) => {
         const xdata = xLineout.map((v, idx) => {
             return [
-                this.domain(0)[0] + (idx / this.data[0].length) * (this.domain(0)[1] - this.domain(0)[0]),
+                this.domain(0)[0] + (idx / this.data.raw_pixels[0].length) * (this.domain(0)[1] - this.domain(0)[0]),
                 v,
             ];
         });
@@ -324,14 +310,13 @@ export class HeatmapWithLineoutsComponent {
 
         //TODO(pjm): consolidate with x above
         const yd = this.domain(1);
-        const yoff = (yd[1] - yd[0]) / this.data.length / 2;
+        const yoff = (yd[1] - yd[0]) / this.data.raw_pixels.length / 2;
         const yline = d3.line()
               .x((d) => this.yxScale(d[1]))
               .y((d) => this.yZoomScale(d[0] + yoff));
-        //const ydata = this.data.map((v, idx) => {
         const ydata = yLineout.map((v, idx) => {
             return [
-                this.domain(1)[0] + (idx / this.data.length) * (this.domain(1)[1] - this.domain(1)[0]),
+                this.domain(1)[0] + (idx / this.data.raw_pixels.length) * (this.domain(1)[1] - this.domain(1)[0]),
                 //v[Math.round(v.length / 2)],
                 v,
             ];

@@ -31,7 +31,10 @@ class UIAPI(slicops.quest.API):
         )
 
     async def api_action(self, api_args):
-        return self._app_implementation(api_args).action()
+        m = getattr(self._app_implementation(api_args), f"action_{api_args.method}")
+        if m:
+            return m()
+        raise AssertionError(f"unknown action method: {api_args.method}")
 
     async def api_echo(self, api_args):
         return self._app_implementation(api_args).api_args.value

@@ -51,8 +51,8 @@ import { APIService } from '../api.service';
     </div>
 
     <div class="col-sm-9 col-xxl-7">
-      <div *ngIf="heatmapData && heatmapData.length">
-        <app-heatmap-with-lineouts [data]="heatmapData"></app-heatmap-with-lineouts>
+      <div *ngIf="image && image.raw_pixels.length">
+        <app-heatmap-with-lineouts [data]="image"></app-heatmap-with-lineouts>
       </div>
     </div>
 
@@ -80,7 +80,7 @@ import { APIService } from '../api.service';
 })
 export class ScreenComponent {
     readonly APP_NAME: string = 'screen';
-    heatmapData: number[][] = [];
+    image: any = null;
     beamPaths: string[] = [];
     cameras = [
         'VCCB',
@@ -115,10 +115,10 @@ export class ScreenComponent {
         }).subscribe({
             next: (result) => {
                 console.log('get_image result:', result);
-                this.heatmapData = result.raw_pixels;
+                this.image = result;
             },
             error: (err) => {
-                this.heatmapData = [];
+                this.image = null;
                 this.handleError(err);
             },
         });

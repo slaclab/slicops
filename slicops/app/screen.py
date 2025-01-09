@@ -26,48 +26,47 @@ class Screen(PKDict):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-    def action(self):
+    def action_acquire_button(self):
         # TODO(pjm): get selected camera from screen model
-        if self.api_args.method == "acquire_button":
-            if _cfg.dev.use_epics:
-                try:
-                    # TODO(pjm): use camera yaml definitions
-                    PV(f"{_cfg.dev.camera_pv}:Acquire").put(
-                        1 if self.api_args.is_start else 0
-                    )
-                except PVInvalidError as err:
-                    raise err
-            return PKDict()
-        elif self.api_args.method == "get_image":
-            if _cfg.dev.use_epics:
-                try:
-                    return PKDict(
-                        raw_pixels=PV(f"{_cfg.dev.image_pv}:ArrayData")
-                        .get()
-                        .reshape(
-                            (
-                                PV(f"{_cfg.dev.image_pv}:ArraySize1_RBV").get(),
-                                PV(f"{_cfg.dev.image_pv}:ArraySize0_RBV").get(),
-                            )
-                        )
-                        .tolist(),
-                    )
-                except PVInvalidError as err:
-                    raise err
-            else:
-                # TODO(pjm): get shape and bitdepth from filename
-                num = math.floor(random.random() * 10 + 1)
-                return PKDict(
-                    raw_pixels=numpy.fromfile(
-                        pkresource.file_path(
-                            f"screen/image-640x480-8bit-{num:02d}.bin"
-                        ),
-                        dtype=numpy.uint8,
-                    )
-                    .reshape((480, 640))
-                    .tolist()
+        if _cfg.dev.use_epics:
+            try:
+                # TODO(pjm): use camera yaml definitions
+                PV(f"{_cfg.dev.camera_pv}:Acquire").put(
+                    1 if self.api_args.is_start else 0
                 )
-        raise AssertionError(f"unknown action method: {self.api_args.method}")
+            except PVInvalidError as err:
+                raise err
+        return PKDict()
+
+    def action_get_image(self):
+        raw_pixels = None
+        if _cfg.dev.use_epics:
+            try:
+                raw_pixels = (
+                    PV(f"{_cfg.dev.image_pv}:ArrayData")
+                    .get()
+                    .reshape(
+                        (
+                            PV(f"{_cfg.dev.image_pv}:ArraySize1_RBV").get(),
+                            PV(f"{_cfg.dev.image_pv}:ArraySize0_RBV").get(),
+                        )
+                    )
+                )
+            except PVInvalidError as err:
+                raise err
+        else:
+            # TODO(pjm): get shape and bitdepth from filename
+            num = math.floor(random.random() * 10 + 1)
+            raw_pixels = numpy.fromfile(
+                pkresource.file_path(f"screen/image-640x480-8bit-{num:02d}.bin"),
+                dtype=numpy.uint8,
+            ).reshape((480, 640))
+        return PKDict(
+            # TODO(pjm): output handler should handle ndarray, avoiding tolist()
+            raw_pixels=raw_pixels.tolist(),
+            x_lineout=raw_pixels.sum(axis=0).tolist(),
+            y_lineout=list(reversed(raw_pixels.sum(axis=1).tolist())),
+        )
 
     def default_instance(self):
         # TODO(pjm): dummy data

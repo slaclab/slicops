@@ -63,7 +63,7 @@ export class HeatmapCanvasComponent implements AfterViewInit, OnChanges {
 
     ngAfterViewInit() {
         this.colorScale = d3.scaleSequential((d3 as any)[this.colorMap]);
-        this.ctx = this.canvas.nativeElement.getContext('2d', {});
+        this.ctx = this.canvas.nativeElement.getContext('2d', { willReadFrequently: true });
         this.cacheCanvas = document.createElement('canvas');
         this.initImage();
     }
