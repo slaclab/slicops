@@ -5,10 +5,12 @@
 """
 
 from lcls_tools.common.controls.pyepics.utils import PV, PVInvalidError
+from lcls_tools.common.devices.reader import create_screen
 from pykern import pkconfig
 from pykern import pkresource
 from pykern.pkcollections import PKDict
 from pykern.pkdebug import pkdc, pkdlog, pkdp
+import lcls_tools.common.data.fitting_tool
 import math
 import numpy
 import random
@@ -26,47 +28,31 @@ class Screen(PKDict):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-    def action_acquire_button(self):
-        # TODO(pjm): get selected camera from screen model
-        if _cfg.dev.use_epics:
-            try:
-                # TODO(pjm): use camera yaml definitions
-                PV(f"{_cfg.dev.camera_pv}:Acquire").put(
-                    1 if self.api_args.is_start else 0
-                )
-            except PVInvalidError as err:
-                raise err
-        return PKDict()
+    def action_start_button(self):
+        return ScreenDevice().start()
+
+    def action_stop_button(self):
+        return ScreenDevice().stop()
 
     def action_get_image(self):
-        raw_pixels = None
-        if _cfg.dev.use_epics:
-            try:
-                raw_pixels = (
-                    PV(f"{_cfg.dev.image_pv}:ArrayData")
-                    .get()
-                    .reshape(
-                        (
-                            PV(f"{_cfg.dev.image_pv}:ArraySize1_RBV").get(),
-                            PV(f"{_cfg.dev.image_pv}:ArraySize0_RBV").get(),
-                        )
-                    )
-                )
-            except PVInvalidError as err:
-                raise err
-        else:
-            # TODO(pjm): get shape and bitdepth from filename
-            num = math.floor(random.random() * 10 + 1)
-            raw_pixels = numpy.fromfile(
-                pkresource.file_path(f"screen/image-640x480-8bit-{num:02d}.bin"),
-                dtype=numpy.uint8,
-            ).reshape((480, 640))
+        raw_pixels = ScreenDevice().get_image()
+        x = raw_pixels.sum(axis=0)
+        y = raw_pixels.sum(axis=1)
+        yfit = self._fit(y[::-1], self.api_args.curve_fit)
+        xfit = self._fit(x, self.api_args.curve_fit)
         return PKDict(
-            # TODO(pjm): output handler should handle ndarray, avoiding tolist()
+            # TODO(pjm): output handler should support ndarray, avoiding tolist()
             raw_pixels=raw_pixels.tolist(),
-            x_lineout=raw_pixels.sum(axis=0).tolist(),
-            y_lineout=list(reversed(raw_pixels.sum(axis=1).tolist())),
+            x_lineout=x.tolist(),
+            y_lineout=y[::-1].tolist(),
+            # x_fit=xfit.tolist(),
+            # y_fit=yfit[::-1].tolist(),
+            x_fit=xfit,
+            y_fit=yfit,
         )
+
+    def action_is_acquiring_images(self):
+        return ScreenDevice().is_acquiring_images()
 
     def default_instance(self):
         # TODO(pjm): dummy data
@@ -79,6 +65,7 @@ class Screen(PKDict):
                 camera_image=None,
                 acquire_button=None,
                 stop_button=None,
+                single_button=None,
             ),
         )
 
@@ -127,11 +114,8 @@ class Screen(PKDict):
                 ColorMap=["Inferno", "Viridis"],
                 CurveFitMethod=[
                     ["gaussian", "Gaussian"],
-                    ["assymetric", "Assymetric"],
-                    ["rms_raw", "RMS raw"],
-                    ["rms_cut_peak", "RMS cut peak"],
-                    ["rms_cut_area", "RMS cut area"],
-                    ["rms_floor", "RMS floor"],
+                    ["super_gaussian", "Super Gaussian"],
+                    ["double_gaussian", "Double Gaussian"],
                 ],
             ),
             model=PKDict(
@@ -142,8 +126,9 @@ class Screen(PKDict):
                     curve_fit_method=["Curve Fit Method", "CurveFitMethod", "gaussian"],
                     color_map=["Color Map", "ColorMap", "Inferno"],
                     camera_image=["Camera Image", "CameraImage"],
-                    acquire_button=["Start", "AcquireButton"],
+                    start_button=["Start", "StartButton"],
                     stop_button=["Stop", "StopButton"],
+                    single_button=["Single", "SinglButton"],
                 ),
             ),
             view=PKDict(
@@ -153,12 +138,13 @@ class Screen(PKDict):
                             "beam_path",
                             "camera",
                             "pv",
-                            "acquire_button",
+                            "start_button",
                             "stop_button",
-                            "curve_fit_method",
+                            "single_button",
                         ],
                         [
                             "camera_image",
+                            "curve_fit_method",
                             "color_map",
                         ],
                     ],
@@ -166,16 +152,123 @@ class Screen(PKDict):
             ),
         )
 
+    def _fit(self, line, method):
+        """Use the lcls_tools FittingTool to match the selected method.
+        Valid methods are (gaussian, super_gaussian, double_gaussian).
+        """
+        ft = lcls_tools.common.data.fitting_tool.FittingTool(line)
+        # TODO(pjm): need to pass hints to guesser (mu, nu), translated from domain units to pixels
+        if method == "double_gaussian":
+            ft.initial_params["double_gaussian"]["params"]["mu"] = 473
+        ft.initial_params = {
+            method: ft.initial_params[method],
+        }
+        try:
+            r = ft.get_fit()
+        except RuntimeError:
+            return PKDict(
+                fit_line=numpy.zeros(len(line)).tolist(),
+                results=PKDict(
+                    error="Curve fit was unsuccessful",
+                ),
+            )
+        g = r[method]["params"]
+        return PKDict(
+            fit_line=getattr(ft, method)(x=ft.x, **g).tolist(),
+            results=g,
+        )
+
+
+class ScreenDevice:
+    """Screen device interaction. All EPICS access occurs at this level.
+    Includes a dummy camera implementation if EPICS access is not enabled.
+    """
+
+    def __init__(self):
+        self.screen = None
+        if _cfg.dev.use_epics:
+            self.screen = create_screen(_cfg.dev.beam_path).screens[
+                _cfg.dev.camera_name
+            ]
+
+    def get_image(self):
+        """Gets raw pixels from EPICS or from the configured dummmy camera."""
+        raw_pixels = None
+        if self.screen:
+            try:
+                return self.screen.image
+            except PVInvalidError as err:
+                # TODO(pjm): could provide a better error message here
+                raise err
+            except AttributeError as err:
+                # most likely EPICS PV is unavailable due to timeout,
+                #  Screen.image should raise an exception if no connection is completed
+                #  for now, catch AttributeError: 'NoneType' object has no attribute 'reshape'
+                # TODO(pjm): could provide a better error message here
+                raise err
+        return numpy.fromfile(
+            pkresource.file_path(
+                _cfg.dev.dummy_camera.template.format(
+                    math.floor(random.random() * _cfg.dev.dummy_camera.count + 1),
+                    1,
+                )
+            ),
+            dtype=(
+                numpy.uint8 if _cfg.dev.dummy_camera.dtype == "uint8" else numpy.uint16
+            ),
+        ).reshape(
+            _cfg.dev.dummy_camera.dimensions,
+        )
+
+    def is_acquiring_images(self):
+        """Returns True if the camera's EPICS value indicates it is capturing images."""
+        if self.screen:
+            try:
+                return PKDict(is_acquiring_images=bool(self._acquire_pv()[0].get()))
+            except PVInvalidError as err:
+                # does not return an error, the initial camera may not be available
+                return PKDict(is_acquiring_images=False)
+        return PKDict(is_acquiring_images=True)
+
+    def start(self):
+        """Set the EPICS camera to acquire mode."""
+        self._set_acquire(1)
+
+    def stop(self):
+        """Set the EPICS camera to stop acquire mode."""
+        return self._set_acquire(0)
+
+    def _acquire_pv(self):
+        n = f"{self.screen.controls_information.control_name}:Acquire"
+        return (PV(n), n)
+
+    def _set_acquire(self, is_on):
+        if self.screen:
+            try:
+                pv, n = self._acquire_pv()
+                pv.put(is_on)
+                if not pv.connected:
+                    raise PVInvalidError(f"Unable to connect to PV: {n}")
+            except PVInvalidError as err:
+                # TODO(pjm): could provide a better error message here
+                raise err
+        return PKDict()
+
 
 _cfg = pkconfig.init(
     dev=PKDict(
-        camera_filename=(
-            "image-640x480-8bit-01.bin",
-            str,
-            "use a static file for camera data",
+        dummy_camera=dict(
+            template=("screen/image-640x480-8bit-{:02d}.bin", str, "image filename"),
+            count=(12, int, "number of image files"),
+            dtype=("uint8", str, "image data type"),
+            dimensions=((480, 640), tuple, "image dimensions"),
+            # template=("screen/image2-1292x964-16bit-{:02d}.bin", str, "image filename"),
+            # count=(1, int, "number of image files"),
+            # dtype=("uint16", str, "image data type"),
+            # dimensions=((964, 1292), tuple, "image dimensions"),
         ),
-        camera_pv=("13SIM1:cam1", str, "EPICS camera PV prefix for dev testing"),
-        image_pv=("13SIM1:image1", str, "EPICS image PV prefix for dev testing"),
+        beam_path=("VCC", str, "dev beampath name"),
+        camera_name=("PJMDEV", str, "dev camera name"),
         use_epics=(False, bool, "Enable EPICS access"),
     ),
 )

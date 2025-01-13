@@ -29,7 +29,7 @@ class SVG {
 @Component({
     selector: 'app-heatmap-with-lineouts',
     template: `
-<h2 style="text-align: center">OTRS:LI21:291</h2>
+<!--<h2 style="text-align: center">OTRS:LI21:291</h2> -->
 <figure #figure>
   <div [ngStyle]="{
     position: 'absolute',
@@ -68,7 +68,8 @@ class SVG {
           </clipPath>
         </defs>
         <g [attr.clip-path]="SVG.clipPathURL(lineoutSize, canvasHeight)">
-          <path></path>
+          <path class="sr-y-path"></path>
+          <path class="sr-y-fit-path"></path>
         </g>
       </g>
       <g [attr.transform]="SVG.translate(0, canvasHeight + lineoutPad)" class="sr-x-overlay">
@@ -78,7 +79,8 @@ class SVG {
           </clipPath>
         </defs>
         <g [attr.clip-path]="SVG.clipPathURL(canvasWidth, lineoutSize)">
-          <path></path>
+          <path class="sr-x-path"></path>
+          <path class="sr-x-fit-path"></path>
         </g>
       </g>
       <g class="sr-x-axis" [attr.transform]="SVG.translate(0, canvasHeight + lineoutSize)"></g>
@@ -109,10 +111,16 @@ class SVG {
     `,
     styles: [
         `
-.sr-x-overlay path, .sr-y-overlay path {
+.sr-x-path, .sr-y-path {
     fill: none;
-    stroke: steelblue;
+    stroke: #1f77b4;
     stroke-width: 2;
+}
+.sr-x-fit-path, .sr-y-fit-path {
+    fill: none;
+    stroke-dasharray: 5 3;
+    stroke: #ff7f0e;
+    stroke-width: 3;
 }
         `,
     ],
@@ -164,9 +172,12 @@ export class HeatmapWithLineoutsComponent {
     constructor(private cdRef: ChangeDetectorRef) {
     }
 
-    select(selector?: string) : any {
-        const s = d3.select(this.el.nativeElement);
-        return selector ? s.select(selector) : s;
+    axisDomain(axis: string) : number[] {
+        //TODO(pjm): from input
+        if (axis === 'x') {
+            return [-4, 4];
+        }
+        return [0, 4];
     }
 
     center(event: any, target: any) {
@@ -175,14 +186,6 @@ export class HeatmapWithLineoutsComponent {
             return [d3.mean(p, d => d[0]), d3.mean(p, d => d[1])];
         }
         return [this.canvasWidth / 2, this.canvasHeight / 2];
-    }
-
-    domain(axisIndex: number) : number[] {
-        //TODO(pjm): from input
-        if (axisIndex === 0) {
-            return [-4, 4];
-        }
-        return [0, 4];
     }
 
     handleZoom(event: any) {
@@ -247,6 +250,44 @@ export class HeatmapWithLineoutsComponent {
         this.refresh();
     }
 
+    ngOnDestroy() {
+        //TODO(pjm): not sure this is required, check for memory leaks
+        //this.xZoom.on('zoom', null);
+        //this.resize.next();
+        //this.resize.complete();
+    }
+
+    ngAfterViewInit() {
+        this.resize.asObservable().pipe(debounceTime(350)).subscribe(() => {
+            this.refresh();
+        });
+
+        this.xZoom = d3.zoom().on('zoom', (event) => { this.handleZoomX(event.transform) });
+        this.select('.sr-mouse-rect-x').call(this.xZoom);
+        this.yZoom = d3.zoom().on('zoom', (event) => { this.handleZoomY(event.transform) });
+        this.select('.sr-mouse-rect-y').call(this.yZoom);
+        this.xyZoom = d3.zoom().on('zoom', (event) => { this.handleZoom(event) });
+        this.select('.sr-mouse-rect-xy').call(this.xyZoom);
+
+        this.xScale.domain(this.axisDomain('x'));
+        this.yScale.domain(this.axisDomain('y'));
+
+        this.refresh();
+        // required because refresh() changes view values (element sizes)
+        this.cdRef.detectChanges();
+    }
+
+    ngOnChanges(changes: any) {
+        if (this.el) {
+            this.refresh();
+        }
+    }
+
+    @HostListener('window:resize')
+    onResize() {
+        this.resize.next();
+    }
+
     refresh() {
         const w = parseInt(this.select().style('width'));
         if (isNaN(w)) {
@@ -283,45 +324,69 @@ export class HeatmapWithLineoutsComponent {
         const yLineout = this.data.y_lineout as number[];
 
         this.yxScale
-            .domain([d3.min(yLineout) as number, d3.max(yLineout) as number])
+            .domain([
+                d3.min(yLineout) as number,
+                Math.max(
+                    d3.max(yLineout) as number,
+                    d3.max(this.data.y_fit.fit_line as number[]) as number,
+                ),
+            ])
             .range([this.lineoutSize - this.lineoutPad, 0]);
         this.select('.sr-yx-axis').call(d3.axisBottom(this.yxScale).ticks(3).tickFormat(d3.format('.1e')));
 
         this.xyScale
-            .domain([d3.min(xLineout) as number, d3.max(xLineout) as number])
+            .domain([
+                d3.min(xLineout) as number,
+                Math.max(
+                    d3.max(xLineout) as number,
+                    d3.max(this.data.x_fit.fit_line as number[]) as number,
+                ),
+            ])
             .range([this.lineoutSize - this.lineoutPad, 0]);
         this.select('.sr-xy-axis').call(d3.axisLeft(this.xyScale).ticks(5).tickFormat(d3.format('.1e')));
 
 
-        const xd = this.domain(0);
+        const xd = this.axisDomain('x');
         // offset by half pixel width
         const xoff = (xd[1] - xd[0]) / this.data.raw_pixels[0].length / 2;
+        const xdata = xLineout.map((v, idx) => {
+            return [
+                xd[0] + (idx / this.data.raw_pixels[0].length) * (xd[1] - xd[0]),
+                v,
+            ];
+        });
+        const xdata2 = (this.data.x_fit.fit_line as number[]).map((v, idx) => {
+            return [
+                xd[0] + (idx / this.data.raw_pixels[0].length) * (xd[1] - xd[0]),
+                v,
+            ];
+        });
         const xline = d3.line()
               .x((d) => this.xZoomScale(d[0] + xoff))
               .y((d) => this.xyScale(d[1]));
-        const xdata = xLineout.map((v, idx) => {
+        this.select('.sr-x-overlay path.sr-x-path').datum(xdata).attr('d', xline);
+        this.select('.sr-x-overlay path.sr-x-fit-path').datum(xdata2).attr('d', xline);
+
+        //TODO(pjm): consolidate with x above
+        const yd = this.axisDomain('y');
+        const yoff = (yd[1] - yd[0]) / this.data.raw_pixels.length / 2;
+        const ydata = yLineout.map((v, idx) => {
             return [
-                this.domain(0)[0] + (idx / this.data.raw_pixels[0].length) * (this.domain(0)[1] - this.domain(0)[0]),
+                yd[0] + (idx / this.data.raw_pixels.length) * (yd[1] - yd[0]),
                 v,
             ];
         });
-
-        this.select('.sr-x-overlay path').datum(xdata).attr('d', xline);
-
-        //TODO(pjm): consolidate with x above
-        const yd = this.domain(1);
-        const yoff = (yd[1] - yd[0]) / this.data.raw_pixels.length / 2;
+        const ydata2 = (this.data.y_fit.fit_line as number[]).map((v, idx) => {
+            return [
+                yd[0] + (idx / this.data.raw_pixels.length) * (yd[1] - yd[0]),
+                v,
+            ];
+        });
         const yline = d3.line()
               .x((d) => this.yxScale(d[1]))
               .y((d) => this.yZoomScale(d[0] + yoff));
-        const ydata = yLineout.map((v, idx) => {
-            return [
-                this.domain(1)[0] + (idx / this.data.raw_pixels.length) * (this.domain(1)[1] - this.domain(1)[0]),
-                //v[Math.round(v.length / 2)],
-                v,
-            ];
-        });
-        this.select('.sr-y-overlay path').datum(ydata).attr('d', yline);
+        this.select('.sr-y-overlay path.sr-y-path').datum(ydata).attr('d', yline);
+        this.select('.sr-y-overlay path.sr-y-fit-path').datum(ydata2).attr('d', yline);
 
         const xZoomDomain = this.xZoomScale.domain();
         const xDomain = this.xScale.domain();
@@ -337,41 +402,9 @@ export class HeatmapWithLineoutsComponent {
         ];
     }
 
-    ngOnDestroy() {
-        //TODO(pjm): not sure this is required, check for memory leaks
-        //this.xZoom.on('zoom', null);
-        //this.resize.next();
-        //this.resize.complete();
+    select(selector?: string) : any {
+        const s = d3.select(this.el.nativeElement);
+        return selector ? s.select(selector) : s;
     }
 
-    ngAfterViewInit() {
-        this.resize.asObservable().pipe(debounceTime(350)).subscribe(() => {
-            this.refresh();
-        });
-
-        this.xZoom = d3.zoom().on('zoom', (event) => { this.handleZoomX(event.transform) });
-        this.select('.sr-mouse-rect-x').call(this.xZoom);
-        this.yZoom = d3.zoom().on('zoom', (event) => { this.handleZoomY(event.transform) });
-        this.select('.sr-mouse-rect-y').call(this.yZoom);
-        this.xyZoom = d3.zoom().on('zoom', (event) => { this.handleZoom(event) });
-        this.select('.sr-mouse-rect-xy').call(this.xyZoom);
-
-        this.xScale.domain(this.domain(0));
-        this.yScale.domain(this.domain(1));
-
-        this.refresh();
-        // required because refresh() changes view values (element sizes)
-        this.cdRef.detectChanges();
-    }
-
-    ngOnChanges(changes: any) {
-        if (this.el) {
-            this.refresh();
-        }
-    }
-
-    @HostListener('window:resize')
-    onResize() {
-        this.resize.next();
-    }
 }
