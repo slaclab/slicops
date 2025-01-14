@@ -19,6 +19,10 @@ type ReplyMsg = {
     api_result: any;
 };
 
+type AuthResult = {
+    client_id: string;
+};
+
 class Call {
     call_id: number;
     api_name: string;
@@ -61,15 +65,15 @@ const AUTH_API_VERSION = 1;
     providedIn: 'root'
 })
 export class APIService {
-    #socket: Websocket | null = null;
-    #socketAuthOK: boolean = false;
-    #socketRetryBackoff: int = 0;
-    #pendingCalls: Map<number, Call> = new Map<number,Call>();
-    #unsentCalls: Array<Call> = new Array<Call>;
+    #authOK: boolean = false;
     #call_id: number = 0;
     #client_id: string | null = null;
     //TODO(robnagler) registration interface
-    #apiErrorHandler? = this.#defaultAPIErrorHandler;
+    #errorHandler = this.#defaultErrorHandler;
+    #pendingCalls: Map<number, Call> = new Map<number,Call>();
+    #socket: Websocket | null = null;
+    #socketRetryBackoff: int = 0;
+    #unsentCalls: Array<Call> = new Array<Call>;
 
     constructor(logService: LogService) {
         this.log = logService;
@@ -89,12 +93,24 @@ export class APIService {
     ngOnDestroy() {
         this.log.dbg('destroy');
         if (this.#socket) {
-            this.#socket.close()
+            this.#socket.close();
             this.#socket = null;
         }
-        // just in case
-        this.#unsentCalls = new Array<Call>();
-        this.#pending = new Map<number, Call>();
+        this.#clearCalls('ngOnDestroy');
+    }
+
+    #authError(error: string) {
+        // If there is a protocol error, this will retry forever. That would be a major problem
+        // which is not fixable or really detectable. Likely case is the socket closed before auth
+        // completed.
+        this.#socket.close();
+        this.#socketOnError(error);
+    }
+
+    #authResult(api_result: AuthResult) {
+        this.#client_id = api_result.client_id;
+        this.#authOK = true;
+        this.#send();
     }
 
     #clearCalls(error: string) {
@@ -102,16 +118,23 @@ export class APIService {
         this.#pendingCalls = new Map<number,Call>();
         this.#unsentCalls = new Array<Call>();
         for (const c of a) {
-            if (!c.destroyed && c.apiErrorHandler?) {
-                c.apiErrorHandler?(error);
-                c.destroy();
+            if (c.destroyed) {
+                continue;
             }
+            if (c.apiErrorHandler?) {
+                c.apiErrorHandler?(error);
+            }
+            c.destroy();
         }
     }
 
 
-    #defaultAPIErrorHandler(call: Call, api_error: string) {
-        this.log.error(['error', api_error, c.call_id, c.api_name]);
+    #defaultErrorHandler(call?: Call, error: any) {
+        m = ['error', error];
+        if (call?) {
+            m.push(c.call_id, c.api_name);
+        }
+        this.log.error(m);
     }
 
     #findCall(call_id: number, calls: Map<number, Call>) : Call | null {
@@ -127,31 +150,33 @@ export class APIService {
     }
 
     #send() {
-        if (this.#unsentCalls.length <= 0 || this.#socket.readyState !== WebSocket.OPEN) {
+        if (! this.#socket || this.#unsentCalls.length <= 0 || this.#socket.readyState !== WebSocket.OPEN || ! this.#authOK) {
             return;
         }
         while (this.#unsentCalls.length > 0) {
-            const c = this.#unsentCalls.shift();
-            if (c.destroyed) {
-                continue;
-            }
-            this.log.dbg(['call', c.call_id, c.api_name]);
-            this.#pendingCalls.set(c.call_id, c);
-            this.#socket.send(c.msg);
+            self.#sendOne(this.#unsentCalls.shift());
         }
     };
 
-    #socketOnError(event: Event) {
+    #sendOne(call: Call) {
+        if (call.destroyed) {
+            continue;
+        }
+        this.log.dbg(['call', call.call_id, call.api_name]);
+        this.#pendingCalls.set(call.call_id, call);
+        this.#socket.send(call.msg);
+    }
+
+    #socketOnError(event: any) {
         // close: event.code : short, event.reason : str, wasClean : bool
         // error: app specific
         this.#socket = null;
         if (this.#socketRetryBackoff <= 0) {
             this.#socketRetryBackoff = 1;
-            this.log.dbg(['WebSocket failed: event', event]);
-            self.#clearCalls(event.wasClean ? 'socket closed' : 'socket error')
+            this.#errorHandler(['WebSocket failed', event]);
+            self.#clearCalls(event.wasClean ? 'socket closed' : 'socket error');
         }
-        //TODO(robnagler) some type of set status to communicate connection lost
-        setTimeout(this.#socketOpen, this.#socketRetryBackoff * 1000, 1);
+        setTimeout(this.#socketOpen, this.#socketRetryBackoff * 1000);
         if (this.#socketRetryBackoff < 60) {
             this.#socketRetryBackoff *= 2;
         }
@@ -180,8 +205,19 @@ export class APIService {
 
     #socketOnOpen(event: Event) {
         this.#socketRetryBackoff = 0;
-        this.#send();
-
+        this.call(
+            AUTH_API_NAME,
+            {
+                client_id: #this.client_id,
+                // No token, because any value would have to come from the server,
+                // and therefore would be discoverable.
+                token: null,
+                version: AUTH_API_VERSION,
+            },
+            this.#authResult,
+            this.#authError,
+        )
+        this.#sendOne(this.#unsentCalls.pop());
     };
 
     #socketOpen() {
@@ -192,19 +228,7 @@ export class APIService {
             s.onerror = this.#socketOnError;
             s.onmessage = this.#socketOnMessage;
             s.onopen = this.#socketOnOpen;
-            this.#socketAuthOK = false;
-            this.call(
-                AUTH_API_NAME,
-                {
-                    client_id: #this.client_id,
-                    // No token, because any value would have to come from the server,
-                    // and therefore would be discoverable.
-                    token: null,
-                    version: AUTH_API_VERSION,
-                },
-                this.#authResult,
-                this.#authError,
-            )
+            this.#authOK = false;
             this.#socket = s;
         } catch (err) {
             this.#socketOnError(err);
