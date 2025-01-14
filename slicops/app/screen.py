@@ -206,6 +206,10 @@ class ScreenDevice:
                 #  for now, catch AttributeError: 'NoneType' object has no attribute 'reshape'
                 # TODO(pjm): could provide a better error message here
                 raise err
+            except ValueError as err:
+                # similar to the above, connection works but image IOC is misconfigured
+                # ex. cannot reshape array of size 0 into shape (1024,1024)
+                raise err
         return numpy.fromfile(
             pkresource.file_path(
                 _cfg.dev.dummy_camera.template.format(

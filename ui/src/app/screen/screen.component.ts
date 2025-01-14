@@ -119,7 +119,9 @@ export class ScreenComponent {
                     this.getImages();
                 });
             },
-            error: this.handleError,
+            error: (err) => {
+                this.handleError(err);
+            },
         });
     }
 
@@ -168,6 +170,9 @@ export class ScreenComponent {
     handleError(err: any) {
         if (this.errorMessage === undefined) {
             throw new Error(`Invalid this in handleError: ${this}`);
+        }
+        if (err && err.target instanceof WebSocket) {
+            err = "WebSocket connection to server failed";
         }
         this.errorMessage = err;
     }
