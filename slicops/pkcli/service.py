@@ -18,15 +18,10 @@ class Commands(slicops.pkcli.CommandsBase):
 
         """
         from pykern import http
-        from slicops import config, ui_api, quest
+        from slicops import config, auth_api, ui_api, quest
 
         http.server_start(
             attr_classes=quest.attr_classes(),
-            api_classes=(ui_api.UIAPI,),
-            http_config=config.cfg()
-            .ui_api.copy()
-            .pkupdate(
-                # Turn off authentication and version checking
-                auth_secret=False,
-            ),
+            api_classes=(ui_api.UIAPI, auth_api.AuthAPI),
+            http_config=config.cfg().ui_api.copy(),
         )
