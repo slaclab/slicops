@@ -75,16 +75,11 @@ import { APIService } from '../api.service';
                 <option *ngFor="let cm of colorMaps" [value]="cm">{{ cm }}</option>
               </select>
             </div>
-            <div class="col-sm-3"></div>
-            <div class="col-sm-3" style="margin-top: 24px">
-              <button class="btn btn-outline-dark" type="button">Select ROI</button>
-            </div>
           </div>
         </div>
       </form>
 
     </div>
-
   </div>
     `,
     styles: [],

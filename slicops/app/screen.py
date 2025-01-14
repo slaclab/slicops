@@ -5,17 +5,45 @@
 """
 
 from lcls_tools.common.controls.pyepics.utils import PV, PVInvalidError
-from lcls_tools.common.devices.reader import create_screen
 from pykern import pkconfig
 from pykern import pkresource
 from pykern.pkcollections import PKDict
 from pykern.pkdebug import pkdc, pkdlog, pkdp
 import lcls_tools.common.data.fitting_tool
+import lcls_tools.common.devices.reader
 import math
 import numpy
 import random
 
 _cfg = None
+
+#TODO(pjm): needed to monkey path reader._device data to add a dev camera
+_old_device_data = lcls_tools.common.devices.reader._device_data
+
+
+def _monkey_patch_device_data(area=None, device_type=None, name=None):
+    res = _old_device_data(area, device_type, name)
+    res["screens"][_cfg.dev.camera_name] = {
+        "controls_information": {
+            "PVs": {
+                "image": "13SIM1:image1:ArrayData",
+                "n_col": "13SIM1:cam1:ArraySizeX_RBV",
+                "n_row": "13SIM1:cam1:ArraySizeY_RBV",
+                "n_bits": "13SIM1:cam1:N_OF_BITS",
+                "resolution": "13SIM1:cam1:RESOLUTION",
+            },
+            "control_name": "13SIM1:cam1",
+        },
+        "metadata": {
+            "area": "GUNB",
+            "beam_path": ["SC_DIAG0", "SC_HXR", "SC_SXR"],
+            "sum_l_meters": 0.0,
+        },
+    }
+    return res
+
+
+lcls_tools.common.devices.reader._device_data = _monkey_patch_device_data
 
 
 def new_implementation(args):
@@ -55,7 +83,7 @@ class Screen(PKDict):
         return ScreenDevice().is_acquiring_images()
 
     def default_instance(self):
-        # TODO(pjm): dummy data
+        # TODO(pjm): need data store
         return PKDict(
             screen=PKDict(
                 beam_path="SC_HXR",
@@ -74,7 +102,7 @@ class Screen(PKDict):
         return PKDict(
             constants=PKDict(
                 BeamPath=[
-                    # TODO(pjm): dummy data, should be generated from yaml or csv sources
+                    # TODO(pjm): should be generated from yaml or csv sources
                     PKDict(
                         name="CU_HXR",
                         screens=[
@@ -180,59 +208,40 @@ class Screen(PKDict):
 
 
 class ScreenDevice:
-    """Screen device interaction. All EPICS access occurs at this level.
-    Includes a dummy camera implementation if EPICS access is not enabled.
-    """
+    """Screen device interaction. All EPICS access occurs at this level."""
 
     def __init__(self):
-        self.screen = None
-        if _cfg.dev.use_epics:
-            self.screen = create_screen(_cfg.dev.beam_path).screens[
-                _cfg.dev.camera_name
-            ]
+        self.screen = lcls_tools.common.devices.reader.create_screen(
+            _cfg.dev.beam_path
+        ).screens[_cfg.dev.camera_name]
 
     def get_image(self):
-        """Gets raw pixels from EPICS or from the configured dummmy camera."""
-        raw_pixels = None
-        if self.screen:
-            try:
-                return self.screen.image
-            except PVInvalidError as err:
-                # TODO(pjm): could provide a better error message here
-                raise err
-            except AttributeError as err:
-                # most likely EPICS PV is unavailable due to timeout,
-                #  Screen.image should raise an exception if no connection is completed
-                #  for now, catch AttributeError: 'NoneType' object has no attribute 'reshape'
-                # TODO(pjm): could provide a better error message here
-                raise err
-            except ValueError as err:
-                # similar to the above, connection works but image IOC is misconfigured
-                # ex. cannot reshape array of size 0 into shape (1024,1024)
-                raise err
-        return numpy.fromfile(
-            pkresource.file_path(
-                _cfg.dev.dummy_camera.template.format(
-                    math.floor(random.random() * _cfg.dev.dummy_camera.count + 1),
-                    1,
-                )
-            ),
-            dtype=(
-                numpy.uint8 if _cfg.dev.dummy_camera.dtype == "uint8" else numpy.uint16
-            ),
-        ).reshape(
-            _cfg.dev.dummy_camera.dimensions,
-        )
+        """Gets raw pixels from EPICS"""
+        try:
+            # TODO(pjm): the row/columns is reversed in lcls_tools
+            #  possibly this needs to be a flag in the camera meta data
+            return self.screen.image.reshape(self.screen.n_rows, self.screen.n_columns)
+        except PVInvalidError as err:
+            # TODO(pjm): could provide a better error message here
+            raise err
+        except AttributeError as err:
+            # most likely EPICS PV is unavailable due to timeout,
+            #  Screen.image should raise an exception if no connection is completed
+            #  for now, catch AttributeError: 'NoneType' object has no attribute 'reshape'
+            # TODO(pjm): could provide a better error message here
+            raise err
+        except ValueError as err:
+            # similar to the above, connection works but image IOC is misconfigured
+            # ex. cannot reshape array of size 0 into shape (1024,1024)
+            raise err
 
     def is_acquiring_images(self):
         """Returns True if the camera's EPICS value indicates it is capturing images."""
-        if self.screen:
-            try:
-                return PKDict(is_acquiring_images=bool(self._acquire_pv()[0].get()))
-            except PVInvalidError as err:
-                # does not return an error, the initial camera may not be available
-                return PKDict(is_acquiring_images=False)
-        return PKDict(is_acquiring_images=True)
+        try:
+            return PKDict(is_acquiring_images=bool(self._acquire_pv()[0].get()))
+        except PVInvalidError as err:
+            # does not return an error, the initial camera may not be available
+            return PKDict(is_acquiring_images=False)
 
     def start(self):
         """Set the EPICS camera to acquire mode."""
@@ -247,32 +256,20 @@ class ScreenDevice:
         return (PV(n), n)
 
     def _set_acquire(self, is_on):
-        if self.screen:
-            try:
-                pv, n = self._acquire_pv()
-                pv.put(is_on)
-                if not pv.connected:
-                    raise PVInvalidError(f"Unable to connect to PV: {n}")
-            except PVInvalidError as err:
-                # TODO(pjm): could provide a better error message here
-                raise err
+        try:
+            pv, n = self._acquire_pv()
+            pv.put(is_on)
+            if not pv.connected:
+                raise PVInvalidError(f"Unable to connect to PV: {n}")
+        except PVInvalidError as err:
+            # TODO(pjm): could provide a better error message here
+            raise err
         return PKDict()
 
 
 _cfg = pkconfig.init(
     dev=PKDict(
-        dummy_camera=dict(
-            template=("screen/image-640x480-8bit-{:02d}.bin", str, "image filename"),
-            count=(12, int, "number of image files"),
-            dtype=("uint8", str, "image data type"),
-            dimensions=((480, 640), tuple, "image dimensions"),
-            # template=("screen/image2-1292x964-16bit-{:02d}.bin", str, "image filename"),
-            # count=(1, int, "number of image files"),
-            # dtype=("uint16", str, "image data type"),
-            # dimensions=((964, 1292), tuple, "image dimensions"),
-        ),
         beam_path=("VCC", str, "dev beampath name"),
-        camera_name=("PJMDEV", str, "dev camera name"),
-        use_epics=(False, bool, "Enable EPICS access"),
+        camera_name=("DEV_CAMERA", str, "dev camera name"),
     ),
 )
