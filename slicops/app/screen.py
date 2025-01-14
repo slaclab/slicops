@@ -17,7 +17,7 @@ import random
 
 _cfg = None
 
-#TODO(pjm): needed to monkey path reader._device data to add a dev camera
+# TODO(pjm): needed to monkey path reader._device data to add a dev camera
 _old_device_data = lcls_tools.common.devices.reader._device_data
 
 
