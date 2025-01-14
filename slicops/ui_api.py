@@ -43,5 +43,5 @@ class UIAPI(slicops.quest.API):
         a = self._app_implementation(api_args)
         return PKDict(
             schema=a.schema(),
-            instance=a.default_instance(),
+            model=a.default_model(),
         )

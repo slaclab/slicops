@@ -110,56 +110,22 @@ export class ScreenComponent {
                 this.beamPaths = result.schema.constants.BeamPath.map((b: any) => b.name);
                 this.methods = result.schema.constants.CurveFitMethod;
                 this.colorMaps = result.schema.constants.ColorMap;
-                this.isAcquiringImages(() => {
+                this.isAcquiring = result.model.screen.is_acquiring_images;
+                if (this.isAcquiring) {
                     this.getImages();
-                });
-            },
-            error: (err) => {
-                this.handleError(err);
-            },
-        });
-    }
-
-    getImage(callback: Function | null) {
-        this.apiService.call('action', {
-            app_name: this.APP_NAME,
-            method: 'get_image',
-            curve_fit: this.curveFit,
-        }).subscribe({
-            next: (result) => {
-                this.image = result;
-                if (callback) {
-                    callback();
                 }
             },
             error: (err) => {
-                this.image = null;
                 this.handleError(err);
             },
         });
-    }
-
-    getImages() {
-        let ready = true;
-        this.interval = setInterval(() => {
-            if (ready) {
-                ready = false;
-                this.getImage(() => {
-                    ready = true;
-                });
-            }
-        }, 1000);
     }
 
     getSingleImage() {
         if (this.isAcquiring) {
             return;
         }
-        this.acquireImages('start_button', () => {
-            this.getImage(() => {
-                this.stopAcquiringImages();
-            });
-        });
+        this.acquireImages('single_button');
     }
 
     handleError(err: any) {
@@ -172,34 +138,13 @@ export class ScreenComponent {
         this.errorMessage = err;
     }
 
-    isAcquiringImages(callback: Function) {
-        //TODO(pjm): consolidate calling method w/errorMessage handling
-        this.errorMessage = "";
-        this.apiService.call('action', {
-            app_name: this.APP_NAME,
-            method: 'is_acquiring_images',
-        }).subscribe({
-            next: (result) => {
-                this.isAcquiring = result.is_acquiring_images;
-                if (result.is_acquiring_images) {
-                    callback();
-                }
-            },
-            error: (err) => {
-                this.handleError(err);
-            },
-        });
-    }
-
     selectCurveFit(event: any) {
         this.curveFit = event.target.value;
     }
 
     startAcquiringImages() {
-        this.acquireImages('start_button', () => {
-            this.isAcquiring = true;
-            this.getImages();
-        });
+        this.isAcquiring = true;
+        this.acquireImages('start_button');
     }
 
     stopAcquiringImages() {
@@ -208,23 +153,56 @@ export class ScreenComponent {
             this.interval = null;
         }
         this.isAcquiring = false;
-        this.acquireImages('stop_button', null);
+        this.acquireImages('stop_button');
     }
 
-    private acquireImages(button: string, callback: Function | null) {
+    private acquireImages(button: string) {
         this.errorMessage = "";
         this.apiService.call('action', {
             app_name: this.APP_NAME,
             method: button,
+            curve_fit: this.curveFit,
         }).subscribe({
             next: (result) => {
-                if (callback) {
-                    callback();
+                if (result.image) {
+                    this.image = result.image;
+                    if (button == 'start_button') {
+                        this.getImages();
+                    }
                 }
             },
             error: (err) => {
                 this.handleError(err);
             },
         });
+    }
+
+    private getImage(callback: Function) {
+        this.apiService.call('action', {
+            app_name: this.APP_NAME,
+            method: 'get_image',
+            curve_fit: this.curveFit,
+        }).subscribe({
+            next: (result) => {
+                this.image = result.image;
+                callback();
+            },
+            error: (err) => {
+                this.image = null;
+                this.handleError(err);
+            },
+        });
+    }
+
+    private getImages() {
+        let ready = true;
+        this.interval = setInterval(() => {
+            if (ready) {
+                ready = false;
+                this.getImage(() => {
+                    ready = true;
+                });
+            }
+        }, 1000);
     }
 }

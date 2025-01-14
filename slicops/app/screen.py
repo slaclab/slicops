@@ -57,7 +57,15 @@ class Screen(PKDict):
         super().__init__(**kwargs)
 
     def action_start_button(self):
-        return ScreenDevice().start()
+        """Starts image acquisition and returns an image"""
+        ScreenDevice().start()
+        return self.action_get_image()
+
+    def action_single_button(self):
+        """Acquires a single image and then stops acquisition"""
+        res = self.action_start_button()
+        ScreenDevice().stop()
+        return res
 
     def action_stop_button(self):
         return ScreenDevice().stop()
@@ -66,23 +74,21 @@ class Screen(PKDict):
         raw_pixels = ScreenDevice().get_image()
         x = raw_pixels.sum(axis=0)
         y = raw_pixels.sum(axis=1)
+        # TODO(pjm): return structure x and y with values, compute in loop
         yfit = self._fit(y[::-1], self.api_args.curve_fit)
         xfit = self._fit(x, self.api_args.curve_fit)
         return PKDict(
-            # TODO(pjm): output handler should support ndarray, avoiding tolist()
-            raw_pixels=raw_pixels.tolist(),
-            x_lineout=x.tolist(),
-            y_lineout=y[::-1].tolist(),
-            # x_fit=xfit.tolist(),
-            # y_fit=yfit[::-1].tolist(),
-            x_fit=xfit,
-            y_fit=yfit,
+            image=PKDict(
+                # TODO(pjm): output handler should support ndarray, avoiding tolist()
+                raw_pixels=raw_pixels.tolist(),
+                x_lineout=x.tolist(),
+                y_lineout=y[::-1].tolist(),
+                x_fit=xfit,
+                y_fit=yfit,
+            ),
         )
 
-    def action_is_acquiring_images(self):
-        return ScreenDevice().is_acquiring_images()
-
-    def default_instance(self):
+    def default_model(self):
         # TODO(pjm): need data store
         return PKDict(
             screen=PKDict(
@@ -94,6 +100,8 @@ class Screen(PKDict):
                 acquire_button=None,
                 stop_button=None,
                 single_button=None,
+                # TODO(pjm): this is a potentially very slow operation if the default camera is unavailable
+                is_acquiring_images=ScreenDevice().is_acquiring_images(),
             ),
         )
 
@@ -193,6 +201,9 @@ class Screen(PKDict):
         }
         try:
             r = ft.get_fit()
+            # TODO(pjm): FittingTool returns initial params on failure
+            if r[method]["params"] == ft.initial_params[method]["params"]:
+                raise RuntimeError("Fit failed")
         except RuntimeError:
             return PKDict(
                 fit_line=numpy.zeros(len(line)).tolist(),
@@ -238,10 +249,10 @@ class ScreenDevice:
     def is_acquiring_images(self):
         """Returns True if the camera's EPICS value indicates it is capturing images."""
         try:
-            return PKDict(is_acquiring_images=bool(self._acquire_pv()[0].get()))
+            return bool(self._acquire_pv()[0].get())
         except PVInvalidError as err:
-            # does not return an error, the initial camera may not be available
-            return PKDict(is_acquiring_images=False)
+            # does not return an error, the initial camera may not be currently available
+            return False
 
     def start(self):
         """Set the EPICS camera to acquire mode."""
