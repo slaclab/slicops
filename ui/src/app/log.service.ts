@@ -4,31 +4,39 @@
 // http://github.com/slaclab/slicops/LICENSE
 
 import { Injectable } from '@angular/core';
-@Injectable()
 
+@Injectable({
+    providedIn: 'root'
+})
 export class LogService {
     dbg(msg: any) {
-        _console(new Error(), msg);
+        this.#console(new Error(), msg);
     }
 
-    warn(msg: any) {
-        _console(new Error(), msg);
+    error(msg: any) {
+        this.#console(new Error(), msg);
     }
 
-    _caller(stack: string) {
+    info(msg: any) {
+        this.#console(new Error(), msg);
+    }
+
+    #caller(stack: string) : string {
         if (! stack) {
             return "";
         }
         const l = stack.split(/\r?\n/);
         if (l[0] == 'Error') {
-            return l[1];
+            return l[2];
         }
-        return l[0];
+        return l[1];
     }
 
-    _console(error: Error, msg: any) : string {
-        (new Date().toISOString()).substring(11, 19),
-        msg,
-        _caller(error.stack),
+    #console(error: Error, msg: any) {
+        console.log(
+            (new Date().toISOString()).substring(11, 19),
+            msg,
+            this.#caller(error.stack || ""),
+        );
     }
 }
