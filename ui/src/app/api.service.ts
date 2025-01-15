@@ -70,12 +70,9 @@ export class APIService {
     #socket: WebSocket | null = null;
     #socketRetryBackoff: number = 0;
     #unsentCalls: Array<Call> = new Array<Call>;
-    #log: LogService;
 
-
-    constructor(private logService: LogService) {
-        this.#log = logService;
-        this.#log.info('create websocket');
+    constructor(private log: LogService) {
+        this.log.info('create websocket');
         this.#socketOpen();
     }
 
@@ -88,7 +85,7 @@ export class APIService {
     }
 
     ngOnDestroy() {
-        this.#log.info('destroy websocket');
+        this.log.info('destroy websocket');
         if (this.#socket) {
             this.#socket.close();
             this.#socket = null;
@@ -133,7 +130,7 @@ export class APIService {
         if (call) {
             m.push(call.call_id, call.api_name);
         }
-        this.#log.error(m);
+        this.log.error(m);
     }
 
     #findCall(calls: Map<number, Call>, call_id: number) : Call | null {
@@ -163,7 +160,7 @@ export class APIService {
         if (call.destroyed || ! this.#socket) {
             return;
         }
-        this.#log.dbg(['call', call.call_id, call.api_name]);
+        this.log.dbg(['call', call.call_id, call.api_name]);
         this.#pendingCalls.set(call.call_id, call);
         this.#socket.send(call.msg);
     }
@@ -187,7 +184,7 @@ export class APIService {
         const m = decode(msg) as ReplyMsg;
         const c = this.#findCall(this.#pendingCalls, m.call_id);
         if (! c) {
-            this.#log.error(['call not found, ignoring', m.call_id])
+            this.log.error(['call not found, ignoring', m.call_id])
             return;
         }
         if (m.api_error) {
@@ -195,13 +192,13 @@ export class APIService {
                 c.apiErrorHandler(m.api_error);
             }
             else {
-                this.#log.dbg(['api_error calling errorHandler', m.api_error, c.api_name, c.call_id]);
+                this.log.dbg(['api_error calling errorHandler', m.api_error, c.api_name, c.call_id]);
                 this.#errorHandler(m.api_error, c);
             }
             c.destroy();
         }
         else {
-            this.#log.dbg(['api_result', m.api_result, c.api_name, c.call_id]);
+            this.log.dbg(['api_result', m.api_result, c.api_name, c.call_id]);
             c.handleResult(m.api_result);
         }
     };
@@ -231,14 +228,14 @@ export class APIService {
     #socketOpen() {
         try {
             const s = new WebSocket('/api-v1')
-            s.onclose = (event) => {this.#socketOnError(event)};
+            s.onclose = this.#socketOnError.bind(this);
             s.onerror = this.#socketOnError.bind(this);
             s.onmessage = (event) => {
                 this.#socketOnMessage.bind(this);
                 event.data.arrayBuffer().then(
-                    (blob: any) => {this.#socketOnMessage(blob)},
+                    this.#socketOnMessage.bind(this),
                     (error: Event) => {
-                        this.#log.error(['arrayBuffer decode error', error, event.data]);
+                        this.log.error(['arrayBuffer decode error', error, event.data]);
                         this.#socketOnError(event);
                     },
                 );

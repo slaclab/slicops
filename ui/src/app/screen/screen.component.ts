@@ -8,6 +8,7 @@ import { AppDataService } from '../app-data.service';
 import { FormGroup, FormControl, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { APIService } from '../api.service';
+import { LogService } from '../log.service';
 
 @Component({
     selector: 'app-screen',
@@ -131,24 +132,22 @@ export class ScreenComponent {
         8, 9, 10, 11, 12, 13, 14, 15, 16,
     ];
 
-    constructor(dataService: AppDataService, private apiService: APIService) {
+    constructor(dataService: AppDataService, private apiService: APIService, private log: LogService) {
         console.log("constructor ScreenComponent");
         this.heatmapData = dataService.heatmapData;
         this.apiService = apiService;
     }
 
     echoCall() {
-        console.log("echoCall");
-        this.apiService.call('echo', 'hello').subscribe({
-            next: (result) => {
+        this.log.dbg("echoCall");
+        this.apiService.call(
+            'echo',
+            'hello',
+            (result) => {
                 this.echoReply = result;
-                console.log('reply', result);
+                this.log.dbg(['reply', result]);
             },
-            error: (err) => {
-                this.echoReply = "error=" + err;
-                console.log('error', err);
-            },
-        });
+        );
     }
 
     toggleStats() {

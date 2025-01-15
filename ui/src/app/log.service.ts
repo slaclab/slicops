@@ -25,18 +25,26 @@ export class LogService {
         if (! stack) {
             return "";
         }
-        const l = stack.split(/\r?\n/);
-        if (l[0] == 'Error') {
-            return l[2];
-        }
-        return l[1];
+        const s = stack.split(/\r?\n/);
+        const l = s[0] == 'Error' ? s[2] : s[1];
+        const m = l.match(/^\s*at\s*(\S+)/);
+        return m ? m[1] + '()' : l;
     }
 
     #console(error: Error, msg: any) {
-        console.log(
-            (new Date().toISOString()).substring(11, 19),
-            msg,
-            this.#caller(error.stack || ""),
-        );
+        if (msg instanceof Array && msg.length < 10) {
+            console.log(
+                (new Date().toISOString()).substring(11, 19),
+                ...msg,
+                this.#caller(error.stack || ""),
+            );
+        }
+        else {
+            console.log(
+                (new Date().toISOString()).substring(11, 19),
+                msg,
+                this.#caller(error.stack || ""),
+            );
+        }
     }
 }
