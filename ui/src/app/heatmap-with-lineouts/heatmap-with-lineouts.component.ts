@@ -14,7 +14,7 @@ import * as d3 from 'd3';
 
 class SVG {
     static clipPathId(width: number, height: number): string {
-        return `sr-clippath-${width}-${height}`;
+        return `slicops-clippath-${width}-${height}`;
     }
 
     static clipPathURL(width: number, height: number): string {
@@ -52,7 +52,7 @@ class SVG {
       'top.px': canvasHeight / 2,
       'width.px': canvasHeight,
     }">
-      <div class="sr-y-axis-label text-center">{{ yLabel }}</div>
+      <div class="slicops-y-axis-label text-center">{{ yLabel }}</div>
     </div>
   </div>
   <svg
@@ -60,49 +60,49 @@ class SVG {
     [attr.height]="margin.top + canvasHeight + lineoutSize + margin.bottom"
   >
     <g [attr.transform]="SVG.translate(margin.left, margin.top)">
-      <g class="sr-y-overlay" [attr.transform]="SVG.translate(canvasWidth + lineoutPad, 0)">
+      <g class="slicops-y-overlay" [attr.transform]="SVG.translate(canvasWidth + lineoutPad, 0)">
         <defs>
           <clipPath [attr.id]="SVG.clipPathId(lineoutSize, canvasHeight)">
             <rect [attr.width]="lineoutSize" [attr.height]="canvasHeight"></rect>
           </clipPath>
         </defs>
         <g [attr.clip-path]="SVG.clipPathURL(lineoutSize, canvasHeight)">
-          <path class="sr-y-path"></path>
-          <path class="sr-y-fit-path"></path>
+          <path class="slicops-y-path"></path>
+          <path class="slicops-y-fit-path"></path>
         </g>
       </g>
-      <g [attr.transform]="SVG.translate(0, canvasHeight + lineoutPad)" class="sr-x-overlay">
+      <g [attr.transform]="SVG.translate(0, canvasHeight + lineoutPad)" class="slicops-x-overlay">
         <defs>
           <clipPath [attr.id]="SVG.clipPathId(canvasWidth, lineoutSize)">
             <rect [attr.width]="canvasWidth" [attr.height]="lineoutSize"></rect>
           </clipPath>
         </defs>
         <g [attr.clip-path]="SVG.clipPathURL(canvasWidth, lineoutSize)">
-          <path class="sr-x-path"></path>
-          <path class="sr-x-fit-path"></path>
+          <path class="slicops-x-path"></path>
+          <path class="slicops-x-fit-path"></path>
         </g>
       </g>
-      <g class="sr-x-axis" [attr.transform]="SVG.translate(0, canvasHeight + lineoutSize)"></g>
-      <g class="sr-x-axis-grid" [attr.transform]="SVG.translate(0, canvasHeight + lineoutSize)"></g>
+      <g class="slicops-x-axis" [attr.transform]="SVG.translate(0, canvasHeight + lineoutSize)"></g>
+      <g class="slicops-x-axis-grid" [attr.transform]="SVG.translate(0, canvasHeight + lineoutSize)"></g>
       <g [attr.transform]="SVG.translate(canvasWidth + lineoutSize, 0)">
-        <g class="sr-y-axis"></g>
-        <g class="sr-y-axis-grid"></g>
+        <g class="slicops-y-axis"></g>
+        <g class="slicops-y-axis-grid"></g>
       </g>
       <g [attr.transform]="SVG.translate(canvasWidth + lineoutPad, canvasHeight)">
-        <g class="sr-yx-axis"></g>
+        <g class="slicops-yx-axis"></g>
       </g>
       <g [attr.transform]="SVG.translate(0, canvasHeight + lineoutPad)">
-        <g class="sr-xy-axis"></g>
+        <g class="slicops-xy-axis"></g>
       </g>
-      <rect class="sr-mouse-rect-xy sr-mouse-zoom" [attr.width]="canvasWidth"
+      <rect class="slicops-mouse-rect-xy slicops-mouse-zoom" [attr.width]="canvasWidth"
         [attr.height]="canvasHeight"></rect>
-      <rect class="sr-mouse-rect-y sr-mouse-zoom" [attr.x]="canvasWidth" [attr.width]="lineoutSize"
+      <rect class="slicops-mouse-rect-y slicops-mouse-zoom" [attr.x]="canvasWidth" [attr.width]="lineoutSize"
         [attr.height]="canvasHeight"></rect>
-      <rect class="sr-mouse-rect-x sr-mouse-zoom" [attr.y]="canvasHeight"
+      <rect class="slicops-mouse-rect-x slicops-mouse-zoom" [attr.y]="canvasHeight"
         [attr.width]="canvasWidth" [attr.height]="lineoutSize"></rect>
     </g>
   </svg>
-  <div class="sr-x-axis-label text-center" [ngStyle]="{
+  <div class="slicops-x-axis-label text-center" [ngStyle]="{
     'width.px': canvasWidth,
     'marginLeft.px': margin.left
   }">{{ xLabel }}</div>
@@ -110,12 +110,12 @@ class SVG {
     `,
     styles: [
         `
-.sr-x-path, .sr-y-path {
+.slicops-x-path, .slicops-y-path {
     fill: none;
     stroke: #1f77b4;
     stroke-width: 2;
 }
-.sr-x-fit-path, .sr-y-fit-path {
+.slicops-x-fit-path, .slicops-y-fit-path {
     fill: none;
     stroke-dasharray: 5 3;
     stroke: #ff7f0e;
@@ -192,23 +192,23 @@ export class HeatmapWithLineoutsComponent {
         const k = t.k / this.prevXYZoom.k;
         if (k === 1) {
             // pan
-            this.select('.sr-mouse-rect-x').call(
+            this.select('.slicops-mouse-rect-x').call(
                 this.xZoom.translateBy,
-                (t.x - this.prevXYZoom.x) / d3.zoomTransform(this.select('.sr-mouse-rect-x').node()).k,
+                (t.x - this.prevXYZoom.x) / d3.zoomTransform(this.select('.slicops-mouse-rect-x').node()).k,
                 0,
             );
             //TODO(pjm): consolidate this with above
-            this.select('.sr-mouse-rect-y').call(
+            this.select('.slicops-mouse-rect-y').call(
                 this.yZoom.translateBy,
                 0,
-                (t.y - this.prevXYZoom.y) / d3.zoomTransform(this.select('.sr-mouse-rect-y').node()).k,
+                (t.y - this.prevXYZoom.y) / d3.zoomTransform(this.select('.slicops-mouse-rect-y').node()).k,
             );
         }
         else {
             // zoom
-            const p = this.center(event, this.select('.sr-mouse-rect-xy').node());
-            this.select('.sr-mouse-rect-x').call(this.xZoom.scaleBy, k, p);
-            this.select('.sr-mouse-rect-y').call(this.yZoom.scaleBy, k, p);
+            const p = this.center(event, this.select('.slicops-mouse-rect-xy').node());
+            this.select('.slicops-mouse-rect-x').call(this.xZoom.scaleBy, k, p);
+            this.select('.slicops-mouse-rect-y').call(this.yZoom.scaleBy, k, p);
         }
         this.prevXYZoom = t;
         this.refresh();
@@ -262,11 +262,11 @@ export class HeatmapWithLineoutsComponent {
         });
 
         this.xZoom = d3.zoom().on('zoom', (event) => { this.handleZoomX(event.transform) });
-        this.select('.sr-mouse-rect-x').call(this.xZoom);
+        this.select('.slicops-mouse-rect-x').call(this.xZoom);
         this.yZoom = d3.zoom().on('zoom', (event) => { this.handleZoomY(event.transform) });
-        this.select('.sr-mouse-rect-y').call(this.yZoom);
+        this.select('.slicops-mouse-rect-y').call(this.yZoom);
         this.xyZoom = d3.zoom().on('zoom', (event) => { this.handleZoom(event) });
-        this.select('.sr-mouse-rect-xy').call(this.xyZoom);
+        this.select('.slicops-mouse-rect-xy').call(this.xyZoom);
 
         this.xScale.domain(this.axisDomain('x'));
         this.yScale.domain(this.axisDomain('y'));
@@ -305,19 +305,19 @@ export class HeatmapWithLineoutsComponent {
             || (prevSize[1] && prevSize[1] != this.canvasHeight)
         ) {
             //TODO(pjm): see if this is update-able via a call()
-            let t = d3.zoomTransform(this.select('.sr-mouse-rect-x').node());
+            let t = d3.zoomTransform(this.select('.slicops-mouse-rect-x').node());
             (t.x as any) *= this.canvasWidth / prevSize[0];
-            t = d3.zoomTransform(this.select('.sr-mouse-rect-y').node());
+            t = d3.zoomTransform(this.select('.slicops-mouse-rect-y').node());
             (t.y as any) *= this.canvasHeight / prevSize[1];
         }
 
         //TODO(pjm): could keep axis as instance variable
-        this.select('.sr-x-axis').call(d3.axisBottom(this.xZoomScale).ticks(5));
-        this.select('.sr-x-axis-grid').call(d3.axisBottom(this.xZoomScale).ticks(5).tickSize(-(this.canvasHeight + this.lineoutSize)));
+        this.select('.slicops-x-axis').call(d3.axisBottom(this.xZoomScale).ticks(5));
+        this.select('.slicops-x-axis-grid').call(d3.axisBottom(this.xZoomScale).ticks(5).tickSize(-(this.canvasHeight + this.lineoutSize)));
         this.yScale.range([this.canvasHeight, 0]);
         this.yZoomScale.range([this.canvasHeight, 0]);
-        this.select('.sr-y-axis').call(d3.axisRight(this.yZoomScale).ticks(5));
-        this.select('.sr-y-axis-grid').call(d3.axisRight(this.yZoomScale).ticks(5).tickSize(-(this.canvasWidth + this.lineoutSize)));
+        this.select('.slicops-y-axis').call(d3.axisRight(this.yZoomScale).ticks(5));
+        this.select('.slicops-y-axis-grid').call(d3.axisRight(this.yZoomScale).ticks(5).tickSize(-(this.canvasWidth + this.lineoutSize)));
 
         const xLineout = this.data.x.lineout as number[];
         const yLineout = this.data.y.lineout as number[];
@@ -331,7 +331,7 @@ export class HeatmapWithLineoutsComponent {
                 ),
             ])
             .range([this.lineoutSize - this.lineoutPad, 0]);
-        this.select('.sr-yx-axis').call(d3.axisBottom(this.yxScale).ticks(3).tickFormat(d3.format('.1e')));
+        this.select('.slicops-yx-axis').call(d3.axisBottom(this.yxScale).ticks(3).tickFormat(d3.format('.1e')));
 
         this.xyScale
             .domain([
@@ -342,7 +342,7 @@ export class HeatmapWithLineoutsComponent {
                 ),
             ])
             .range([this.lineoutSize - this.lineoutPad, 0]);
-        this.select('.sr-xy-axis').call(d3.axisLeft(this.xyScale).ticks(5).tickFormat(d3.format('.1e')));
+        this.select('.slicops-xy-axis').call(d3.axisLeft(this.xyScale).ticks(5).tickFormat(d3.format('.1e')));
 
 
         const xd = this.axisDomain('x');
@@ -363,8 +363,8 @@ export class HeatmapWithLineoutsComponent {
         const xline = d3.line()
               .x((d) => this.xZoomScale(d[0] + xoff))
               .y((d) => this.xyScale(d[1]));
-        this.select('.sr-x-overlay path.sr-x-path').datum(xdata).attr('d', xline);
-        this.select('.sr-x-overlay path.sr-x-fit-path').datum(xdata2).attr('d', xline);
+        this.select('.slicops-x-overlay path.slicops-x-path').datum(xdata).attr('d', xline);
+        this.select('.slicops-x-overlay path.slicops-x-fit-path').datum(xdata2).attr('d', xline);
 
         //TODO(pjm): consolidate with x above
         const yd = this.axisDomain('y');
@@ -384,8 +384,8 @@ export class HeatmapWithLineoutsComponent {
         const yline = d3.line()
               .x((d) => this.yxScale(d[1]))
               .y((d) => this.yZoomScale(d[0] + yoff));
-        this.select('.sr-y-overlay path.sr-y-path').datum(ydata).attr('d', yline);
-        this.select('.sr-y-overlay path.sr-y-fit-path').datum(ydata2).attr('d', yline);
+        this.select('.slicops-y-overlay path.slicops-y-path').datum(ydata).attr('d', yline);
+        this.select('.slicops-y-overlay path.slicops-y-fit-path').datum(ydata2).attr('d', yline);
 
         const xZoomDomain = this.xZoomScale.domain();
         const xDomain = this.xScale.domain();

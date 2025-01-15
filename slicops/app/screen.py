@@ -72,6 +72,7 @@ class Screen(PKDict):
     def action_start_button(self):
         """Starts image acquisition and returns an image"""
         ScreenDevice().start()
+        # TODO(pjm): need a retry with timeout here if first acquiring and no image is available yet
         return self.action_get_image()
 
     def action_single_button(self):
@@ -141,7 +142,9 @@ class ScreenDevice:
 
     def __init__(self):
         self.screen = lcls_tools.common.devices.reader.create_screen(
-            slicops.app.screen_schema.get_camera_area(_cfg.dev.beam_path, _cfg.dev.camera_name),
+            slicops.app.screen_schema.get_camera_area(
+                _cfg.dev.beam_path, _cfg.dev.camera_name
+            ),
         ).screens[_cfg.dev.camera_name]
 
     def get_image(self):
