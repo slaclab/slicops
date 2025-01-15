@@ -6,14 +6,13 @@
 
 from lcls_tools.common.controls.pyepics.utils import PV, PVInvalidError
 from pykern import pkconfig
-from pykern import pkresource
 from pykern.pkcollections import PKDict
 from pykern.pkdebug import pkdc, pkdlog, pkdp
 import lcls_tools.common.data.fitting_tool
 import lcls_tools.common.devices.reader
-import math
 import numpy
 import random
+import slicops.app.screen_schema
 
 _cfg = None
 
@@ -56,6 +55,20 @@ class Screen(PKDict):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
+    def action_get_image(self):
+        """Returns an image and x/y profiles with computed fitting"""
+        raw_pixels = ScreenDevice().get_image()
+        return PKDict(
+            image=PKDict(
+                # TODO(pjm): output handler should support ndarray, avoiding tolist()
+                raw_pixels=raw_pixels.tolist(),
+                x=self._fit_profile(raw_pixels.sum(axis=0), self.api_args.curve_fit),
+                y=self._fit_profile(
+                    raw_pixels.sum(axis=1)[::-1], self.api_args.curve_fit
+                ),
+            ),
+        )
+
     def action_start_button(self):
         """Starts image acquisition and returns an image"""
         ScreenDevice().start()
@@ -70,32 +83,17 @@ class Screen(PKDict):
     def action_stop_button(self):
         return ScreenDevice().stop()
 
-    def action_get_image(self):
-        raw_pixels = ScreenDevice().get_image()
-        x = raw_pixels.sum(axis=0)
-        y = raw_pixels.sum(axis=1)
-        # TODO(pjm): return structure x and y with values, compute in loop
-        yfit = self._fit(y[::-1], self.api_args.curve_fit)
-        xfit = self._fit(x, self.api_args.curve_fit)
-        return PKDict(
-            image=PKDict(
-                # TODO(pjm): output handler should support ndarray, avoiding tolist()
-                raw_pixels=raw_pixels.tolist(),
-                x_lineout=x.tolist(),
-                y_lineout=y[::-1].tolist(),
-                x_fit=xfit,
-                y_fit=yfit,
-            ),
-        )
-
     def default_model(self):
         # TODO(pjm): need data store
         return PKDict(
             screen=PKDict(
-                beam_path="SC_HXR",
-                camera="VCCB",
-                pv="CAMR:LGUN:950",
+                beam_path=_cfg.dev.beam_path,
+                camera=_cfg.dev.camera_name,
+                pv=slicops.app.screen_schema.get_camera_pv(
+                    _cfg.dev.beam_path, _cfg.dev.camera_name
+                ),
                 curve_fit_method="gaussian",
+                color_map="Inferno",
                 camera_image=None,
                 acquire_button=None,
                 stop_button=None,
@@ -106,96 +104,13 @@ class Screen(PKDict):
         )
 
     def schema(self):
-        # TODO(pjm): schema could be pulled from a file
-        return PKDict(
-            constants=PKDict(
-                BeamPath=[
-                    # TODO(pjm): should be generated from yaml or csv sources
-                    PKDict(
-                        name="CU_HXR",
-                        screens=[
-                            ["OTR11", "OTRS:LI21:237"],
-                            ["OTR12", "OTRS:LI21:291"],
-                            ["OTR2", "OTRS:IN20:571"],
-                            ["OTR21", "OTRS:LI24:807"],
-                            ["OTR3", "OTRS:IN20:621"],
-                            ["OTR30", "OTRS:LTU1:449"],
-                            ["OTR33", "OTRS:LTUH:745"],
-                            ["OTR4", "OTRS:IN20:711"],
-                            ["OTRDMP", "OTRS:DMPH:695"],
-                            ["OTRH1", "OTRS:IN20:465"],
-                            ["OTRH2", "OTRS:IN20:471"],
-                            ["VCC", "CAMR:IN20:186"],
-                            ["YAG01", "YAGS:IN20:211"],
-                            ["YAG02", "YAGS:IN20:241"],
-                            ["YAG03", "YAGS:IN20:351"],
-                            ["YAGPSI", "YAGS:LTUH:743"],
-                        ],
-                    ),
-                    PKDict(
-                        name="SC_HXR",
-                        screens=[
-                            ["OTR11B", "PROF:BC1B:470"],
-                            ["OTR21B", "PROF:BC2B:545"],
-                            ["OTRC006", "PROF:COL0:535"],
-                            ["OTRDMP", "OTRS:DMPH:695"],
-                            ["OTRDOG", "PROF:DOG:195"],
-                            ["VCCB", "CAMR:LGUN:950"],
-                            ["YAGH1", "YAGS:HTR:625"],
-                            ["YAGH2", "YAGS:HTR:675"],
-                            ["YAGPSI", "YAGS:LTUH:743"],
-                        ],
-                    ),
-                ],
-                ColorMap=["Inferno", "Viridis"],
-                CurveFitMethod=[
-                    ["gaussian", "Gaussian"],
-                    ["super_gaussian", "Super Gaussian"],
-                    ["double_gaussian", "Double Gaussian"],
-                ],
-            ),
-            model=PKDict(
-                screen=PKDict(
-                    beam_path=["Beam Path", "BeamPath"],
-                    camera=["Camera", "Camera"],
-                    pv=["PV", "CameraPV"],
-                    curve_fit_method=["Curve Fit Method", "CurveFitMethod", "gaussian"],
-                    color_map=["Color Map", "ColorMap", "Inferno"],
-                    camera_image=["Camera Image", "CameraImage"],
-                    start_button=["Start", "StartButton"],
-                    stop_button=["Stop", "StopButton"],
-                    single_button=["Single", "SinglButton"],
-                ),
-            ),
-            view=PKDict(
-                screen=PKDict(
-                    fields=[
-                        [
-                            "beam_path",
-                            "camera",
-                            "pv",
-                            "start_button",
-                            "stop_button",
-                            "single_button",
-                        ],
-                        [
-                            "camera_image",
-                            "curve_fit_method",
-                            "color_map",
-                        ],
-                    ],
-                ),
-            ),
-        )
+        return slicops.app.screen_schema.SCHEMA
 
-    def _fit(self, line, method):
+    def _fit_profile(self, profile, method):
         """Use the lcls_tools FittingTool to match the selected method.
-        Valid methods are (gaussian, super_gaussian, double_gaussian).
+        Valid methods are (gaussian, super_gaussian).
         """
-        ft = lcls_tools.common.data.fitting_tool.FittingTool(line)
-        # TODO(pjm): need to pass hints to guesser (mu, nu), translated from domain units to pixels
-        if method == "double_gaussian":
-            ft.initial_params["double_gaussian"]["params"]["mu"] = 473
+        ft = lcls_tools.common.data.fitting_tool.FittingTool(profile)
         ft.initial_params = {
             method: ft.initial_params[method],
         }
@@ -206,15 +121,18 @@ class Screen(PKDict):
                 raise RuntimeError("Fit failed")
         except RuntimeError:
             return PKDict(
-                fit_line=numpy.zeros(len(line)).tolist(),
+                fit_line=numpy.zeros(len(profile)).tolist(),
                 results=PKDict(
                     error="Curve fit was unsuccessful",
                 ),
             )
         g = r[method]["params"]
         return PKDict(
-            fit_line=getattr(ft, method)(x=ft.x, **g).tolist(),
-            results=g,
+            lineout=profile.tolist(),
+            fit=PKDict(
+                fit_line=getattr(ft, method)(x=ft.x, **g).tolist(),
+                results=g,
+            ),
         )
 
 
@@ -223,7 +141,7 @@ class ScreenDevice:
 
     def __init__(self):
         self.screen = lcls_tools.common.devices.reader.create_screen(
-            _cfg.dev.beam_path
+            slicops.app.screen_schema.get_camera_area(_cfg.dev.beam_path, _cfg.dev.camera_name),
         ).screens[_cfg.dev.camera_name]
 
     def get_image(self):
@@ -280,7 +198,7 @@ class ScreenDevice:
 
 _cfg = pkconfig.init(
     dev=PKDict(
-        beam_path=("VCC", str, "dev beampath name"),
+        beam_path=("SC_SXR", str, "dev beampath name"),
         camera_name=("DEV_CAMERA", str, "dev camera name"),
     ),
 )

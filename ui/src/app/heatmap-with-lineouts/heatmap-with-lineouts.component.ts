@@ -29,7 +29,6 @@ class SVG {
 @Component({
     selector: 'app-heatmap-with-lineouts',
     template: `
-<!--<h2 style="text-align: center">OTRS:LI21:291</h2> -->
 <figure #figure>
   <div [ngStyle]="{
     position: 'absolute',
@@ -137,6 +136,7 @@ export class HeatmapWithLineoutsComponent {
     //  colormap
 
     @Input() data: any = null;
+    @Input() colorMap: any = null;
     SVG = SVG;
 
     xScale = d3.scaleLinear();
@@ -151,7 +151,6 @@ export class HeatmapWithLineoutsComponent {
     yLabel = "y [mm]";
     yZoom: any;
     zoomOffsets: number[] = [];
-    colorMap = "interpolateInferno";
 
     xyZoom: any;
     prevXYZoom = d3.zoomIdentity;
@@ -320,15 +319,15 @@ export class HeatmapWithLineoutsComponent {
         this.select('.sr-y-axis').call(d3.axisRight(this.yZoomScale).ticks(5));
         this.select('.sr-y-axis-grid').call(d3.axisRight(this.yZoomScale).ticks(5).tickSize(-(this.canvasWidth + this.lineoutSize)));
 
-        const xLineout = this.data.x_lineout as number[];
-        const yLineout = this.data.y_lineout as number[];
+        const xLineout = this.data.x.lineout as number[];
+        const yLineout = this.data.y.lineout as number[];
 
         this.yxScale
             .domain([
                 d3.min(yLineout) as number,
                 Math.max(
                     d3.max(yLineout) as number,
-                    d3.max(this.data.y_fit.fit_line as number[]) as number,
+                    d3.max(this.data.y.fit.fit_line as number[]) as number,
                 ),
             ])
             .range([this.lineoutSize - this.lineoutPad, 0]);
@@ -339,7 +338,7 @@ export class HeatmapWithLineoutsComponent {
                 d3.min(xLineout) as number,
                 Math.max(
                     d3.max(xLineout) as number,
-                    d3.max(this.data.x_fit.fit_line as number[]) as number,
+                    d3.max(this.data.x.fit.fit_line as number[]) as number,
                 ),
             ])
             .range([this.lineoutSize - this.lineoutPad, 0]);
@@ -355,7 +354,7 @@ export class HeatmapWithLineoutsComponent {
                 v,
             ];
         });
-        const xdata2 = (this.data.x_fit.fit_line as number[]).map((v, idx) => {
+        const xdata2 = (this.data.x.fit.fit_line as number[]).map((v, idx) => {
             return [
                 xd[0] + (idx / this.data.raw_pixels[0].length) * (xd[1] - xd[0]),
                 v,
@@ -376,7 +375,7 @@ export class HeatmapWithLineoutsComponent {
                 v,
             ];
         });
-        const ydata2 = (this.data.y_fit.fit_line as number[]).map((v, idx) => {
+        const ydata2 = (this.data.y.fit.fit_line as number[]).map((v, idx) => {
             return [
                 yd[0] + (idx / this.data.raw_pixels.length) * (yd[1] - yd[0]),
                 v,

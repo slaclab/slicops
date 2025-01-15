@@ -23,11 +23,11 @@ export class HeatmapCanvasComponent implements AfterViewInit, OnChanges {
     @Input() intensity: number[][] = [];
     // zoomOffsets: [dx, dy, dWidth, dHeight]
     @Input() zoomOffsets: number[] = [];
-    @Input() colorMap = "interpolateViridis";
+    @Input() colorMap = "Viridis";
     ctx: any;
     cacheCanvas: any;
     colorScale: any;
-    oldIntensity: number[][] = [];
+    previousValues: any = {};
 
     initImage() {
         this.cacheCanvas.width = this.intensity[0].length;
@@ -46,7 +46,8 @@ export class HeatmapCanvasComponent implements AfterViewInit, OnChanges {
             }
         }
         this.cacheCanvas.getContext('2d').putImageData(imageData, 0, 0);
-        this.oldIntensity = this.intensity;
+        this.previousValues.intensity = this.intensity;
+        this.previousValues.colorMap = this.colorMap;
     }
 
     max() : number {
@@ -62,7 +63,7 @@ export class HeatmapCanvasComponent implements AfterViewInit, OnChanges {
     }
 
     ngAfterViewInit() {
-        this.colorScale = d3.scaleSequential((d3 as any)[this.colorMap]);
+        this.colorScale = d3.scaleSequential((d3 as any)["interpolate" + this.colorMap]);
         this.ctx = this.canvas.nativeElement.getContext('2d', { willReadFrequently: true });
         this.cacheCanvas = document.createElement('canvas');
         this.initImage();
@@ -70,7 +71,11 @@ export class HeatmapCanvasComponent implements AfterViewInit, OnChanges {
 
     ngOnChanges(changes: any) {
         if (this.cacheCanvas) {
-            if (this.oldIntensity != this.intensity) {
+            if (
+                this.previousValues.intensity != this.intensity
+                || this.previousValues.colorMap != this.colorMap
+            ) {
+                this.colorScale = d3.scaleSequential((d3 as any)["interpolate" + this.colorMap]);
                 this.initImage();
             }
             this.refresh();

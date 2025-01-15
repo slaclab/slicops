@@ -3,114 +3,120 @@
 // Copyright (c) 2024 The Board of Trustees of the Leland Stanford Junior University, through SLAC National Accelerator Laboratory (subject to receipt of any required approvals from the U.S. Dept. of Energy).  All Rights Reserved.
 // http://github.com/slaclab/slicops/LICENSE
 
+import { APIService } from '../api.service';
 import { Component } from '@angular/core';
 import { FormGroup, FormControl, Validators } from '@angular/forms';
-import { HttpClient } from '@angular/common/http';
-import { APIService } from '../api.service';
 
 @Component({
     selector: 'app-screen',
     template: `
+  <form [formGroup]="form">
   <div class="row">
     <div *ngIf="errorMessage" class="alert alert-warning">{{ errorMessage }}</div>
     <div class="col-sm-3 ">
 
-      <form>
         <div class="mb-3">
           <label class="form-label">Beam Path</label>
-          <select class="form-select form-control-sm">
+          <select formControlName="beam_path" class="form-select form-control-sm">
             <option *ngFor="let bp of beamPaths" [value]="bp">{{ bp }}</option>
           </select>
         </div>
         <div class="mb-3">
           <label class="form-label">Camera</label>
-          <select class="form-select form-control-sm">
+          <select formControlName="camera" class="form-select form-control-sm">
             <option *ngFor="let c of cameras" [value]="c">{{ c }}</option>
           </select>
         </div>
         <div class="mb-3">
           <label class="form-label">PV</label>
-          <input class="form-control form-control-sm" value="OTRS:LI21:291"/>
+          <input formControlName="pv" class="form-control form-control-sm form-control-plaintext" />
         </div>
 
         <div class="mb-3">
           <div class="row">
             <div class="col-sm-4">
-              <button [disabled]="isAcquiring" class="btn btn-primary" type="button" (click)="startAcquiringImages()">Start</button>
+              <button [disabled]="isAcquiring || ! form.value.pv" class="btn btn-primary" type="button" (click)="startAcquiringImages()">Start</button>
             </div>
             <div class="col-sm-4">
-              <button [disabled]="! isAcquiring" class="btn btn-danger" type="button" (click)="stopAcquiringImages()">Stop</button>
+              <button [disabled]="! isAcquiring || ! form.value.pv" class="btn btn-danger" type="button" (click)="stopAcquiringImages()">Stop</button>
             </div>
             <div class="col-sm-4">
-              <button [disabled]="isAcquiring" class="btn btn-outline-dark" type="button" (click)="getSingleImage()">Single</button>
+              <button [disabled]="isAcquiring || ! form.value.pv" class="btn btn-outline-dark" type="button" (click)="getSingleImage()">Single</button>
             </div>
           </div>
         </div>
-      </form>
 
     </div>
 
     <div class="col-sm-9 col-xxl-7">
       <div *ngIf="image && image.raw_pixels.length">
-        <app-heatmap-with-lineouts [data]="image"></app-heatmap-with-lineouts>
+        <app-heatmap-with-lineouts [data]="image" [colorMap]="form.value.color_map"></app-heatmap-with-lineouts>
       </div>
     </div>
-
-
     <div class="col-sm-3 "></div>
     <div *ngIf="image && image.raw_pixels.length" style="margin-top: 3ex" class="col-sm-9">
 
-      <form>
         <div class="mb-3">
           <div class="row">
             <div class="col-sm-3">
               <label class="form-label">Curve Fit Method</label>
-              <select class="form-select form-control-sm" (change)="selectCurveFit($event)">
+              <select formControlName="curve_fit_method" class="form-select form-control-sm">
                 <option *ngFor="let m of methods" [value]="m[0]">{{ m[1] }}</option>
               </select>
             </div>
             <div class="col-sm-3">
               <label class="form-label">Color Map</label>
-              <select class="form-select form-control-sm">
+              <select formControlName="color_map" class="form-select form-control-sm">
                 <option *ngFor="let cm of colorMaps" [value]="cm">{{ cm }}</option>
               </select>
             </div>
           </div>
         </div>
-      </form>
 
     </div>
   </div>
+  </form>
     `,
     styles: [],
 })
 export class ScreenComponent {
     readonly APP_NAME: string = 'screen';
-    image: any = null;
+    beamPathInfo: any = null;
     beamPaths: string[] = [];
-    cameras = [
-        'VCCB',
-    ];
+    cameras: string[] = [];
     colorMaps: string[] = [];
-    methods: any = [];
     errorMessage: string = "";
+    image: any = null;
+    imageInterval: any = null;
     isAcquiring: boolean = false;
-    interval: any = null;
-    curveFit = "gaussian";
+    methods: any = [];
+
+    form = new FormGroup({
+        beam_path: new FormControl(''),
+        camera: new FormControl(''),
+        pv: new FormControl(''),
+        color_map: new FormControl(''),
+        curve_fit_method: new FormControl(''),
+    });
 
     constructor(private apiService: APIService) {
         this.apiService = apiService;
+
+        this.form.valueChanges.subscribe(values => {
+            this.updateForm(values);
+        });
 
         this.apiService.call('init_app', {
             app_name: this.APP_NAME,
         }).subscribe({
             next: (result) => {
-                console.log('init_app result:', result);
                 //TODO(pjm): these details move to field editors
-                this.beamPaths = result.schema.constants.BeamPath.map((b: any) => b.name);
+                this.beamPathInfo = result.schema.constants.BeamPath;
+                this.beamPaths = Object.keys(result.schema.constants.BeamPath);
                 this.methods = result.schema.constants.CurveFitMethod;
                 this.colorMaps = result.schema.constants.ColorMap;
                 this.isAcquiring = result.model.screen.is_acquiring_images;
+                this.form.patchValue(result.model.screen);
                 if (this.isAcquiring) {
                     this.getImages();
                 }
@@ -138,19 +144,15 @@ export class ScreenComponent {
         this.errorMessage = err;
     }
 
-    selectCurveFit(event: any) {
-        this.curveFit = event.target.value;
-    }
-
     startAcquiringImages() {
         this.isAcquiring = true;
         this.acquireImages('start_button');
     }
 
     stopAcquiringImages() {
-        if (this.interval) {
-            clearInterval(this.interval);
-            this.interval = null;
+        if (this.imageInterval) {
+            clearInterval(this.imageInterval);
+            this.imageInterval = null;
         }
         this.isAcquiring = false;
         this.acquireImages('stop_button');
@@ -161,7 +163,7 @@ export class ScreenComponent {
         this.apiService.call('action', {
             app_name: this.APP_NAME,
             method: button,
-            curve_fit: this.curveFit,
+            curve_fit: this.form.controls.curve_fit_method.value,
         }).subscribe({
             next: (result) => {
                 if (result.image) {
@@ -181,7 +183,7 @@ export class ScreenComponent {
         this.apiService.call('action', {
             app_name: this.APP_NAME,
             method: 'get_image',
-            curve_fit: this.curveFit,
+            curve_fit: this.form.controls.curve_fit_method.value,
         }).subscribe({
             next: (result) => {
                 this.image = result.image;
@@ -196,7 +198,7 @@ export class ScreenComponent {
 
     private getImages() {
         let ready = true;
-        this.interval = setInterval(() => {
+        this.imageInterval = setInterval(() => {
             if (ready) {
                 ready = false;
                 this.getImage(() => {
@@ -204,5 +206,21 @@ export class ScreenComponent {
                 });
             }
         }, 1000);
+    }
+
+    private updateForm(values: any) {
+        // Update list of cameras for the selected beam path
+        // and the pv for the selected camera
+        if (values.beam_path) {
+            const c = this.beamPathInfo[values.beam_path];
+            this.cameras = Object.keys(c);
+            const pv = values.camera && this.cameras.includes(values.camera)
+                ? c[values.camera][0]
+                : '';
+            if (values.pv !== pv) {
+                // note: this will fire an update change, calling updateForm() again
+                this.form.patchValue({ pv: pv });
+            }
+        }
     }
 }
