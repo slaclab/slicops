@@ -12,4 +12,5 @@ import slicops.config
 
 class AuthAPI(pykern.http.AuthAPI):
     """Placeholder at the moment"""
+
     pass
