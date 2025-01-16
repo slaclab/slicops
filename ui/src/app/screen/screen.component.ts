@@ -41,7 +41,7 @@ import { FormGroup, FormControl, Validators } from '@angular/forms';
               <button [disabled]="! isAcquiring || ! form.value.pv" class="btn btn-danger" type="button" (click)="stopAcquiringImages()">Stop</button>
             </div>
             <div class="col-sm-4">
-              <button [disabled]="isAcquiring || ! form.value.pv" class="btn btn-outline-dark" type="button" (click)="getSingleImage()">Single</button>
+              <button [disabled]="isAcquiring || ! form.value.pv" class="btn btn-outline-info" type="button" (click)="getSingleImage()">Single</button>
             </div>
           </div>
         </div>
