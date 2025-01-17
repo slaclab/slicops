@@ -6,6 +6,7 @@
 
 from pykern.pkcollections import PKDict
 from pykern.pkdebug import pkdc, pkdlog, pkdp
+import importlib
 import slicops.quest
 
 
@@ -19,5 +20,28 @@ class UIAPI(slicops.quest.API):
     Or, raise a `pykern.quest.APIError`.
     """
 
+    def _app_implementation(self, api_args):
+        assert "app_name" in api_args
+        return importlib.import_module(
+            f"slicops.app.{api_args.app_name}"
+        ).new_implementation(
+            PKDict(
+                api_args=api_args,
+            )
+        )
+
+    async def api_action(self, api_args):
+        m = getattr(self._app_implementation(api_args), f"action_{api_args.method}")
+        if m:
+            return m()
+        raise AssertionError(f"unknown action method: {api_args.method}")
+
     async def api_echo(self, api_args):
-        return api_args
+        return self._app_implementation(api_args).api_args.value
+
+    async def api_init_app(self, api_args):
+        a = self._app_implementation(api_args)
+        return PKDict(
+            schema=a.schema(),
+            model=a.default_model(),
+        )

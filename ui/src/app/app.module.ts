@@ -1,12 +1,12 @@
-import { NgModule } from '@angular/core';
-import { BrowserModule } from '@angular/platform-browser';
-
-import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
-import { HttpClientModule } from "@angular/common/http";
-import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
-import { HeatmapWithLineoutsComponent } from './heatmap-with-lineouts/heatmap-with-lineouts.component';
+import { AppRoutingModule } from './app-routing.module';
+import { BrowserModule } from '@angular/platform-browser';
+import { ReactiveFormsModule } from '@angular/forms';
 import { HeatmapCanvasComponent } from './heatmap-with-lineouts/heatmap-canvas.component';
+import { HeatmapWithLineoutsComponent } from './heatmap-with-lineouts/heatmap-with-lineouts.component';
+import { HttpClientModule } from "@angular/common/http";
+import { NgModule } from '@angular/core';
+import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { ScreenComponent } from './screen/screen.component';
 
 @NgModule({
@@ -17,10 +17,11 @@ import { ScreenComponent } from './screen/screen.component';
         ScreenComponent
     ],
     imports: [
-        BrowserModule,
         AppRoutingModule,
+        BrowserModule,
         HttpClientModule,
-        NgbModule
+        NgbModule,
+        ReactiveFormsModule,
     ],
     providers: [],
     bootstrap: [AppComponent]

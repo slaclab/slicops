@@ -8,23 +8,23 @@ g.tick text {
   font-size: 13px;
 }
 
-.sr-x-axis-grid, .sr-y-axis-grid {
+.slicops-x-axis-grid, .slicops-y-axis-grid {
   stroke-opacity: 0.1;
 }
 
-.sr-x-axis-grid text, .sr-y-axis-grid text {
+.slicops-x-axis-grid text, .slicops-y-axis-grid text {
   display: none;
 }
 
-.sr-x-axis line, .sr-y-axis line, .sr-x-axis-grid line, .sr-y-axis-grid line {
+.slicops-x-axis line, .slicops-y-axis line, .slicops-x-axis-grid line, .slicops-y-axis-grid line {
   shape-rendering: crispEdges;
 }
 
-.sr-x-axis-label, .sr-y-axis-label {
+.slicops-x-axis-label, .slicops-y-axis-label {
   font-size: 14px;
 }
 
-.sr-mouse-rect-xy, .sr-mouse-rect-x, .sr-mouse-rect-y {
+.slicops-mouse-rect-xy, .slicops-mouse-rect-x, .slicops-mouse-rect-y {
   pointer-events: all;
   fill: none;
 }
