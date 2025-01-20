@@ -31,6 +31,10 @@ import { FormGroup, FormControl, Validators } from '@angular/forms';
           <label class="form-label">PV</label>
           <input formControlName="pv" class="form-control form-control-sm form-control-plaintext" />
         </div>
+        <div class="mb-3">
+          <label class="form-label">Gain</label>
+          <input formControlName="camera_gain" class="form-control form-control-sm" (keydown)="gainKeyDown($event)"/>
+        </div>
 
         <div class="mb-3">
           <div class="row">
@@ -97,6 +101,7 @@ export class ScreenComponent {
         pv: new FormControl(''),
         color_map: new FormControl(''),
         curve_fit_method: new FormControl(''),
+        camera_gain: new FormControl(''),
     });
 
     constructor(private apiService: APIService) {
@@ -121,10 +126,28 @@ export class ScreenComponent {
                     this.getImages();
                 }
             },
-            error: (err) => {
-                this.handleError(err);
-            },
+            error: (err) => this.handleError.bind(this),
         });
+    }
+
+    gainKeyDown(event: KeyboardEvent) {
+        if (event.key === 'Enter') {
+            this.form.controls.camera_gain.disable();
+            this.apiService.call('action', {
+                app_name: this.APP_NAME,
+                method: 'camera_gain',
+                camera_gain: this.form.controls.camera_gain.value
+            }).subscribe({
+                next: (result) => {
+                    this.form.controls.camera_gain.enable();
+                },
+                error: (err) => {
+                    this.form.controls.camera_gain.enable();
+                    this.handleError(err);
+                }
+            });
+
+        }
     }
 
     getSingleImage() {
@@ -173,9 +196,7 @@ export class ScreenComponent {
                     }
                 }
             },
-            error: (err) => {
-                this.handleError(err);
-            },
+            error: (err) => this.handleError.bind(this),
         });
     }
 

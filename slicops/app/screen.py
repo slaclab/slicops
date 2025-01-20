@@ -55,6 +55,10 @@ class Screen(PKDict):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
+    def action_camera_gain(self):
+        # TODO(pjm): need PV config for gain
+        return ScreenDevice().put_pv("Gain", self.api_args.camera_gain)
+
     def action_get_image(self):
         """Returns an image and x/y profiles with computed fitting"""
         raw_pixels = ScreenDevice().get_image()
@@ -82,10 +86,12 @@ class Screen(PKDict):
         return res
 
     def action_stop_button(self):
-        return ScreenDevice().stop()
+        ScreenDevice().stop()
+        return PKDict()
 
     def default_model(self):
         # TODO(pjm): need data store
+        s = ScreenDevice()
         return PKDict(
             screen=PKDict(
                 beam_path=_cfg.dev.beam_path,
@@ -99,8 +105,10 @@ class Screen(PKDict):
                 acquire_button=None,
                 stop_button=None,
                 single_button=None,
+                # TODO(pjm): don't use get_pv_or_default()  - takes too long on failure and would be multiple times
+                camera_gain=s.get_pv_or_default("Gain", 180),
                 # TODO(pjm): this is a potentially very slow operation if the default camera is unavailable
-                is_acquiring_images=ScreenDevice().is_acquiring_images(),
+                is_acquiring_images=s.is_acquiring_images(),
             ),
         )
 
@@ -122,9 +130,12 @@ class Screen(PKDict):
                 raise RuntimeError("Fit failed")
         except RuntimeError:
             return PKDict(
-                fit_line=numpy.zeros(len(profile)).tolist(),
-                results=PKDict(
-                    error="Curve fit was unsuccessful",
+                lineout=profile.tolist(),
+                fit=PKDict(
+                    fit_line=numpy.zeros(len(profile)).tolist(),
+                    results=PKDict(
+                        error="Curve fit was unsuccessful",
+                    ),
                 ),
             )
         g = r[method]["params"]
@@ -167,36 +178,48 @@ class ScreenDevice:
             # ex. cannot reshape array of size 0 into shape (1024,1024)
             raise err
 
+    def get_pv(self, name):
+        """Get a PV value by name"""
+        pv = PV(self._pv_name(name))
+        v = pv.get()
+        if not pv.connected:
+            raise PVInvalidError(f"Unable to connect to PV: {n}")
+        return v
+
+    def get_pv_or_default(self, name, default_value):
+        """Get a PV value by name or return a default value if not available"""
+        try:
+            return self.get_pv(name)
+        except PVInvalidError:
+            return default_value
+
     def is_acquiring_images(self):
         """Returns True if the camera's EPICS value indicates it is capturing images."""
         try:
-            return bool(self._acquire_pv()[0].get())
+            return bool(self.get_pv("Acquire"))
         except PVInvalidError as err:
             # does not return an error, the initial camera may not be currently available
             return False
 
     def start(self):
         """Set the EPICS camera to acquire mode."""
-        self._set_acquire(1)
+        self.put_pv("Acquire", 1)
 
     def stop(self):
         """Set the EPICS camera to stop acquire mode."""
-        return self._set_acquire(0)
+        self.put_pv("Acquire", 0)
 
-    def _acquire_pv(self):
-        n = f"{self.screen.controls_information.control_name}:Acquire"
-        return (PV(n), n)
+    def put_pv(self, name, value):
+        """Set a PV value."""
+        pv = PV(self._pv_name(name))
+        v = pv.put(value)
+        if not pv.connected:
+            raise PVInvalidError(f"Unable to connect to PV: {n}")
+        if not v:
+            raise PVInvalidError(f"Update failed for PV: {n}")
 
-    def _set_acquire(self, is_on):
-        try:
-            pv, n = self._acquire_pv()
-            pv.put(is_on)
-            if not pv.connected:
-                raise PVInvalidError(f"Unable to connect to PV: {n}")
-        except PVInvalidError as err:
-            # TODO(pjm): could provide a better error message here
-            raise err
-        return PKDict()
+    def _pv_name(self, name):
+        return f"{self.screen.controls_information.control_name}:{name}"
 
 
 _cfg = pkconfig.init(
