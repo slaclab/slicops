@@ -7,9 +7,17 @@
 from pykern.pkcollections import PKDict
 from pykern.pkdebug import pkdc, pkdlog, pkdp
 import epics
+import os
+import pykern.pkio
+import subprocess
+import time
+
+# Local so should connect quickly
+_SIM_DETECTOR_TIMEOUT = 5
+_LOG_BASE = "sim_detector.log"
 
 
-def init_dev():
+def init_sim_detector():
     """Initialize the ADSimDetector module with useful default values."""
     for name, value in {
         "13SIM1:cam1:SimMode": 1,
@@ -30,8 +38,47 @@ def init_dev():
         "13SIM1:image1:EnableCallbacks": 1,
     }.items():
         pv = epics.PV(name)
-        v = pv.put(value, wait=True)
+        v = pv.put(value, wait=True, timeout=_SIM_DETECTOR_TIMEOUT)
         if not pv.connected:
-            raise RuntimeError(f"PV failed to connect: {name}")
-        if not v:
-            raise RuntimeError(f"PV put failed to return a succes value: {name}")
+            raise RuntimeError(f"PV={name} failed to connect")
+        if v is None:
+            raise RuntimeError(f"PV={name} ")
+
+
+def sim_detector(ioc_sim_detector_dir=None):
+    # TODO(robnagler) use https://github.com/ralphlange/procServ
+    # Macs don't have /dev/stdin|out so /dev/tty is more portable
+
+    def _chdir():
+        return pykern.pkio.save_chdir(
+            ioc_sim_detector_dir
+            or "~/.local/epics/extensions/synApps/support/areaDetector-R3-12-1/ADSimDetector/iocs/simDetectorIOC/iocBoot/iocSimDetector"
+        )
+
+    def _log():
+        f = pykern.pkio.py_path(_LOG_BASE)
+        pkdlog("log: {}", f)
+        return f.open("w+")
+
+    # _log has to come first so directory is correct.
+    with _log() as o, _chdir():
+        p = subprocess.Popen(
+            ["../../bin/linux-x86_64/simDetectorApp", "st.cmd"],
+            # input will hang forever (ioc exits at EOF)
+            stdin=subprocess.PIPE,
+            stdout=o,
+            stderr=subprocess.STDOUT,
+        )
+    try:
+        pkdlog("started pid={}; sleep 2 seconds", p.pid)
+        # Wait a little bit for the process to initialize and print
+        time.sleep(2)
+        pkdlog("initializing sim detector")
+        init_sim_detector()
+        pkdlog("waiting for pid={} to exit", p.pid)
+        p.wait()
+    finally:
+        if p.poll() is not None:
+            p.terminate()
+            time.sleep(1)
+            p.kill()
