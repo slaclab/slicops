@@ -48,11 +48,6 @@ def _init():
     _cfg = pykern.pkconfig.init(
         ui_api=PKDict(
             api_uri=("/api-v1", str, "URI for API requests"),
-            auth_secret=pykern.pkconfig.RequiredUnlessDev(
-                "development_secret",
-                str,
-                "secret required to access db_api",
-            ),
             tcp_ip=(None, pykern.pkasyncio.cfg_ip, "IP address for server"),
             tcp_port=(9030, pykern.pkasyncio.cfg_ip, "port of server"),
         ),
