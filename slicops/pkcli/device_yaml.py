@@ -25,14 +25,50 @@ def to_python():
 
 class _Parser:
     def __init__(self):
-        self._maps = PKDict(
-            BEAMSPATHS_TO_DEVICES=PKDict(),
-            AREAS_TO_DEVICES=PKDict(),
-            DEVICES_TO_AREAS=PKDict(),
-            AREAS_TO_BEAMPATHS=PKDict(),
+        self._map = PKDict(
+            AREA_TO_BEAM_PATH=PKDict(),
+            AREA_TO_DEVICE=PKDict(),
+            BEAM_PATH_TO_AREA=PKDict(),
+            BEAM_PATH_TO_DEVICE=PKDict(),
+            DEVICE_KIND_TO_DEVICE=PKDict(),
+            DEVICE_TO_AREA=PKDict(),
             DEVICE_TO_META=PKDict(),
-            DEVICE_KIND_TO_DEVICES=PKDict(),
         )
+        self._parse()
+        self._denormalize()
+
+    def _denormalize(self):
+        def _append(map_, name, value):
+            if isinstance(name, tuple):
+                for n in name:
+                    _append_one(map_, n, value)
+            else:
+                _append_one(map_, name, value)
+
+        def _append_one(map_, name, value):
+            m = self._map[map_].pksetdefault(name, set)[name]
+            if isinstance(value, tuple):
+                m.update(value)
+            else:
+                m.add(value)
+
+        def _sort(map_):
+            for k, v in map_.items():
+                if isinstance(v, PKDict):
+                    _sort(v)
+                elif isinstance(v, list):
+                    map_[k] = tuple(sorted(v))
+
+        for d, m in self._map.DEVICE_TO_META.items():
+            _append("AREA_TO_BEAM_PATH", m.area, m.beam_path)
+            _append("AREA_TO_DEVICE", m.area, d)
+            _append("BEAM_PATH_TO_AREA", m.beam_path, m.area)
+            _append("BEAM_PATH_TO_DEVICE", m.beam_path, d)
+            _append("DEVICE_KIND_TO_DEVICE", m.device_kind, d)
+            _append("DEVICE_TO_AREA", d, m.area)
+        _sort(self._map)
+
+    def _parse(self):
         for p in self._paths():
             try:
                 self._parse_file(pykern.pkyaml.load_file(p))
@@ -49,9 +85,9 @@ class _Parser:
 
         def _assign(device, meta):
             """Corrections to input data"""
-            if d := self._maps.DEVICE_TO_META.get(n):
+            if d := self._map.DEVICE_TO_META.get(n):
                 raise ValueError(f"duplicate device={n} record={r} first meta={d}")
-            self._maps.DEVICE_TO_META[n] = meta
+            self._map.DEVICE_TO_META[n] = meta
 
         def _meta(device, ctl, md, kind):
             rv = PKDict(pv_prefix=ctl.control_name, device_kind=kind, pv_base=PKDict())
@@ -66,7 +102,7 @@ class _Parser:
             return rv.pkupdate(
                 # TODO(robnagler) meta.type is not always set (see vcc.yaml)
                 area=md.area,
-                beam_path=md.beam_path,
+                beam_path=tuple(sorted(md.beam_path)),
                 device_length=md.sum_l_meters,
             )
 
