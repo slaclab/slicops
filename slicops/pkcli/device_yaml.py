@@ -1,7 +1,6 @@
-"""Convert `lcls_tools.common.devices.yaml`
+"""Convert `lcls_tools.common.devices.yaml` to `slicops.device_meta_raw`
 
-TODO(robnagler): correct types, add machine and area_to_machine, beam_path_to_machine
-
+TODO(robnagler): document, correct types, add machine and area_to_machine, beam_path_to_machine
 
 :copyright: Copyright (c) 2024 The Board of Trustees of the Leland Stanford Junior University, through SLAC National Accelerator Laboratory (subject to receipt of any required approvals from the U.S. Dept. of Energy).  All Rights Reserved.
 :license: http://github.com/slaclab/slicops/LICENSE
