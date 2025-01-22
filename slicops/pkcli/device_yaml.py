@@ -1,5 +1,8 @@
 """Convert `lcls_tools.common.devices.yaml`
 
+TODO(robnagler): correct types, add machine and area_to_machine, beam_path_to_machine
+
+
 :copyright: Copyright (c) 2024 The Board of Trustees of the Leland Stanford Junior University, through SLAC National Accelerator Laboratory (subject to receipt of any required approvals from the U.S. Dept. of Energy).  All Rights Reserved.
 :license: http://github.com/slaclab/slicops/LICENSE
 """
@@ -125,7 +128,7 @@ class _Parser:
                 # TODO(robnagler) refine type based on name
                 rv.pv_base[m.group(1)] = PKDict(pv_name=v, pv_type="int")
             return rv.pkupdate(
-                # TODO(robnagler) meta.type is not always set (see vcc.yaml)
+                # TODO(robnagler) meta.type is not always set (see vcc.yaml), so ignoring for now
                 area=md.area,
                 beam_path=tuple(sorted(md.beam_path)),
                 device_length=md.sum_l_meters,
