@@ -22,6 +22,53 @@ _MODULE_BASE = "device_meta_raw.py"
 # What this test is doing is ensuring we understand the structure of a pv_base
 _PV_BASE_RE = r"(\w{1,60}|\w{1,58}:\w{1,58})"
 
+# Eventually would be canonical
+_DEVICE_KIND_TO_ACCESSOR = PKDict(
+    screen=PKDict(
+        {
+            "Acquire": PKDict(name="acquire", py_type=bool, pv_writable=True),
+            "IMAGE": PKDict(name="image"),
+            "Image:ArrayData": PKDict(name="image"),
+            "Image:ArraySize0_RBV": PKDict(name="num_rows"),
+            "Image:ArraySize1_RBV": PKDict(name="num_cols"),
+            "Image:ArraySizeX_RBV": PKDict(name="num_rows"),
+            "Image:ArraySizeY_RBV": PKDict(name="num_cols"),
+            "N_OF_BITS": PKDict(name="bit_depth"),
+            "N_OF_COL": PKDict(name="num_cols"),
+            "N_OF_ROW": PKDict(name="num_rols"),
+            "RESOLUTION": PKDict(name="resolution"),
+            # Devlement: AreaDetector SimDetector default definitions
+            # TODO(robnagler) simplify the st.cmd for the SimDetector
+            "cam1:ArraySizeX_RBV": PKDict(name="num_rows"),
+            "cam1:ArraySizeY_RBV": PKDict(name="num_cols"),
+            "cam1:N_OF_BITS": PKDict(name="bit_depth"),
+            "cam1:RESOLUTION": PKDict(name="resolution"),
+            "image1:ArrayData": PKDict(name="image"),
+        }
+    )
+)
+
+_DEV_YAML = """
+screens:
+  DEV_CAMERA:
+    controls_information:
+      PVs:
+        image: 13SIM1:image1:ArrayData
+        n_col: 13SIM1:cam1:ArraySizeX_RBV
+        n_row: 13SIM1:cam1:ArraySizeY_RBV
+        n_bits: 13SIM1:cam1:N_OF_BITS
+        resolution: 13SIM1:cam1:RESOLUTION
+      control_name: 13SIM1
+    metadata:
+      area: VCC
+      beam_path:
+      - SC_DIAG0
+      - SC_HXR
+      - SC_SXR
+      sum_l_meters: 0.614
+      type: PROF
+"""
+
 
 def to_python():
     return _Parser().output_path
@@ -95,10 +142,27 @@ class _Parser:
             except Exception:
                 pkdlog("ERROR file={}", p)
                 raise
+        if pykern.pkconfig.in_dev_mode():
+            self._parse_file(pykern.pkyaml.load_str(_DEV_YAML))
 
     def _parse_file(self, src):
 
-        def _fixups(device, rec):
+        def _accessor(meta):
+            a = _DEVICE_KIND_TO_ACCESSOR[meta.device_kind]
+            return PKDict(
+                {
+                    a[k].name: a[k].copy().pkupdate(pv_base=k, pv_name=v)
+                    for k, v in meta.pv_base.items()
+                }
+            )
+
+        def _assign(device, meta):
+            """Corrections to input data"""
+            if d := self._map.DEVICE_TO_META.get(n):
+                raise ValueError(f"duplicate device={n} record={r} first meta={d}")
+            self._map.DEVICE_TO_META[n] = meta
+
+        def _input_fixups(device, rec):
             """Corrections to input data"""
             if device == "VCCB":
                 rec.controls_information.PVs.resolution = "CAMR:LGUN:950:RESOLUTION"
@@ -110,12 +174,6 @@ class _Parser:
                 return False
             return True
 
-        def _assign(device, meta):
-            """Corrections to input data"""
-            if d := self._map.DEVICE_TO_META.get(n):
-                raise ValueError(f"duplicate device={n} record={r} first meta={d}")
-            self._map.DEVICE_TO_META[n] = meta
-
         def _meta(device, ctl, md, kind):
             rv = PKDict(pv_prefix=ctl.control_name, device_kind=kind, pv_base=PKDict())
             p = re.compile(rf"^{re.escape(rv.pv_prefix)}:{_PV_BASE_RE}$")
@@ -125,21 +183,32 @@ class _Parser:
                         f"invalid pv name={v} for device={device} regex={p}"
                     )
                 # TODO(robnagler) refine type based on name
-                rv.pv_base[m.group(1)] = PKDict(pv_name=v, pv_type="int")
+                rv.pv_base[m.group(1)] = v
             return rv.pkupdate(
                 # TODO(robnagler) meta.type is not always set (see vcc.yaml), so ignoring for now
                 area=md.area,
                 beam_path=tuple(sorted(md.beam_path)),
                 device_length=md.sum_l_meters,
+                device_name=device,
             )
+
+        def _meta_fixups(meta):
+            meta.pv_base.Acquire = f"{meta.pv_prefix}:Acquire"
+            _meta.accessor = _accessor(meta)
+            return _meta
 
         if not (s := src.get("screens")):
             return
         for n, r in s.items():
             try:
-                if not _fixups(n, r):
+                if not _input_fixups(n, r):
                     continue
-                _assign(n, _meta(n, r.controls_information, r.metadata, "screen"))
+                _assign(
+                    n,
+                    _meta_fixups(
+                        _meta(n, r.controls_information, r.metadata, "screen")
+                    ),
+                )
             except Exception:
                 pkdlog("ERROR device={} record={}", n, r)
                 raise
