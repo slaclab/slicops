@@ -6,13 +6,14 @@
 
 from pykern.pkcollections import PKDict
 from pykern.pkdebug import pkdc, pkdlog, pkdp
+import importlib
+import inspect
+import pprint
 import pykern.pkio
 import pykern.pkyaml
-import inspect
-import lcls_tools.common.devices.yaml
 import re
 
-_MODULE_BASE = "device_meta_raw"
+_MODULE_BASE = "device_meta_raw.py"
 
 # We assume the names are valid (could check, but no realy point)
 # What this test is doing is ensuring we understand the structure of a pv_base
@@ -20,7 +21,7 @@ _PV_BASE_RE = r"(\w{1,60}|\w{1,58}:\w{1,58})"
 
 
 def to_python():
-    return _Parser().to_python()
+    return _Parser().output_path
 
 
 class _Parser:
@@ -34,8 +35,10 @@ class _Parser:
             DEVICE_TO_AREA=PKDict(),
             DEVICE_TO_META=PKDict(),
         )
+        self._init_paths()
         self._parse()
         self._denormalize()
+        self.output_path.write(self._to_python())
 
     def _denormalize(self):
         def _append(map_, name, value):
@@ -56,7 +59,7 @@ class _Parser:
             for k, v in map_.items():
                 if isinstance(v, PKDict):
                     _sort(v)
-                elif isinstance(v, list):
+                elif isinstance(v, set):
                     map_[k] = tuple(sorted(v))
 
         for d, m in self._map.DEVICE_TO_META.items():
@@ -68,8 +71,21 @@ class _Parser:
             _append("DEVICE_TO_AREA", d, m.area)
         _sort(self._map)
 
+    def _init_paths(self):
+        m = inspect.getmodule(self)
+        self._this_module_name = m.__name__
+        self._this_module_path = pykern.pkio.py_path(m.__file__)
+        self._yaml_glob = (
+            pykern.pkio.py_path(
+                importlib.import_module("lcls_tools.common.devices.yaml").__file__
+            )
+            .dirpath()
+            .join("*.yaml")
+        )
+        self.output_path = self._this_module_path.dirpath().new(basename=_MODULE_BASE)
+
     def _parse(self):
-        for p in self._paths():
+        for p in pykern.pkio.sorted_glob(self._yaml_glob):
             try:
                 self._parse_file(pykern.pkyaml.load_file(p))
             except Exception:
@@ -116,19 +132,24 @@ class _Parser:
                 pkdlog("ERROR device={} record={}", n, r)
                 raise
 
-    def _paths(self):
-        return pykern.pkio.sorted_glob(
-            pykern.pkio.py_path(lcls_tools.common.devices.yaml.__file__)
-            .dirpath()
-            .join("*.yaml")
-        )
+    def _to_python(
+        self,
+    ):
+        def _header():
+            return f'''"""Raw device data
 
-    def _python_dir(self):
-        return (
-            pykern.pkio.py_path(inspect.getmodule(self).__file__)
-            .dirpath()
-            .new(basename=_MODULE_BASE)
-        )
+**DO NOT EDIT; automatically generated**
 
-    def to_python(self):
-        pass
+* generator: {self._this_module_name}
+* input: {self._yaml_glob}
+
+:copyright: Copyright (c) 2024 The Board of Trustees of the Leland Stanford Junior University, through SLAC National Accelerator Laboratory (subject to receipt of any required approvals from the U.S. Dept. of Energy).  All Rights Reserved.
+:license: http://github.com/slaclab/slicops/LICENSE
+"""
+
+from pykern.pkcollections import PKDict
+
+
+'''
+
+        return _header() + pprint.pformat(self._map, indent=4, width=120)
