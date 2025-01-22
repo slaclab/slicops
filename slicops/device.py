@@ -18,3 +18,20 @@ class Device:
         #TODO(robnagler) support types based on rules
         if m.device_kind != "screen":
             raise NotImplementedError(f"unsupported device_kind={m.device_kind} device={name}")
+        self._meta = m
+
+    def get(self, accessor):
+        a = self._meta.accessor[accessor]
+        value = epics.caget(
+                a.pv_name,
+                as_numpy=as_numpy,
+                use_monitor=use_monitor,
+            )
+
+        while
+
+
+
+    def _create_pv(self, accessor):
+        a = self._meta[accessor]
+        return PV(pvname=a.pv_name, connection_timeout=0.01)

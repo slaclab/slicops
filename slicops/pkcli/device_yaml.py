@@ -26,9 +26,9 @@ _PV_BASE_RE = r"(\w{1,60}|\w{1,58}:\w{1,58})"
 _DEVICE_KIND_TO_ACCESSOR = PKDict(
     screen=PKDict(
         {
-            "Acquire": PKDict(name="acquire", py_type=bool, pv_writable=True),
-            "IMAGE": PKDict(name="image"),
-            "Image:ArrayData": PKDict(name="image"),
+            "Acquire": PKDict(name="acquire", py_type="bool", pv_writable=True),
+            "IMAGE": PKDict(name="image", py_type="ndarray"),
+            "Image:ArrayData": PKDict(name="image", py_type="ndarray"),
             "Image:ArraySize0_RBV": PKDict(name="num_rows"),
             "Image:ArraySize1_RBV": PKDict(name="num_cols"),
             "Image:ArraySizeX_RBV": PKDict(name="num_rows"),
@@ -36,18 +36,17 @@ _DEVICE_KIND_TO_ACCESSOR = PKDict(
             "N_OF_BITS": PKDict(name="bit_depth"),
             "N_OF_COL": PKDict(name="num_cols"),
             "N_OF_ROW": PKDict(name="num_rols"),
-            "RESOLUTION": PKDict(name="resolution"),
             # Devlement: AreaDetector SimDetector default definitions
             # TODO(robnagler) simplify the st.cmd for the SimDetector
             "cam1:ArraySizeX_RBV": PKDict(name="num_rows"),
             "cam1:ArraySizeY_RBV": PKDict(name="num_cols"),
             "cam1:N_OF_BITS": PKDict(name="bit_depth"),
-            "cam1:RESOLUTION": PKDict(name="resolution"),
-            "image1:ArrayData": PKDict(name="image"),
+            "image1:ArrayData": PKDict(name="image", py_type="ndarray"),
         }
     )
 )
 
+# TODO(robnagler) should be dynamic, but need to add to paths so easiest to add here for now
 _DEV_YAML = """
 screens:
   DEV_CAMERA:
@@ -57,14 +56,11 @@ screens:
         n_col: 13SIM1:cam1:ArraySizeX_RBV
         n_row: 13SIM1:cam1:ArraySizeY_RBV
         n_bits: 13SIM1:cam1:N_OF_BITS
-        resolution: 13SIM1:cam1:RESOLUTION
       control_name: 13SIM1
     metadata:
-      area: VCC
+      area: DEV_AREA
       beam_path:
-      - SC_DIAG0
-      - SC_HXR
-      - SC_SXR
+      - DEV_BEAM_PATH
       sum_l_meters: 0.614
       type: PROF
 """
@@ -114,12 +110,16 @@ class _Parser:
                     map_[k] = tuple(sorted(v))
 
         for d, m in self._map.DEVICE_TO_META.items():
-            _append("AREA_TO_BEAM_PATH", m.area, m.beam_path)
-            _append("AREA_TO_DEVICE", m.area, d)
-            _append("BEAM_PATH_TO_AREA", m.beam_path, m.area)
-            _append("BEAM_PATH_TO_DEVICE", m.beam_path, d)
-            _append("DEVICE_KIND_TO_DEVICE", m.device_kind, d)
-            _append("DEVICE_TO_AREA", d, m.area)
+            try:
+                _append("AREA_TO_BEAM_PATH", m.area, m.beam_path)
+                _append("AREA_TO_DEVICE", m.area, d)
+                _append("BEAM_PATH_TO_AREA", m.beam_path, m.area)
+                _append("BEAM_PATH_TO_DEVICE", m.beam_path, d)
+                _append("DEVICE_KIND_TO_DEVICE", m.device_kind, d)
+                _append("DEVICE_TO_AREA", d, m.area)
+            except Exception:
+                pkdlog("ERROR device={} meta={}", d, m)
+                raise
         _sort(self._map)
 
     def _init_paths(self):
@@ -151,7 +151,10 @@ class _Parser:
             a = _DEVICE_KIND_TO_ACCESSOR[meta.device_kind]
             return PKDict(
                 {
-                    a[k].name: a[k].copy().pkupdate(pv_base=k, pv_name=v)
+                    a[k]
+                    .name: a[k]
+                    .copy()
+                    .pksetdefault(pv_base=k, pv_name=v, py_type="int")
                     for k, v in meta.pv_base.items()
                 }
             )
@@ -164,8 +167,11 @@ class _Parser:
 
         def _input_fixups(device, rec):
             """Corrections to input data"""
-            if device == "VCCB":
-                rec.controls_information.PVs.resolution = "CAMR:LGUN:950:RESOLUTION"
+            # TODO(robnagler) when there is resolution
+            # if device == "VCCB":
+            #    rec.controls_information.PVs.resolution = "CAMR:LGUN:950:RESOLUTION"
+            # Don't need resolution
+            rec.controls_information.PVs.pkdel("resolution")
             if rec.metadata.sum_l_meters is None:
                 # eg. LI25.yaml OTR22
                 return False
@@ -182,7 +188,6 @@ class _Parser:
                     raise ValueError(
                         f"invalid pv name={v} for device={device} regex={p}"
                     )
-                # TODO(robnagler) refine type based on name
                 rv.pv_base[m.group(1)] = v
             return rv.pkupdate(
                 # TODO(robnagler) meta.type is not always set (see vcc.yaml), so ignoring for now
@@ -194,8 +199,8 @@ class _Parser:
 
         def _meta_fixups(meta):
             meta.pv_base.Acquire = f"{meta.pv_prefix}:Acquire"
-            _meta.accessor = _accessor(meta)
-            return _meta
+            meta.accessor = _accessor(meta)
+            return meta
 
         if not (s := src.get("screens")):
             return

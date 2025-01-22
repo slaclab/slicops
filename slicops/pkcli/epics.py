@@ -39,6 +39,7 @@ def init_sim_detector():
     }.items():
         pv = epics.PV(name)
         v = pv.put(value, wait=True, timeout=_SIM_DETECTOR_TIMEOUT)
+        pkdp(v)
         if not pv.connected:
             raise RuntimeError(f"PV={name} failed to connect")
         if v is None:
