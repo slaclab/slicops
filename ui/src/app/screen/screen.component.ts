@@ -6,6 +6,7 @@
 import { APIService } from '../api.service';
 import { Component } from '@angular/core';
 import { FormGroup, FormControl, Validators } from '@angular/forms';
+import { LogService } from '../log.service';
 
 @Component({
     selector: 'app-screen',
@@ -94,7 +95,6 @@ export class ScreenComponent {
     imageInterval: any = null;
     isAcquiring: boolean = false;
     methods: any = [];
-
     form = new FormGroup({
         beam_path: new FormControl(''),
         camera: new FormControl(''),
@@ -104,17 +104,18 @@ export class ScreenComponent {
         camera_gain: new FormControl(''),
     });
 
-    constructor(private apiService: APIService) {
+    constructor(private apiService: APIService, private log: LogService) {
         this.apiService = apiService;
 
         this.form.valueChanges.subscribe(values => {
             this.updateForm(values);
         });
 
-        this.apiService.call('init_app', {
-            app_name: this.APP_NAME,
-        }).subscribe({
-            next: (result) => {
+        this.apiService.call(
+            'init_app', {
+                app_name: this.APP_NAME,
+            },
+            (result) => {
                 //TODO(pjm): these details move to field editors
                 this.beamPathInfo = result.schema.constants.BeamPath;
                 this.beamPaths = Object.keys(result.schema.constants.BeamPath);
@@ -126,27 +127,27 @@ export class ScreenComponent {
                     this.getImages();
                 }
             },
-            error: (err) => this.handleError.bind(this),
-        });
+            this.handleError.bind(this),
+        );
     }
 
     gainKeyDown(event: KeyboardEvent) {
         if (event.key === 'Enter') {
             this.form.controls.camera_gain.disable();
-            this.apiService.call('action', {
-                app_name: this.APP_NAME,
-                method: 'camera_gain',
-                camera_gain: this.form.controls.camera_gain.value
-            }).subscribe({
-                next: (result) => {
+            this.apiService.call(
+                'action', {
+                    app_name: this.APP_NAME,
+                    method: 'camera_gain',
+                    camera_gain: this.form.controls.camera_gain.value
+                },
+                (result) => {
                     this.form.controls.camera_gain.enable();
                 },
-                error: (err) => {
+                (err) => {
                     this.form.controls.camera_gain.enable();
                     this.handleError(err);
                 }
-            });
-
+            );
         }
     }
 
@@ -159,11 +160,10 @@ export class ScreenComponent {
 
     handleError(err: any) {
         if (this.errorMessage === undefined) {
+            this.log.error(['invalid this', this]);
             throw new Error(`Invalid this in handleError: ${this}`);
         }
-        if (err && err.target instanceof WebSocket) {
-            err = "WebSocket connection to server failed";
-        }
+        this.log.error(['apiService error', err]);
         this.errorMessage = err;
     }
 
@@ -183,12 +183,14 @@ export class ScreenComponent {
 
     private acquireImages(button: string) {
         this.errorMessage = "";
-        this.apiService.call('action', {
-            app_name: this.APP_NAME,
-            method: button,
-            curve_fit: this.form.controls.curve_fit_method.value,
-        }).subscribe({
-            next: (result) => {
+        this.apiService.call(
+            'action',
+            {
+                app_name: this.APP_NAME,
+                method: button,
+                curve_fit: this.form.controls.curve_fit_method.value,
+            },
+            (result) => {
                 if (result.image) {
                     this.image = result.image;
                     if (button == 'start_button') {
@@ -196,25 +198,27 @@ export class ScreenComponent {
                     }
                 }
             },
-            error: (err) => this.handleError.bind(this),
-        });
+            this.handleError.bind(this),
+        );
     }
 
     private getImage(callback: Function) {
-        this.apiService.call('action', {
-            app_name: this.APP_NAME,
-            method: 'get_image',
-            curve_fit: this.form.controls.curve_fit_method.value,
-        }).subscribe({
-            next: (result) => {
+        this.apiService.call(
+            'action',
+            {
+                app_name: this.APP_NAME,
+                method: 'get_image',
+                curve_fit: this.form.controls.curve_fit_method.value,
+            },
+            (result) => {
                 this.image = result.image;
                 callback();
             },
-            error: (err) => {
+            (err) => {
                 this.image = null;
                 this.handleError(err);
             },
-        });
+        );
     }
 
     private getImages() {
