@@ -9,6 +9,7 @@ from pykern.pkdebug import pkdc, pkdlog, pkdp
 import importlib
 import inspect
 import pprint
+import pykern.pkcli.fmt
 import pykern.pkio
 import pykern.pkyaml
 import re
@@ -39,6 +40,7 @@ class _Parser:
         self._parse()
         self._denormalize()
         self.output_path.write(self._to_python())
+        pykern.pkcli.fmt.run(str(self.output_path))
 
     def _denormalize(self):
         def _append(map_, name, value):
@@ -98,6 +100,13 @@ class _Parser:
             """Corrections to input data"""
             if device == "VCCB":
                 rec.controls_information.PVs.resolution = "CAMR:LGUN:950:RESOLUTION"
+            if rec.metadata.sum_l_meters is None:
+                # eg. LI25.yaml OTR22
+                return False
+            if not rec.controls_information.PVs:
+                # eg. UNDH.yaml BODCBX40
+                return False
+            return True
 
         def _assign(device, meta):
             """Corrections to input data"""
@@ -126,7 +135,8 @@ class _Parser:
             return
         for n, r in s.items():
             try:
-                _fixups(n, r)
+                if not _fixups(n, r):
+                    continue
                 _assign(n, _meta(n, r.controls_information, r.metadata, "screen"))
             except Exception:
                 pkdlog("ERROR device={} record={}", n, r)
@@ -150,6 +160,9 @@ class _Parser:
 from pykern.pkcollections import PKDict
 
 
-'''
+DB = '''
 
-        return _header() + pprint.pformat(self._map, indent=4, width=120)
+        def _pkdict(py):
+            return py.replace("{", "PKDict({").replace("}", "})")
+
+        return _header() + _pkdict(pprint.pformat(self._map, indent=4, width=120))
