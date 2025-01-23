@@ -619,8 +619,8 @@ DB = PKDict(
                                 "acquire": PKDict(
                                     {
                                         "name": "acquire",
-                                        "pv_base": "Acquire",
-                                        "pv_name": "13SIM1:Acquire",
+                                        "pv_base": "cam1:Acquire",
+                                        "pv_name": "13SIM1:cam1:Acquire",
                                         "pv_writable": True,
                                         "py_type": "bool",
                                     }
@@ -666,7 +666,7 @@ DB = PKDict(
                         "device_name": "DEV_CAMERA",
                         "pv_base": PKDict(
                             {
-                                "Acquire": "13SIM1:Acquire",
+                                "cam1:Acquire": "13SIM1:cam1:Acquire",
                                 "cam1:ArraySizeX_RBV": "13SIM1:cam1:ArraySizeX_RBV",
                                 "cam1:ArraySizeY_RBV": "13SIM1:cam1:ArraySizeY_RBV",
                                 "cam1:N_OF_BITS": "13SIM1:cam1:N_OF_BITS",

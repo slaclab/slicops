@@ -32,7 +32,7 @@ class Device:
         a, p = self._accessor_pv(accessor)
         if (rv := p.get()) is None or not p.connected:
             raise DeviceError(
-                f"unable to get accessor={accessor} device={self.name} pv={p.pvname}"
+                f"unable to get accessor={accessor} device={self.name} pv={a.pv_name}"
             )
         if a.py_type == "bool":
             return bool(rv)
@@ -40,18 +40,19 @@ class Device:
 
     def put(self, accessor, value):
         a, p = self._accessor_pv(accessor)
-        # ECA_NORMAL == 0
-        if e := p.put(value):
+        # ECA_NORMAL == 0 and None is normal, too, apparently
+        if (e := p.put(value)) != 1:
             if not p.connected:
-                raise DeviceError(f"device={self.name} not connected pv={p.pv}")
+                raise DeviceError(f"device={self.name} not connected pv={a.pv_name}")
             raise DeviceError(
-                f"put error={e} accessor={accessor} value={value} to device={self.name} pv={p.pvname}"
+                f"put error={e} accessor={accessor} value={value} to device={self.name} pv={a.pv_name}"
             )
-        return
 
     def _accessor_pv(self, accessor):
         a = self._meta.accessor[accessor]
         return (
             a,
-            self._pv.pksetdefault(accessor, lambda: epics.PV(a.pv_name))[accessor],
+            self._pv.pksetdefault(accessor, lambda: epics.PV(a.pv_name))[
+                accessor
+            ],
         )

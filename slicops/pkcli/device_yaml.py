@@ -41,6 +41,7 @@ _DEVICE_KIND_TO_ACCESSOR = PKDict(
             "cam1:ArraySizeX_RBV": PKDict(name="num_rows"),
             "cam1:ArraySizeY_RBV": PKDict(name="num_cols"),
             "cam1:N_OF_BITS": PKDict(name="bit_depth"),
+            "cam1:Acquire": PKDict(name="acquire", py_type="bool", pv_writable=True),
             "image1:ArrayData": PKDict(name="image", py_type="ndarray"),
         }
     )
@@ -52,6 +53,7 @@ screens:
   DEV_CAMERA:
     controls_information:
       PVs:
+        acquire: 13SIM1:cam1:Acquire
         image: 13SIM1:image1:ArrayData
         n_col: 13SIM1:cam1:ArraySizeX_RBV
         n_row: 13SIM1:cam1:ArraySizeY_RBV
@@ -198,7 +200,9 @@ class _Parser:
             )
 
         def _meta_fixups(meta):
-            meta.pv_base.Acquire = f"{meta.pv_prefix}:Acquire"
+            # TODO(robnagler): DEV_CAMERA is special, need to configure it right
+            if meta.device_name != "DEV_CAMERA":
+                meta.pv_base.pksetdefault(Acquire=f"{meta.pv_prefix}:Acquire")
             meta.accessor = _accessor(meta)
             return meta
 
