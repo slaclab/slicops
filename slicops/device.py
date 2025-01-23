@@ -8,30 +8,50 @@ from pykern.pkcollections import PKDict
 from pykern.pkdebug import pkdc, pkdlog, pkdp
 import epics
 import slicops.device_meta_raw
-import enum
+
+
+class DeviceError(RuntimeError):
+    pass
+
 
 class Device:
 
     def __init__(self, name):
-        if not m := slicops.device_meta_raw.DEVICE_TO_META.get(name):
+        if not (m := slicops.device_meta_raw.DB.DEVICE_TO_META.get(name)):
             raise NameError(f"no such device={name}")
-        #TODO(robnagler) support types based on rules
+        # TODO(robnagler) support types based on rules
         if m.device_kind != "screen":
-            raise NotImplementedError(f"unsupported device_kind={m.device_kind} device={name}")
+            raise NotImplementedError(
+                f"unsupported device_kind={m.device_kind} device={name}"
+            )
+        self.name = name
         self._meta = m
+        self._pv = PKDict()
 
     def get(self, accessor):
-        a = self._meta.accessor[accessor]
-        value = epics.caget(
-                a.pv_name,
-                as_numpy=as_numpy,
-                use_monitor=use_monitor,
+        a, p = self._accessor_pv(accessor)
+        if (rv := p.get()) is None or not p.connected:
+            raise DeviceError(
+                f"unable to get accessor={accessor} device={self.name} pv={p.pvname}"
             )
+        if a.py_type == "bool":
+            return bool(rv)
+        return rv
 
-        while
+    def put(self, accessor, value):
+        a, p = self._accessor_pv(accessor)
+        # ECA_NORMAL == 0
+        if e := p.put(value):
+            if not p.connected:
+                raise DeviceError(f"device={self.name} not connected pv={p.pv}")
+            raise DeviceError(
+                f"put error={e} accessor={accessor} value={value} to device={self.name} pv={p.pvname}"
+            )
+        return
 
-
-
-    def _create_pv(self, accessor):
-        a = self._meta[accessor]
-        return PV(pvname=a.pv_name, connection_timeout=0.01)
+    def _accessor_pv(self, accessor):
+        a = self._meta.accessor[accessor]
+        return (
+            a,
+            self._pv.pksetdefault(accessor, lambda: epics.PV(a.pv_name))[accessor],
+        )

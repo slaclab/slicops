@@ -4,45 +4,16 @@
 :license: http://github.com/slaclab/slicops/LICENSE
 """
 
-from lcls_tools.common.controls.pyepics.utils import PV, PVInvalidError
 from pykern import pkconfig
 from pykern.pkcollections import PKDict
 from pykern.pkdebug import pkdc, pkdlog, pkdp
 import lcls_tools.common.data.fitting_tool
-import lcls_tools.common.devices.reader
+import slicops.device
 import numpy
 import random
 import slicops.app.screen_schema
 
 _cfg = None
-
-# TODO(pjm): needed to monkey path reader._device data to add a dev camera
-_old_device_data = lcls_tools.common.devices.reader._device_data
-
-
-def _monkey_patch_device_data(area=None, device_type=None, name=None):
-    res = _old_device_data(area, device_type, name)
-    res["screens"][_cfg.dev.camera_name] = {
-        "controls_information": {
-            "PVs": {
-                "image": "13SIM1:image1:ArrayData",
-                "n_col": "13SIM1:cam1:ArraySizeX_RBV",
-                "n_row": "13SIM1:cam1:ArraySizeY_RBV",
-                "n_bits": "13SIM1:cam1:N_OF_BITS",
-                "resolution": "13SIM1:cam1:RESOLUTION",
-            },
-            "control_name": "13SIM1:cam1",
-        },
-        "metadata": {
-            "area": "GUNB",
-            "beam_path": ["SC_DIAG0", "SC_HXR", "SC_SXR"],
-            "sum_l_meters": 0.0,
-        },
-    }
-    return res
-
-
-lcls_tools.common.devices.reader._device_data = _monkey_patch_device_data
 
 
 def new_implementation(args):
@@ -141,37 +112,23 @@ class ScreenDevice:
     """Screen device interaction. All EPICS access occurs at this level."""
 
     def __init__(self):
-        self.screen = lcls_tools.common.devices.reader.create_screen(
-            slicops.app.screen_schema.get_camera_area(
-                _cfg.dev.beam_path, _cfg.dev.camera_name
-            ),
-        ).screens[_cfg.dev.camera_name]
+        self.screen = slicops.device.Device(_cfg.dev.camera_name)
 
     def get_image(self):
         """Gets raw pixels from EPICS"""
-        try:
-            # TODO(pjm): the row/columns is reversed in lcls_tools
-            #  possibly this needs to be a flag in the camera meta data
-            return self.screen.image.reshape(self.screen.n_rows, self.screen.n_columns)
-        except PVInvalidError as err:
-            # TODO(pjm): could provide a better error message here
-            raise err
-        except AttributeError as err:
-            # most likely EPICS PV is unavailable due to timeout,
-            #  Screen.image should raise an exception if no connection is completed
-            #  for now, catch AttributeError: 'NoneType' object has no attribute 'reshape'
-            # TODO(pjm): could provide a better error message here
-            raise err
-        except ValueError as err:
-            # similar to the above, connection works but image IOC is misconfigured
-            # ex. cannot reshape array of size 0 into shape (1024,1024)
-            raise err
+        if (rv := self.screen.get("image")) is None:
+            return ValueError("no image")
+        if not (
+            (r := self.screen.get("num_rows")) and (c := self.screen.get("num_cols"))
+        ):
+            raise ValueError("num_rows or num_cols is invalid")
+        return rv.reshape(c, r)
 
     def is_acquiring_images(self):
         """Returns True if the camera's EPICS value indicates it is capturing images."""
         try:
-            return bool(self._acquire_pv()[0].get())
-        except PVInvalidError as err:
+            return self.screen.get("acquire")
+        except slicops.device.DeviceError as err:
             # does not return an error, the initial camera may not be currently available
             return False
 
@@ -183,19 +140,8 @@ class ScreenDevice:
         """Set the EPICS camera to stop acquire mode."""
         return self._set_acquire(0)
 
-    def _acquire_pv(self):
-        n = f"{self.screen.controls_information.control_name}:Acquire"
-        return (PV(n), n)
-
     def _set_acquire(self, is_on):
-        try:
-            pv, n = self._acquire_pv()
-            pv.put(is_on)
-            if not pv.connected:
-                raise PVInvalidError(f"Unable to connect to PV: {n}")
-        except PVInvalidError as err:
-            # TODO(pjm): could provide a better error message here
-            raise err
+        self.screen.put("acquire", is_on)
         return PKDict()
 
 
