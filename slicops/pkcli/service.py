@@ -22,6 +22,6 @@ class Commands(slicops.pkcli.CommandsBase):
 
         http.server_start(
             attr_classes=quest.attr_classes(),
-            api_classes=(ui_api.UIAPI, auth_api.AuthAPI),
+            api_classes=(ui_api.ScreenAPI, auth_api.AuthAPI),
             http_config=config.cfg().ui_api.copy(),
         )

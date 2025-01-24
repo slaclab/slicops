@@ -12,20 +12,20 @@ import { LogService } from '../log.service';
     selector: 'app-screen',
     template: `
   <form [formGroup]="form">
-  <div class="row" *ngIf="model">
+  <div class="row" *ngIf="ui_ctx">
     <div *ngIf="errorMessage" class="alert alert-warning">{{ errorMessage }}</div>
     <div class="col-sm-3 ">
 
         <div class="mb-3">
           <label class="col-form-label col-form-label-sm">Beam Path</label>
           <select formControlName="beam_path" class="form-select form-select-sm" (change)="selectChanged('beam_path')" >
-            <option *ngFor="let bp of model.beam_path.valid_values" [value]="bp">{{ bp }}</option>
+            <option *ngFor="let bp of ui_ctx.beam_path.valid_values" [value]="bp">{{ bp }}</option>
           </select>
         </div>
         <div class="mb-3">
           <label class="col-form-label col-form-label-sm">Camera</label>
           <select formControlName="camera" class="form-select form-select-sm" (change)="selectChanged('camera')">
-            <option *ngFor="let c of model.camera.valid_values" [value]="c">{{ c }}</option>
+            <option *ngFor="let c of ui_ctx.camera.valid_values" [value]="c">{{ c }}</option>
           </select>
         </div>
         <div class="mb-3">
@@ -34,19 +34,19 @@ import { LogService } from '../log.service';
         </div>
         <div class="mb-3">
           <label class="col-form-label col-form-label-sm">Gain</label>
-          <input [readonly]="! model.camera_gain.enabled" formControlName="camera_gain" class="form-control form-control-sm" (keydown)="filterEnterKey($event, 'camera_gain')"/>
+          <input [readonly]="! ui_ctx.camera_gain.enabled" formControlName="camera_gain" class="form-control form-control-sm" (keydown)="filterEnterKey($event, 'camera_gain')"/>
         </div>
 
         <div class="mb-3">
           <div class="row">
             <div class="col-sm-4">
-              <button [disabled]="! model.start_button.enabled" class="btn btn-primary" type="button" (click)="serverAction('start_button', true)">Start</button>
+              <button [disabled]="! ui_ctx.start_button.enabled" class="btn btn-primary" type="button" (click)="serverAction('start_button', false)">Start</button>
             </div>
             <div class="col-sm-4">
-              <button [disabled]="! model.stop_button.enabled" class="btn btn-danger" type="button" (click)="serverAction('stop_button', true)">Stop</button>
+              <button [disabled]="! ui_ctx.stop_button.enabled" class="btn btn-danger" type="button" (click)="serverAction('stop_button', false)">Stop</button>
             </div>
             <div class="col-sm-4">
-              <button [disabled]="! model.single_button.enabled" class="btn btn-outline-info" type="button" (click)="serverAction('single_button', true)">Single</button>
+              <button [disabled]="! ui_ctx.single_button.enabled" class="btn btn-outline-info" type="button" (click)="serverAction('single_button', false)">Single</button>
             </div>
           </div>
         </div>
@@ -66,13 +66,13 @@ import { LogService } from '../log.service';
             <div class="col-sm-3">
               <label class="col-form-label col-form-label-sm">Curve Fit Method</label>
               <select formControlName="curve_fit_method" class="form-select form-select-sm" (change)="selectChanged('curve_fit_method')">
-                <option *ngFor="let m of model.curve_fit_method.valid_values" [value]="m[0]">{{ m[1] }}</option>
+                <option *ngFor="let m of ui_ctx.curve_fit_method.valid_values" [value]="m[0]">{{ m[1] }}</option>
               </select>
             </div>
             <div class="col-sm-3">
               <label class="col-form-label col-form-label-sm">Color Map</label>
               <select formControlName="color_map" class="form-select form-select-sm" (change)="selectChanged('color_map')">
-                <option *ngFor="let cm of model.color_map.valid_values" [value]="cm">{{ cm }}</option>
+                <option *ngFor="let cm of ui_ctx.color_map.valid_values" [value]="cm">{{ cm }}</option>
               </select>
             </div>
           </div>
@@ -85,7 +85,6 @@ import { LogService } from '../log.service';
     styles: [],
 })
 export class ScreenComponent {
-    readonly APP_NAME: string = 'screen';
     errorMessage: string = "";
     image: any = null;
     imageInterval: any = null;
@@ -99,20 +98,18 @@ export class ScreenComponent {
         curve_fit_method: new FormControl(''),
         camera_gain: new FormControl(''),
     });
-    model: any = null;
+    ui_ctx: any = null;
 
     constructor(private apiService: APIService, private log: LogService) {
         this.apiService = apiService;
 
         this.apiService.call(
-            'init_app', {
-                app_name: this.APP_NAME,
-            },
+            'screen_ui_ctx',
             (result) => {
-                this.model = result.model;
+                this.ui_ctx = result.ui_ctx;
                 let v:any = {};
-                for (let f in result.model) {
-                    v[f] = result.model[f].value;
+                for (let f in result.ui_ctx) {
+                    v[f] = result.ui_ctx[f].value;
                 }
                 this.form.patchValue(v);
             },
@@ -141,29 +138,26 @@ export class ScreenComponent {
 
     serverAction(field: string, value: any) {
         this.errorMessage = '';
-        this.model[field].enabled = false;
+        this.ui_ctx[field].enabled = false;
         this.apiService.call(
-            'action', {
-                app_name: this.APP_NAME,
-                method: 'field_changed',
-                field: field,
-                value: value,
+            `screen_{field}`, {
+                field_value: value,
             },
             (result) => {
                 if (result.plot) {
                     this.image = result.plot;
                 }
-                if (result.model && field in result.model && 'enabled' in result.model[field]) {
+                if (result.ui_ctx && field in result.ui_ctx && 'enabled' in result.ui_ctx[field]) {
                 }
                 else {
-                    this.model[field].enabled = true;
+                    this.ui_ctx[field].enabled = true;
                 }
-                if (result.model) {
-                    Object.assign(this.model, result.model);
+                if (result.ui_ctx) {
+                    Object.assign(this.ui_ctx, result.ui_ctx);
                     const values: any = {};
-                    for (let f in result.model) {
-                        if ('value' in result.model[f]) {
-                            values[f] = result.model[f].value;
+                    for (let f in result.ui_ctx) {
+                        if ('value' in result.ui_ctx[f]) {
+                            values[f] = result.ui_ctx[f].value;
                         }
                     }
                     this.form.patchValue(values);
@@ -171,7 +165,7 @@ export class ScreenComponent {
             },
             (err) => {
                 this.handleError(err);
-                this.model[field].enabled = true;
+                this.ui_ctx[field].enabled = true;
             }
         );
     }

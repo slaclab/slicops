@@ -12,8 +12,13 @@ import lcls_tools.common.data.fitting_tool
 import lcls_tools.common.devices.reader
 import numpy
 import random
-import slicops.app.screen_schema
+import slicops.quest
+import slicops.ui_schema
 import time
+
+_NAME = "screen"
+
+_API_PREFIX_LEN = len(f"api_{_NAME}_")
 
 _cfg = None
 
@@ -46,126 +51,96 @@ def _monkey_patch_device_data(area=None, device_type=None, name=None):
 lcls_tools.common.devices.reader._device_data = _monkey_patch_device_data
 
 
-def new_implementation(args):
-    return Screen(**args)
+def _hack_wrapper(f):
+    """Replace when pykern.quest supports dispatch_api_call method"""
+    def _wrapped(self, api_args):
+        if "ui_schema" not in self:
+            self._init_session()
+        ux = self.ui_ctx
+        rv = PKDict()
+        m = f.__name__[_API_PREFIX_LEN:]
+        if m != "ui_ctx":
+            ux[m].value = field_value
+        if (p := f(self, self.)) is not None:
+            rv.plot = p
+        #TODO(robnagler) qcall should have API name on qcall
+        if m != 'single_button':
+            #TODO(robnagler) ui_ctx or something name? in the typescript; "model" is too general
+            #TODO(robnagler) return edits; have function that updates nested attrs in py and ts
+            rv.model = ux
+        return rv
 
-
-class Screen(PKDict):
+class ScreenAPI(slicops.quest.API):
     """Implementation for the Screen (Profile Monitor) application"""
 
-    # TODO(pjm): the session state, needs to be tied to an id
-    _session_state = None
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-
-    def action_beam_path(self, value):
-        m = self.session_state().model
-        m.beam_path.value = value
-        m.camera.valid_values = slicops.app.screen_schema.get_cameras_for_beam_path(
-            value
-        )
-        if m.camera.value in m.camera.valid_values:
-            m.start_button.enabled = True
-            m.stop_button.enabled = False
-            m.single_button.enabled = True
+    @_hack_wrapper
+    def api_screen_beam_path(self, ux):
+        ux.camera.valid_values = self.ui_schema.cameras_for_beam_path(ux.beam_path.value)
+        if ux.camera.value in ux.camera.valid_values:
+            ux.start_button.enabled = True
+            ux.stop_button.enabled = False
+            ux.single_button.enabled = True
         else:
             # selected camera is not in beam_path
-            m.camera.value = None
-            m.pv.value = None
-            m.start_button.enabled = False
-            m.stop_button.enabled = False
-            m.single_button.enabled = False
+            ux.camera.value = None
+            ux.pv.value = None
+            ux.start_button.enabled = False
+            ux.stop_button.enabled = False
+            ux.single_button.enabled = False
         # TODO(pjm): could return a diff of model changes rather than full model
-        return PKDict(
-            model=m,
-        )
+        # OK to return in place values, not copy, becasue
+        return None
 
-    def action_camera(self, value):
-        m = self.session_state().model
-        m.camera.value = value
-        m.start_button.enabled = True
-        m.stop_button.enabled = False
-        m.single_button.enabled = True
-        m.pv.value = slicops.app.screen_schema.get_camera_pv(
-            m.beam_path.value,
-            m.camera.value,
+    @_hack_wrapper
+    def api_screen_camera(self, ux):
+        ux.start_button.enabled = True
+        ux.stop_button.enabled = False
+        ux.single_button.enabled = True
+        ux.pv.value = slicops.app.screen_schema.get_camera_pv(
+            ux.beam_path.value,
+            ux.camera.value,
         )
-        return PKDict(
-            model=m,
-        )
+        return None
 
-    def action_camera_gain(self, value):
-        m = self.session_state().model
-        m.camera_gain.value = value
-        ScreenDevice().put_pv("Gain", value)
-        return PKDict(
-            model=m,
-        )
+    @_hack_wrapper
+    def api_screen_camera_gain(self, ux):
+        self.session.screen_device.put_pv("Gain", ux.camera_gain.value)
+        return self._return(ux)
 
-    def action_color_map(self, value):
-        m = self.session_state().model
-        m.color_map.value = value
-        return PKDict(
-            model=m,
-        )
+    @_hack_wrapper
+    def api_screen_color_map(self, ux):
+        return None
 
-    def action_curve_fit_method(self, value):
-        m = self.session_state().model
-        m.curve_fit_method.value = value
-        return PKDict(
-            model=m,
-            plot=self._get_image(with_retry=True),
-        )
+    @_hack_wrapper
+    def api_screen_curve_fit_method(self, ux):
+        return self._get_image(ux, with_retry=True)
 
-    def action_single_button(self, value):
-        ScreenDevice().start()
-        i = self._get_image(with_retry=True)
-        ScreenDevice().stop()
-        return PKDict(
-            plot=i,
-        )
+    @_hack_wrapper
+    def api_screen_single_button(self, ux):
+        self.session.screen_device.start()
+        i = self._get_image(ux, with_retry=True)
+        self.session.screen_device.stop()
+        return i
 
-    def action_start_button(self, value):
-        m = self.session_state().model
-        ScreenDevice().start()
-        m.start_button.enabled = False
-        m.stop_button.enabled = True
-        m.single_button.enabled = False
-        return PKDict(
-            model=m,
-            plot=self._get_image(with_retry=True),
-        )
+    @_hack_wrapper
+    def api_screen_start_button(self, ux):
+        self.session.screen_device.start()
+        ux.start_button.enabled = False
+        ux.stop_button.enabled = True
+        ux.single_button.enabled = False
+        return self._get_image(ux, with_retry=True)
 
-    def action_stop_button(self, value):
-        m = self.session_state().model
-        ScreenDevice().stop()
-        m.start_button.enabled = True
-        m.stop_button.enabled = False
-        m.single_button.enabled = True
-        return PKDict(model=m)
+    @_hack_wrapper
+    def api_screen_stop_button(self, ux):
+        self.session.screen_device.stop()
+        ux.start_button.enabled = True
+        ux.stop_button.enabled = False
+        ux.single_button.enabled = True
+        return None
 
-    def session_state(self):
-        # TODO(pjm): need data store, using a class var for now
-        if Screen._session_state is None:
-            Screen._session_state = PKDict(
-                model=self._default_model(),
-            )
-        return Screen._session_state
-
-    def _default_model(self):
-        m = slicops.app.screen_schema.new_model()
-        m.beam_path.value = _cfg.dev.beam_path
-        m.camera.value = _cfg.dev.camera_name
-        m.camera.valid_values = slicops.app.screen_schema.get_cameras_for_beam_path(
-            _cfg.dev.beam_path
-        )
-        m.pv.value = slicops.app.screen_schema.get_camera_pv(
-            _cfg.dev.beam_path, _cfg.dev.camera_name
-        )
-        # TODO(pjm): only get this value if the selected camera supports Gain
-        m.camera_gain.value = ScreenDevice().get_pv("Gain")
-        return m
+    @_hack_wrapper
+    def api_screen_ui_ctx(self, api_args):
+        return None
 
     def _fit_profile(self, profile, method):
         """Use the lcls_tools FittingTool to match the selected method.
@@ -199,17 +174,16 @@ class Screen(PKDict):
             ),
         )
 
-    def _get_image(self, with_retry=False):
-        m = self.session_state().model
+    def _get_image(self, ux, with_retry=False):
         try:
-            raw_pixels = ScreenDevice().get_image()
+            raw_pixels = self.session.screen_device.get_image()
             return PKDict(
                 # TODO(pjm): output handler should support ndarray, avoiding tolist()
                 raw_pixels=raw_pixels.tolist(),
-                x=self._fit_profile(raw_pixels.sum(axis=0), m.curve_fit_method.value),
+                x=self._fit_profile(raw_pixels.sum(axis=0), ux.curve_fit_method.value),
                 y=self._fit_profile(
                     raw_pixels.sum(axis=1)[::-1],
-                    m.curve_fit_method.value,
+                    ux.curve_fit_method.value,
                 ),
             )
         except ValueError as err:
@@ -221,15 +195,26 @@ class Screen(PKDict):
                 return self._get_image()
             raise err
 
+    def _init_session(self):
+        self.session.ui_schema = slicops.ui_schema.load(_NAME)
+        self.session.ui_ctx = ux = slicops.app.screen_schema.default_ui_ctx()
+        ux.beam_path.value = _cfg.dev.beam_path
+        ux.camera.value = _cfg.dev.camera_name
+        s = self.session.ui_schema
+        ux.camera.valid_values = s.cameras_for_beam_path(_cfg.dev.beam_path)
+        ux.pv.value = s.camera_pv(_cfg.dev.beam_path, _cfg.dev.camera_name)
+        self.session.screen_device = _ScreenDevice(self.session.ui_schema)
+        # TODO(pjm): only get this value if the selected camera supports Gain
+        ux.camera_gain.value = self.session.screen_device.get_pv("Gain")
+        return ux
 
-class ScreenDevice:
+
+class _ScreenDevice:
     """Screen device interaction. All EPICS access occurs at this level."""
 
-    def __init__(self):
+    def __init__(self, schema):
         self.screen = lcls_tools.common.devices.reader.create_screen(
-            slicops.app.screen_schema.get_camera_area(
-                _cfg.dev.beam_path, _cfg.dev.camera_name
-            ),
+            schema.camera_area(_cfg.dev.beam_path, _cfg.dev.camera_name)
         ).screens[_cfg.dev.camera_name]
 
     def get_image(self):
