@@ -139,6 +139,14 @@ SCHEMA = PKDict(
 )
 
 
+def get_beam_paths():
+    return list(SCHEMA.constants.BeamPath.keys())
+
+
+def get_cameras_for_beam_path(beam_path):
+    return list(SCHEMA.constants.BeamPath[beam_path].keys())
+
+
 def get_camera_area(beam_path, camera_name):
     return SCHEMA.constants.BeamPath[beam_path][camera_name][1]
 

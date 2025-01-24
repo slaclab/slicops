@@ -13,6 +13,7 @@ import lcls_tools.common.devices.reader
 import numpy
 import random
 import slicops.app.screen_schema
+import time
 
 _cfg = None
 
@@ -52,68 +53,224 @@ def new_implementation(args):
 class Screen(PKDict):
     """Implementation for the Screen (Profile Monitor) application"""
 
+    # TODO(pjm): the session state, needs to be tied to websocket or cookie
+    model = None
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-    def action_camera_gain(self):
-        # TODO(pjm): need PV config for gain
-        return ScreenDevice().put_pv("Gain", self.api_args.camera_gain)
-
-    def action_get_image(self):
-        """Returns an image and x/y profiles with computed fitting"""
-        raw_pixels = ScreenDevice().get_image()
+    def action_beam_path(self, value):
+        Screen.model.beam_path.value = value
+        values = slicops.app.screen_schema.get_cameras_for_beam_path(value)
+        res = PKDict(
+            model=PKDict(
+                camera=PKDict(
+                    valid_values=values,
+                ),
+                start_button=PKDict(
+                    enabled=True,
+                ),
+                stop_button=PKDict(
+                    enabled=False,
+                ),
+                single_button=PKDict(
+                    enabled=True,
+                ),
+            ),
+        )
+        if Screen.model.camera.value in values:
+            return res
+        # selected camera is not in beam_path
+        Screen.model.camera.value = None
+        Screen.model.pv.value = None
         return PKDict(
-            image=PKDict(
+            model=PKDict(
+                camera=PKDict(
+                    value=None,
+                    valid_values=values,
+                ),
+                pv=PKDict(
+                    value=None,
+                ),
+                start_button=PKDict(
+                    enabled=False,
+                ),
+                stop_button=PKDict(
+                    enabled=False,
+                ),
+                single_button=PKDict(
+                    enabled=False,
+                ),
+            ),
+        )
+
+    def action_camera(self, value):
+        Screen.model.camera.value = value
+        return PKDict(
+            model=PKDict(
+                start_button=PKDict(
+                    enabled=True,
+                ),
+                stop_button=PKDict(
+                    enabled=False,
+                ),
+                single_button=PKDict(
+                    enabled=True,
+                ),
+                pv=PKDict(
+                    value=slicops.app.screen_schema.get_camera_pv(
+                        Screen.model.beam_path.value,
+                        Screen.model.camera.value,
+                    ),
+                ),
+            ),
+        )
+
+    def action_color_map(self, value):
+        Screen.model.color_map.value = value
+        return PKDict(
+            model=PKDict(),
+        )
+
+    def action_curve_fit_method(self, value):
+        Screen.model.curve_fit_method.value = value
+        return PKDict(
+            plot=self._get_image(with_retry=True),
+        )
+
+    def action_camera_gain(self, value):
+        Screen.model.camera_gain.value = value
+        ScreenDevice().put_pv("Gain", value)
+        return PKDict(
+            model=PKDict(),
+        )
+
+    def action_single_button(self, value):
+        ScreenDevice().start()
+        i = self._get_image(with_retry=True)
+        ScreenDevice().stop()
+        return PKDict(
+            plot=i,
+        )
+
+    def action_start_button(self, value):
+        ScreenDevice().start()
+        return PKDict(
+            model=PKDict(
+                start_button=PKDict(
+                    enabled=False,
+                ),
+                stop_button=PKDict(
+                    enabled=True,
+                ),
+                single_button=PKDict(
+                    enabled=False,
+                ),
+            ),
+            plot=self._get_image(with_retry=True),
+        )
+
+    def action_stop_button(self, value):
+        ScreenDevice().stop()
+        return PKDict(
+            model=PKDict(
+                start_button=PKDict(
+                    enabled=True,
+                ),
+                stop_button=PKDict(
+                    enabled=False,
+                ),
+                single_button=PKDict(
+                    enabled=True,
+                ),
+            ),
+        )
+
+    def _get_image(self, with_retry=False):
+        try:
+            raw_pixels = ScreenDevice().get_image()
+            return PKDict(
                 # TODO(pjm): output handler should support ndarray, avoiding tolist()
                 raw_pixels=raw_pixels.tolist(),
-                x=self._fit_profile(raw_pixels.sum(axis=0), self.api_args.curve_fit),
-                y=self._fit_profile(
-                    raw_pixels.sum(axis=1)[::-1], self.api_args.curve_fit
+                x=self._fit_profile(
+                    raw_pixels.sum(axis=0), Screen.model.curve_fit_method.value
                 ),
-            ),
-        )
-
-    def action_start_button(self):
-        """Starts image acquisition and returns an image"""
-        ScreenDevice().start()
-        # TODO(pjm): need a retry with timeout here if first acquiring and no image is available yet
-        return self.action_get_image()
-
-    def action_single_button(self):
-        """Acquires a single image and then stops acquisition"""
-        res = self.action_start_button()
-        ScreenDevice().stop()
-        return res
-
-    def action_stop_button(self):
-        ScreenDevice().stop()
-        return PKDict()
+                y=self._fit_profile(
+                    raw_pixels.sum(axis=1)[::-1],
+                    Screen.model.curve_fit_method.value,
+                ),
+            )
+        except ValueError as err:
+            if with_retry:
+                # TODO(pjm): need a retry with timeout here if first acquiring and no image is available yet
+                #    sleep() needs to be replaced with async sleep?
+                time.sleep(1)
+                # no retry
+                return self._get_image()
+            raise err
 
     def default_model(self):
-        # TODO(pjm): need data store
+        if Screen.model:
+            return Screen.model
+        # TODO(pjm): need data store, could use global var for now
         s = ScreenDevice()
-        return PKDict(
-            screen=PKDict(
-                beam_path=_cfg.dev.beam_path,
-                camera=_cfg.dev.camera_name,
-                pv=slicops.app.screen_schema.get_camera_pv(
+        Screen.model = PKDict(
+            beam_path=PKDict(
+                value=_cfg.dev.beam_path,
+                valid_values=slicops.app.screen_schema.get_beam_paths(),
+                visible=True,
+                enabled=True,
+            ),
+            camera=PKDict(
+                value=_cfg.dev.camera_name,
+                valid_values=slicops.app.screen_schema.get_cameras_for_beam_path(
+                    _cfg.dev.beam_path
+                ),
+                visible=True,
+                enabled=True,
+            ),
+            pv=PKDict(
+                value=slicops.app.screen_schema.get_camera_pv(
                     _cfg.dev.beam_path, _cfg.dev.camera_name
                 ),
-                curve_fit_method="gaussian",
-                color_map="Inferno",
-                camera_image=None,
-                acquire_button=None,
-                stop_button=None,
-                single_button=None,
+                visible=True,
+                enabled=False,
+            ),
+            curve_fit_method=PKDict(
+                value="gaussian",
+                valid_values=[
+                    ["gaussian", "Gaussian"],
+                    ["super_gaussian", "Super Gaussian"],
+                ],
+                visible=True,
+                enabled=True,
+            ),
+            color_map=PKDict(
+                value="Inferno",
+                valid_values=["Cividis", "Inferno", "Viridis"],
+                visible=True,
+                enabled=True,
+            ),
+            start_button=PKDict(
+                visible=True,
+                enabled=True,
+            ),
+            stop_button=PKDict(
+                visible=True,
+                enabled=False,
+            ),
+            single_button=PKDict(
+                visible=True,
+                enabled=True,
+            ),
+            camera_gain=PKDict(
                 # TODO(pjm): don't use get_pv_or_default()  - takes too long on failure and would be multiple times
-                camera_gain=s.get_pv_or_default("Gain", 180),
-                # TODO(pjm): this is a potentially very slow operation if the default camera is unavailable
-                is_acquiring_images=s.is_acquiring_images(),
+                value=s.get_pv_or_default("Gain", 180),
+                visible=True,
+                enabled=True,
             ),
         )
-
-    def schema(self):
-        return slicops.app.screen_schema.SCHEMA
+        return Screen.model
 
     def _fit_profile(self, profile, method):
         """Use the lcls_tools FittingTool to match the selected method.

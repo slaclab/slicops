@@ -12,41 +12,41 @@ import { LogService } from '../log.service';
     selector: 'app-screen',
     template: `
   <form [formGroup]="form">
-  <div class="row">
+  <div class="row" *ngIf="model">
     <div *ngIf="errorMessage" class="alert alert-warning">{{ errorMessage }}</div>
     <div class="col-sm-3 ">
 
         <div class="mb-3">
-          <label class="form-label">Beam Path</label>
-          <select formControlName="beam_path" class="form-select form-control-sm">
-            <option *ngFor="let bp of beamPaths" [value]="bp">{{ bp }}</option>
+          <label class="col-form-label col-form-label-sm">Beam Path</label>
+          <select formControlName="beam_path" class="form-select form-select-sm" (change)="selectChanged('beam_path')" >
+            <option *ngFor="let bp of model.beam_path.valid_values" [value]="bp">{{ bp }}</option>
           </select>
         </div>
         <div class="mb-3">
-          <label class="form-label">Camera</label>
-          <select formControlName="camera" class="form-select form-control-sm">
-            <option *ngFor="let c of cameras" [value]="c">{{ c }}</option>
+          <label class="col-form-label col-form-label-sm">Camera</label>
+          <select formControlName="camera" class="form-select form-select-sm" (change)="selectChanged('camera')">
+            <option *ngFor="let c of model.camera.valid_values" [value]="c">{{ c }}</option>
           </select>
         </div>
         <div class="mb-3">
-          <label class="form-label">PV</label>
+          <label class="col-form-label col-form-label-sm">PV</label>
           <input formControlName="pv" class="form-control form-control-sm form-control-plaintext" />
         </div>
         <div class="mb-3">
-          <label class="form-label">Gain</label>
-          <input formControlName="camera_gain" class="form-control form-control-sm" (keydown)="gainKeyDown($event)"/>
+          <label class="col-form-label col-form-label-sm">Gain</label>
+          <input [readonly]="! model.camera_gain.enabled" formControlName="camera_gain" class="form-control form-control-sm" (keydown)="filterEnterKey($event, 'camera_gain')"/>
         </div>
 
         <div class="mb-3">
           <div class="row">
             <div class="col-sm-4">
-              <button [disabled]="isAcquiring || ! form.value.pv" class="btn btn-primary" type="button" (click)="startAcquiringImages()">Start</button>
+              <button [disabled]="! model.start_button.enabled" class="btn btn-primary" type="button" (click)="serverAction('start_button', true)">Start</button>
             </div>
             <div class="col-sm-4">
-              <button [disabled]="! isAcquiring || ! form.value.pv" class="btn btn-danger" type="button" (click)="stopAcquiringImages()">Stop</button>
+              <button [disabled]="! model.stop_button.enabled" class="btn btn-danger" type="button" (click)="serverAction('stop_button', true)">Stop</button>
             </div>
             <div class="col-sm-4">
-              <button [disabled]="isAcquiring || ! form.value.pv" class="btn btn-outline-info" type="button" (click)="getSingleImage()">Single</button>
+              <button [disabled]="! model.single_button.enabled" class="btn btn-outline-info" type="button" (click)="serverAction('single_button', true)">Single</button>
             </div>
           </div>
         </div>
@@ -64,15 +64,15 @@ import { LogService } from '../log.service';
         <div class="mb-3">
           <div class="row">
             <div class="col-sm-3">
-              <label class="form-label">Curve Fit Method</label>
-              <select formControlName="curve_fit_method" class="form-select form-control-sm">
-                <option *ngFor="let m of methods" [value]="m[0]">{{ m[1] }}</option>
+              <label class="col-form-label col-form-label-sm">Curve Fit Method</label>
+              <select formControlName="curve_fit_method" class="form-select form-select-sm" (change)="selectChanged('curve_fit_method')">
+                <option *ngFor="let m of model.curve_fit_method.valid_values" [value]="m[0]">{{ m[1] }}</option>
               </select>
             </div>
             <div class="col-sm-3">
-              <label class="form-label">Color Map</label>
-              <select formControlName="color_map" class="form-select form-control-sm">
-                <option *ngFor="let cm of colorMaps" [value]="cm">{{ cm }}</option>
+              <label class="col-form-label col-form-label-sm">Color Map</label>
+              <select formControlName="color_map" class="form-select form-select-sm" (change)="selectChanged('color_map')">
+                <option *ngFor="let cm of model.color_map.valid_values" [value]="cm">{{ cm }}</option>
               </select>
             </div>
           </div>
@@ -86,15 +86,9 @@ import { LogService } from '../log.service';
 })
 export class ScreenComponent {
     readonly APP_NAME: string = 'screen';
-    beamPathInfo: any = null;
-    beamPaths: string[] = [];
-    cameras: string[] = [];
-    colorMaps: string[] = [];
     errorMessage: string = "";
     image: any = null;
     imageInterval: any = null;
-    isAcquiring: boolean = false;
-    methods: any = [];
     form = new FormGroup({
         beam_path: new FormControl(''),
         camera: new FormControl(''),
@@ -103,59 +97,31 @@ export class ScreenComponent {
         curve_fit_method: new FormControl(''),
         camera_gain: new FormControl(''),
     });
+    model: any = null;
 
     constructor(private apiService: APIService, private log: LogService) {
         this.apiService = apiService;
-
-        this.form.valueChanges.subscribe(values => {
-            this.updateForm(values);
-        });
 
         this.apiService.call(
             'init_app', {
                 app_name: this.APP_NAME,
             },
             (result) => {
-                //TODO(pjm): these details move to field editors
-                this.beamPathInfo = result.schema.constants.BeamPath;
-                this.beamPaths = Object.keys(result.schema.constants.BeamPath);
-                this.methods = result.schema.constants.CurveFitMethod;
-                this.colorMaps = result.schema.constants.ColorMap;
-                this.isAcquiring = result.model.screen.is_acquiring_images;
-                this.form.patchValue(result.model.screen);
-                if (this.isAcquiring) {
-                    this.getImages();
+                this.model = result.model;
+                let v:any = {};
+                for (let f in result.model) {
+                    v[f] = result.model[f].value;
                 }
+                this.form.patchValue(v);
             },
             this.handleError.bind(this),
         );
     }
 
-    gainKeyDown(event: KeyboardEvent) {
+    filterEnterKey(event: KeyboardEvent, field: string) {
         if (event.key === 'Enter') {
-            this.form.controls.camera_gain.disable();
-            this.apiService.call(
-                'action', {
-                    app_name: this.APP_NAME,
-                    method: 'camera_gain',
-                    camera_gain: this.form.controls.camera_gain.value
-                },
-                (result) => {
-                    this.form.controls.camera_gain.enable();
-                },
-                (err) => {
-                    this.form.controls.camera_gain.enable();
-                    this.handleError(err);
-                }
-            );
+            this.serverAction(field, (this.form.controls as any)[field].value);
         }
-    }
-
-    getSingleImage() {
-        if (this.isAcquiring) {
-            return;
-        }
-        this.acquireImages('single_button');
     }
 
     handleError(err: any) {
@@ -167,60 +133,49 @@ export class ScreenComponent {
         this.errorMessage = err;
     }
 
-    startAcquiringImages() {
-        this.isAcquiring = true;
-        this.acquireImages('start_button');
+    selectChanged(field: string) {
+        this.serverAction(field, (this.form.controls as any)[field].value);
     }
 
-    stopAcquiringImages() {
-        if (this.imageInterval) {
-            clearInterval(this.imageInterval);
-            this.imageInterval = null;
-        }
-        this.isAcquiring = false;
-        this.acquireImages('stop_button');
-    }
-
-    private acquireImages(button: string) {
-        this.errorMessage = "";
+    serverAction(field: string, value: any) {
+        this.errorMessage = '';
+        this.model[field].enabled = false;
         this.apiService.call(
-            'action',
-            {
+            'action', {
                 app_name: this.APP_NAME,
-                method: button,
-                curve_fit: this.form.controls.curve_fit_method.value,
+                method: 'field_changed',
+                field: field,
+                value: value,
             },
             (result) => {
-                if (result.image) {
-                    this.image = result.image;
-                    if (button == 'start_button') {
-                        this.getImages();
+                if (result.plot) {
+                    this.image = result.plot;
+                }
+                if (result.model && field in result.model && 'enabled' in result.model[field]) {
+                }
+                else {
+                    this.model[field].enabled = true;
+                }
+                if (result.model) {
+                    Object.assign(this.model, result.model);
+                    const values: any = {};
+                    for (let f in result.model) {
+                        if ('value' in result.model[f]) {
+                            values[f] = result.model[f].value;
+                        }
                     }
+                    this.form.patchValue(values);
                 }
             },
-            this.handleError.bind(this),
-        );
-    }
-
-    private getImage(callback: Function) {
-        this.apiService.call(
-            'action',
-            {
-                app_name: this.APP_NAME,
-                method: 'get_image',
-                curve_fit: this.form.controls.curve_fit_method.value,
-            },
-            (result) => {
-                this.image = result.image;
-                callback();
-            },
             (err) => {
-                this.image = null;
                 this.handleError(err);
-            },
+                this.model[field].enabled = true;
+            }
         );
     }
 
+    //TODO(pjm): add poll time to serverAction response to refresh image for now
+    /*
     private getImages() {
         let ready = true;
         this.imageInterval = setInterval(() => {
@@ -232,20 +187,5 @@ export class ScreenComponent {
             }
         }, 1000);
     }
-
-    private updateForm(values: any) {
-        // Update list of cameras for the selected beam path
-        // and the pv for the selected camera
-        if (values.beam_path) {
-            const c = this.beamPathInfo[values.beam_path];
-            this.cameras = Object.keys(c);
-            const pv = values.camera && this.cameras.includes(values.camera)
-                ? c[values.camera][0]
-                : '';
-            if (values.pv !== pv) {
-                // note: this will fire an update change, calling updateForm() again
-                this.form.patchValue({ pv: pv });
-            }
-        }
-    }
+    */
 }
