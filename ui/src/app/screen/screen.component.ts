@@ -89,6 +89,8 @@ export class ScreenComponent {
     errorMessage: string = "";
     image: any = null;
     imageInterval: any = null;
+
+    //TODO(pjm): build form and ui components dynamically from schema view layout
     form = new FormGroup({
         beam_path: new FormControl(''),
         camera: new FormControl(''),

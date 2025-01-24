@@ -5,6 +5,7 @@
 """
 
 from pykern.pkcollections import PKDict
+from pykern.pkdebug import pkdc, pkdlog, pkdp
 
 # TODO(pjm): should be immutable
 SCHEMA = PKDict(
@@ -108,13 +109,13 @@ SCHEMA = PKDict(
         screen=PKDict(
             beam_path=["Beam Path", "BeamPath"],
             camera=["Camera", "Camera"],
-            pv=["PV", "CameraPV"],
-            curve_fit_method=["Curve Fit Method", "CurveFitMethod", "gaussian"],
-            color_map=["Color Map", "ColorMap", "Inferno"],
             camera_image=["Camera Image", "CameraImage"],
+            color_map=["Color Map", "ColorMap", "Inferno"],
+            curve_fit_method=["Curve Fit Method", "CurveFitMethod", "gaussian"],
+            pv=["PV", "CameraPV"],
+            single_button=["Single", "SingleButton"],
             start_button=["Start", "StartButton"],
             stop_button=["Stop", "StopButton"],
-            single_button=["Single", "SingleButton"],
         ),
     ),
     view=PKDict(
@@ -153,3 +154,53 @@ def get_camera_area(beam_path, camera_name):
 
 def get_camera_pv(beam_path, camera_name):
     return SCHEMA.constants.BeamPath[beam_path][camera_name][0]
+
+
+def new_model():
+    # TODO(pjm): create field values from schema above with default values
+    return PKDict(
+        beam_path=PKDict(
+            valid_values=get_beam_paths(),
+            visible=True,
+            enabled=True,
+        ),
+        camera=PKDict(
+            visible=True,
+            enabled=True,
+        ),
+        camera_gain=PKDict(
+            visible=True,
+            enabled=True,
+        ),
+        pv=PKDict(
+            visible=True,
+            enabled=False,
+        ),
+        color_map=PKDict(
+            value="Inferno",
+            valid_values=["Cividis", "Inferno", "Viridis"],
+            visible=True,
+            enabled=True,
+        ),
+        curve_fit_method=PKDict(
+            value="gaussian",
+            valid_values=[
+                ["gaussian", "Gaussian"],
+                ["super_gaussian", "Super Gaussian"],
+            ],
+            visible=True,
+            enabled=True,
+        ),
+        single_button=PKDict(
+            visible=True,
+            enabled=True,
+        ),
+        start_button=PKDict(
+            visible=True,
+            enabled=True,
+        ),
+        stop_button=PKDict(
+            visible=True,
+            enabled=False,
+        ),
+    )

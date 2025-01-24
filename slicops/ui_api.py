@@ -31,14 +31,11 @@ class UIAPI(slicops.quest.API):
         )
 
     async def api_action(self, api_args):
-        #TODO(pjm): document inputs, field, value
+        # TODO(pjm): document inputs, field, value
         m = getattr(self._app_implementation(api_args), f"action_{api_args.field}")
         if m:
             return m(api_args.value)
         raise AssertionError(f"unknown action method: {api_args.field}")
 
     async def api_init_app(self, api_args):
-        #TODO(pjm): return existing session state, including plot
-        return PKDict(
-            model=self._app_implementation(api_args).default_model(),
-        )
+        return self._app_implementation(api_args).session_state()
