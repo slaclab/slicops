@@ -20,6 +20,10 @@ _NAME = "screen"
 
 _API_PREFIX_LEN = len(f"api_{_NAME}_")
 
+_NOT_API_WITH_FIELD = frozenset(
+    ("ui_ctx", "stop_button", "single_button", "start_button")
+)
+
 _cfg = None
 
 # TODO(pjm): needed to monkey path reader._device data to add a dev camera
@@ -51,31 +55,37 @@ def _monkey_patch_device_data(area=None, device_type=None, name=None):
 lcls_tools.common.devices.reader._device_data = _monkey_patch_device_data
 
 
-def _hack_wrapper(f):
+def _hack_wrapper(api_method):
     """Replace when pykern.quest supports dispatch_api_call method"""
+
     def _wrapped(self, api_args):
         if "ui_schema" not in self:
             self._init_session()
         ux = self.ui_ctx
         rv = PKDict()
-        m = f.__name__[_API_PREFIX_LEN:]
-        if m != "ui_ctx":
+        a = api_method.__name__[_API_PREFIX_LEN:]
+        if a not in _NOT_API_WITH_FIELD:
+            # TODO(robnagler) The "value" is not always used.
             ux[m].value = field_value
-        if (p := f(self, self.)) is not None:
+        if (p := api_method(self, ux)) is not None:
             rv.plot = p
-        #TODO(robnagler) qcall should have API name on qcall
-        if m != 'single_button':
-            #TODO(robnagler) ui_ctx or something name? in the typescript; "model" is too general
-            #TODO(robnagler) return edits; have function that updates nested attrs in py and ts
+        # TODO(robnagler) qcall should have API name on qcall
+        if m != "single_button":
+            # TODO(robnagler) ui_ctx or something name? in the typescript; "model" is too general
+            # TODO(robnagler) return edits; have function that updates nested attrs in py and ts
             rv.model = ux
         return rv
+
 
 class ScreenAPI(slicops.quest.API):
     """Implementation for the Screen (Profile Monitor) application"""
 
     @_hack_wrapper
     def api_screen_beam_path(self, ux):
-        ux.camera.valid_values = self.ui_schema.cameras_for_beam_path(ux.beam_path.value)
+        # TODO(robnagler) get from device db
+        ux.camera.valid_values = self.session.ui_schema.cameras_for_beam_path(
+            ux.beam_path.value
+        )
         if ux.camera.value in ux.camera.valid_values:
             ux.start_button.enabled = True
             ux.stop_button.enabled = False
