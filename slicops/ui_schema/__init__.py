@@ -6,7 +6,9 @@
 
 from pykern.pkcollections import PKDict
 from pykern.pkdebug import pkdc, pkdlog, pkdp
+import importlib
+
 
 def load(submodule):
     # TODO(robnagler) package_path
-    return importlib.import_module(f"slicops.ui_schema.{submodule}")
+    return importlib.import_module(f"slicops.ui_schema.{submodule}").SINGLETON

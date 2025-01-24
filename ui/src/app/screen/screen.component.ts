@@ -105,6 +105,7 @@ export class ScreenComponent {
 
         this.apiService.call(
             'screen_ui_ctx',
+            {},
             (result) => {
                 this.ui_ctx = result.ui_ctx;
                 let v:any = {};
@@ -140,7 +141,7 @@ export class ScreenComponent {
         this.errorMessage = '';
         this.ui_ctx[field].enabled = false;
         this.apiService.call(
-            `screen_{field}`, {
+            `screen_${field}`, {
                 field_value: value,
             },
             (result) => {
