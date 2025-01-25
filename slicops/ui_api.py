@@ -31,17 +31,11 @@ class UIAPI(slicops.quest.API):
         )
 
     async def api_action(self, api_args):
-        m = getattr(self._app_implementation(api_args), f"action_{api_args.method}")
+        # TODO(pjm): document inputs, field, value
+        m = getattr(self._app_implementation(api_args), f"action_{api_args.field}")
         if m:
-            return m()
-        raise AssertionError(f"unknown action method: {api_args.method}")
-
-    async def api_echo(self, api_args):
-        return self._app_implementation(api_args).api_args.value
+            return m(api_args.value)
+        raise AssertionError(f"unknown action method: {api_args.field}")
 
     async def api_init_app(self, api_args):
-        a = self._app_implementation(api_args)
-        return PKDict(
-            schema=a.schema(),
-            model=a.default_model(),
-        )
+        return self._app_implementation(api_args).session_state()

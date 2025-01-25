@@ -5,11 +5,76 @@
 """
 
 from pykern.pkcollections import PKDict
+from pykern.pkdebug import pkdc, pkdlog, pkdp
 
-# TODO(pjm): should be immutable
-SCHEMA = PKDict(
+
+class _ScreenSchema(PKDict):
+    def beam_paths(self):
+        return list(self.constants.beam_path.keys())
+
+    def cameras_for_beam_path(self, beam_path):
+        return list(self.constants.beam_path[beam_path].keys())
+
+    def camera_area(self, beam_path, camera_name):
+        return self.constants.beam_path[beam_path][camera_name][1]
+
+    def camera_pv(self, beam_path, camera_name):
+        return self.constants.beam_path[beam_path][camera_name][0]
+
+    def default_ui_ctx(self):
+        # TODO(pjm): create field values from schema above with default values
+        # TODO(robnagler): return an object
+        return PKDict(
+            beam_path=PKDict(
+                valid_values=list(self.constants.beam_path.keys()),
+                visible=True,
+                enabled=True,
+            ),
+            camera=PKDict(
+                visible=True,
+                enabled=True,
+            ),
+            camera_gain=PKDict(
+                visible=True,
+                enabled=True,
+            ),
+            pv=PKDict(
+                visible=True,
+                enabled=False,
+            ),
+            color_map=PKDict(
+                value="Inferno",
+                valid_values=["Cividis", "Inferno", "Viridis"],
+                visible=True,
+                enabled=True,
+            ),
+            curve_fit_method=PKDict(
+                value="gaussian",
+                valid_values=[
+                    ["gaussian", "Gaussian"],
+                    ["super_gaussian", "Super Gaussian"],
+                ],
+                visible=True,
+                enabled=True,
+            ),
+            single_button=PKDict(
+                visible=True,
+                enabled=True,
+            ),
+            start_button=PKDict(
+                visible=True,
+                enabled=True,
+            ),
+            stop_button=PKDict(
+                visible=True,
+                enabled=False,
+            ),
+        )
+
+
+SINGLETON = _ScreenSchema(
     constants=PKDict(
-        BeamPath=PKDict(
+        beam_path=PKDict(
             # beam path -> camera name -> [camera pv, area]
             CU_ALINE=PKDict(
                 YAG01=["YAGS:IN20:211", "GUN"],
@@ -98,50 +163,44 @@ SCHEMA = PKDict(
                 OTRDMPB=["OTRS:DMPS:695", "DMPS"],
             ),
         ),
-        ColorMap=["Cividis", "Cool", "Inferno", "Magma", "Plasma", "Viridis", "Warm"],
-        CurveFitMethod=[
-            ["gaussian", "Gaussian"],
-            ["super_gaussian", "Super Gaussian"],
-        ],
+        # TODO(robnagler) unused and not clear it will be used
+        # color_map=["Cividis", "Cool", "Inferno", "Magma", "Plasma", "Viridis", "Warm"],
+        # curve_fit_method=[
+        #     ["gaussian", "Gaussian"],
+        #     ["super_gaussian", "Super Gaussian"],
+        # ],
     ),
-    model=PKDict(
-        screen=PKDict(
-            beam_path=["Beam Path", "BeamPath"],
-            camera=["Camera", "Camera"],
-            pv=["PV", "CameraPV"],
-            curve_fit_method=["Curve Fit Method", "CurveFitMethod", "gaussian"],
-            color_map=["Color Map", "ColorMap", "Inferno"],
-            camera_image=["Camera Image", "CameraImage"],
-            start_button=["Start", "StartButton"],
-            stop_button=["Stop", "StopButton"],
-            single_button=["Single", "SingleButton"],
-        ),
-    ),
-    view=PKDict(
-        screen=PKDict(
-            fields=[
-                [
-                    "beam_path",
-                    "camera",
-                    "pv",
-                    "start_button",
-                    "stop_button",
-                    "single_button",
-                ],
-                [
-                    "camera_image",
-                    "curve_fit_method",
-                    "color_map",
-                ],
-            ],
-        ),
-    ),
+    # TODO(robnagler) unused and not clear it will be used
+    # model=PKDict(
+    #     screen=PKDict(
+    #         beam_path=["Beam Path", "beam_path"],
+    #         camera=["Camera", "camera"],
+    #         camera_image=["Camera Image", "camera_image"],
+    #         color_map=["Color Map", "color_map", "Inferno"],
+    #         curve_fit_method=["Curve Fit Method", "curve_fit_method", "gaussian"],
+    #         pv=["PV", "camera_pv"],
+    #         single_button=["Single", "single_button"],
+    #         start_button=["Start", "start_button"],
+    #         stop_button=["Stop", "stop_button"],
+    #     ),
+    # ),
+    # view=PKDict(
+    #     screen=PKDict(
+    #         fields=[
+    #             [
+    #                 "beam_path",
+    #                 "camera",
+    #                 "pv",
+    #                 "start_button",
+    #                 "stop_button",
+    #                 "single_button",
+    #             ],
+    #             [
+    #                 "camera_image",
+    #                 "curve_fit_method",
+    #                 "color_map",
+    #             ],
+    #         ],
+    #     ),
+    # ),
 )
-
-
-def get_camera_area(beam_path, camera_name):
-    return SCHEMA.constants.BeamPath[beam_path][camera_name][1]
-
-
-def get_camera_pv(beam_path, camera_name):
-    return SCHEMA.constants.BeamPath[beam_path][camera_name][0]

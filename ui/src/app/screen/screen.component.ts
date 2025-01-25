@@ -12,37 +12,41 @@ import { LogService } from '../log.service';
     selector: 'app-screen',
     template: `
   <form [formGroup]="form">
-  <div class="row">
+  <div class="row" *ngIf="ui_ctx">
     <div *ngIf="errorMessage" class="alert alert-warning">{{ errorMessage }}</div>
     <div class="col-sm-3 ">
 
         <div class="mb-3">
-          <label class="form-label">Beam Path</label>
-          <select formControlName="beam_path" class="form-select form-control-sm">
-            <option *ngFor="let bp of beamPaths" [value]="bp">{{ bp }}</option>
+          <label class="col-form-label col-form-label-sm">Beam Path</label>
+          <select formControlName="beam_path" class="form-select form-select-sm" (change)="selectChanged('beam_path')" >
+            <option *ngFor="let bp of ui_ctx.beam_path.valid_values" [value]="bp">{{ bp }}</option>
           </select>
         </div>
         <div class="mb-3">
-          <label class="form-label">Camera</label>
-          <select formControlName="camera" class="form-select form-control-sm">
-            <option *ngFor="let c of cameras" [value]="c">{{ c }}</option>
+          <label class="col-form-label col-form-label-sm">Camera</label>
+          <select formControlName="camera" class="form-select form-select-sm" (change)="selectChanged('camera')">
+            <option *ngFor="let c of ui_ctx.camera.valid_values" [value]="c">{{ c }}</option>
           </select>
         </div>
         <div class="mb-3">
-          <label class="form-label">PV</label>
+          <label class="col-form-label col-form-label-sm">PV</label>
           <input formControlName="pv" class="form-control form-control-sm form-control-plaintext" />
+        </div>
+        <div class="mb-3">
+          <label class="col-form-label col-form-label-sm">Gain</label>
+          <input [readonly]="! ui_ctx.camera_gain.enabled" formControlName="camera_gain" class="form-control form-control-sm" (keydown)="filterEnterKey($event, 'camera_gain')"/>
         </div>
 
         <div class="mb-3">
           <div class="row">
             <div class="col-sm-4">
-              <button [disabled]="isAcquiring || ! form.value.pv" class="btn btn-primary" type="button" (click)="startAcquiringImages()">Start</button>
+              <button [disabled]="! ui_ctx.start_button.enabled" class="btn btn-primary" type="button" (click)="serverAction('start_button', false)">Start</button>
             </div>
             <div class="col-sm-4">
-              <button [disabled]="! isAcquiring || ! form.value.pv" class="btn btn-danger" type="button" (click)="stopAcquiringImages()">Stop</button>
+              <button [disabled]="! ui_ctx.stop_button.enabled" class="btn btn-danger" type="button" (click)="serverAction('stop_button', false)">Stop</button>
             </div>
             <div class="col-sm-4">
-              <button [disabled]="isAcquiring || ! form.value.pv" class="btn btn-outline-info" type="button" (click)="getSingleImage()">Single</button>
+              <button [disabled]="! ui_ctx.single_button.enabled" class="btn btn-outline-info" type="button" (click)="serverAction('single_button', false)">Single</button>
             </div>
           </div>
         </div>
@@ -60,15 +64,15 @@ import { LogService } from '../log.service';
         <div class="mb-3">
           <div class="row">
             <div class="col-sm-3">
-              <label class="form-label">Curve Fit Method</label>
-              <select formControlName="curve_fit_method" class="form-select form-control-sm">
-                <option *ngFor="let m of methods" [value]="m[0]">{{ m[1] }}</option>
+              <label class="col-form-label col-form-label-sm">Curve Fit Method</label>
+              <select formControlName="curve_fit_method" class="form-select form-select-sm" (change)="selectChanged('curve_fit_method')">
+                <option *ngFor="let m of ui_ctx.curve_fit_method.valid_values" [value]="m[0]">{{ m[1] }}</option>
               </select>
             </div>
             <div class="col-sm-3">
-              <label class="form-label">Color Map</label>
-              <select formControlName="color_map" class="form-select form-control-sm">
-                <option *ngFor="let cm of colorMaps" [value]="cm">{{ cm }}</option>
+              <label class="col-form-label col-form-label-sm">Color Map</label>
+              <select formControlName="color_map" class="form-select form-select-sm" (change)="selectChanged('color_map')">
+                <option *ngFor="let cm of ui_ctx.color_map.valid_values" [value]="cm">{{ cm }}</option>
               </select>
             </div>
           </div>
@@ -81,56 +85,43 @@ import { LogService } from '../log.service';
     styles: [],
 })
 export class ScreenComponent {
-    readonly APP_NAME: string = 'screen';
-    beamPathInfo: any = null;
-    beamPaths: string[] = [];
-    cameras: string[] = [];
-    colorMaps: string[] = [];
     errorMessage: string = "";
     image: any = null;
     imageInterval: any = null;
-    isAcquiring: boolean = false;
-    methods: any = [];
+
+    //TODO(pjm): build form and ui components dynamically from schema view layout
     form = new FormGroup({
         beam_path: new FormControl(''),
         camera: new FormControl(''),
         pv: new FormControl(''),
         color_map: new FormControl(''),
         curve_fit_method: new FormControl(''),
+        camera_gain: new FormControl(''),
     });
+    ui_ctx: any = null;
 
     constructor(private apiService: APIService, private log: LogService) {
         this.apiService = apiService;
 
-        this.form.valueChanges.subscribe(values => {
-            this.updateForm(values);
-        });
-
         this.apiService.call(
-            'init_app', {
-                app_name: this.APP_NAME,
-            },
+            'screen_ui_ctx',
+            {},
             (result) => {
-                //TODO(pjm): these details move to field editors
-                this.beamPathInfo = result.schema.constants.BeamPath;
-                this.beamPaths = Object.keys(result.schema.constants.BeamPath);
-                this.methods = result.schema.constants.CurveFitMethod;
-                this.colorMaps = result.schema.constants.ColorMap;
-                this.isAcquiring = result.model.screen.is_acquiring_images;
-                this.form.patchValue(result.model.screen);
-                if (this.isAcquiring) {
-                    this.getImages();
+                this.ui_ctx = result.ui_ctx;
+                let v:any = {};
+                for (let f in result.ui_ctx) {
+                    v[f] = result.ui_ctx[f].value;
                 }
+                this.form.patchValue(v);
             },
             this.handleError.bind(this),
         );
     }
 
-    getSingleImage() {
-        if (this.isAcquiring) {
-            return;
+    filterEnterKey(event: KeyboardEvent, field: string) {
+        if (event.key === 'Enter') {
+            this.serverAction(field, (this.form.controls as any)[field].value);
         }
-        this.acquireImages('single_button');
     }
 
     handleError(err: any) {
@@ -142,60 +133,46 @@ export class ScreenComponent {
         this.errorMessage = err;
     }
 
-    startAcquiringImages() {
-        this.isAcquiring = true;
-        this.acquireImages('start_button');
+    selectChanged(field: string) {
+        this.serverAction(field, (this.form.controls as any)[field].value);
     }
 
-    stopAcquiringImages() {
-        if (this.imageInterval) {
-            clearInterval(this.imageInterval);
-            this.imageInterval = null;
-        }
-        this.isAcquiring = false;
-        this.acquireImages('stop_button');
-    }
-
-    private acquireImages(button: string) {
-        this.errorMessage = "";
+    serverAction(field: string, value: any) {
+        this.errorMessage = '';
+        this.ui_ctx[field].enabled = false;
         this.apiService.call(
-            'action',
-            {
-                app_name: this.APP_NAME,
-                method: button,
-                curve_fit: this.form.controls.curve_fit_method.value,
+            `screen_${field}`, {
+                field_value: value,
             },
             (result) => {
-                if (result.image) {
-                    this.image = result.image;
-                    if (button == 'start_button') {
-                        this.getImages();
+                if (result.plot) {
+                    this.image = result.plot;
+                }
+                if (result.ui_ctx && field in result.ui_ctx && 'enabled' in result.ui_ctx[field]) {
+                }
+                else {
+                    this.ui_ctx[field].enabled = true;
+                }
+                if (result.ui_ctx) {
+                    Object.assign(this.ui_ctx, result.ui_ctx);
+                    const values: any = {};
+                    for (let f in result.ui_ctx) {
+                        if ('value' in result.ui_ctx[f]) {
+                            values[f] = result.ui_ctx[f].value;
+                        }
                     }
+                    this.form.patchValue(values);
                 }
             },
-            this.handleError.bind(this),
-        );
-    }
-
-    private getImage(callback: Function) {
-        this.apiService.call(
-            'action',
-            {
-                app_name: this.APP_NAME,
-                method: 'get_image',
-                curve_fit: this.form.controls.curve_fit_method.value,
-            },
-            (result) => {
-                this.image = result.image;
-                callback();
-            },
             (err) => {
-                this.image = null;
                 this.handleError(err);
-            },
+                this.ui_ctx[field].enabled = true;
+            }
         );
     }
 
+    //TODO(pjm): add poll time to serverAction response to refresh image for now
+    /*
     private getImages() {
         let ready = true;
         this.imageInterval = setInterval(() => {
@@ -207,20 +184,5 @@ export class ScreenComponent {
             }
         }, 1000);
     }
-
-    private updateForm(values: any) {
-        // Update list of cameras for the selected beam path
-        // and the pv for the selected camera
-        if (values.beam_path) {
-            const c = this.beamPathInfo[values.beam_path];
-            this.cameras = Object.keys(c);
-            const pv = values.camera && this.cameras.includes(values.camera)
-                ? c[values.camera][0]
-                : '';
-            if (values.pv !== pv) {
-                // note: this will fire an update change, calling updateForm() again
-                this.form.patchValue({ pv: pv });
-            }
-        }
-    }
+    */
 }
