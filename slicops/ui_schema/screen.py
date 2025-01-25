@@ -34,6 +34,7 @@ class _ScreenSchema(PKDict):
                 visible=True,
                 enabled=True,
             ),
+            #TODO(robnagler) check gain accessor
             camera_gain=PKDict(
                 visible=True,
                 enabled=True,

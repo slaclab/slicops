@@ -633,6 +633,15 @@ DB = PKDict(
                                         "py_type": "int",
                                     }
                                 ),
+                                "gain": PKDict(
+                                    {
+                                        "name": "gain",
+                                        "pv_base": "cam1:Gain",
+                                        "pv_name": "13SIM1:cam1:Gain",
+                                        "pv_writable": True,
+                                        "py_type": "int",
+                                    }
+                                ),
                                 "image": PKDict(
                                     {
                                         "name": "image",
@@ -669,6 +678,7 @@ DB = PKDict(
                                 "cam1:Acquire": "13SIM1:cam1:Acquire",
                                 "cam1:ArraySizeX_RBV": "13SIM1:cam1:ArraySizeX_RBV",
                                 "cam1:ArraySizeY_RBV": "13SIM1:cam1:ArraySizeY_RBV",
+                                "cam1:Gain": "13SIM1:cam1:Gain",
                                 "cam1:N_OF_BITS": "13SIM1:cam1:N_OF_BITS",
                                 "image1:ArrayData": "13SIM1:image1:ArrayData",
                             }

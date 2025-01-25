@@ -58,7 +58,7 @@ class API(slicops.quest.API):
 
     async def api_screen_camera_gain(self, api_args):
         ux = self._save_field("camera_gain", api_args)
-        self.session.screen_device.put_pv("Gain", ux.camera_gain.value)
+        self.session.device.put("gain", ux.camera_gain.value)
         return self._return(ux)
 
     async def api_screen_color_map(self, api_args):
@@ -71,15 +71,16 @@ class API(slicops.quest.API):
 
     async def api_screen_single_button(self, api_args):
         ux = self._session_ui_ctx()
-        self.session.screen_device.start()
+        self._set_acquire(1)
         try:
             return await self._return_with_image(ux)
         finally:
-            self.session.screen_device.stop()
+            # TODO(robnagler) if raised, then ignore errors here. First error is returned
+            self._set_acquire(0)
 
     async def api_screen_start_button(self, api_args):
         ux = self._session_ui_ctx()
-        self.session.screen_device.start()
+        self._set_acquire(1)
         ux.start_button.enabled = False
         ux.stop_button.enabled = True
         ux.single_button.enabled = False
@@ -87,7 +88,7 @@ class API(slicops.quest.API):
 
     async def api_screen_stop_button(self, api_args):
         ux = self._session_ui_ctx()
-        self.session.screen_device.stop()
+        self._set_acquire(0)
         ux.start_button.enabled = True
         ux.stop_button.enabled = False
         ux.single_button.enabled = True
@@ -96,6 +97,13 @@ class API(slicops.quest.API):
     async def api_screen_ui_ctx(self, api_args):
         ux = self._session_ui_ctx()
         return self._return(ux)
+
+    def _is_acquiring(self):
+        try:
+            return self.session.device.get("acquire")
+        except slicops.device.DeviceError as err:
+            # does not return an error, the initial camera may not be currently available
+            return False
 
     def _return(self, ux):
         return PKDict(ui_ctx=ux)
@@ -142,8 +150,8 @@ class API(slicops.quest.API):
         async def _profile():
             for i in range(2):
                 try:
-                    return self.session.screen_device.get_image()
-                except ValueError as err:
+                    return self.session.device.get("image")
+                except (ValueError, slicops.device.DeviceError) as err:
                     if i >= 1:
                         raise err
                 await asyncio.sleep(1)
@@ -174,43 +182,14 @@ class API(slicops.quest.API):
         s = self.session.ui_schema
         ux.camera.valid_values = s.cameras_for_beam_path(_cfg.dev.beam_path)
         ux.pv.value = s.camera_pv(_cfg.dev.beam_path, _cfg.dev.camera_name)
-        self.session.screen_device = _ScreenDevice()
-        # TODO(pjm): only get this value if the selected camera supports Gain
-        ux.camera_gain.value = self.session.screen_device.device.get("Gain")
+        self.session.device = slicops.device.Device(_cfg.dev.camera_name)
+        # TODO(pjm): only get this value if the selected camera supports gain
+        ux.camera_gain.value = self.session.device.get("gain")
+        # TODO(robnagler) is_acquiring set button state
         return ux
 
-
-class _ScreenDevice:
-    """Screen device interaction. All EPICS access occurs at this level."""
-
-    def __init__(self):
-        self.device = slicops.device.Device(_cfg.dev.camera_name)
-
-    def get_image(self):
-        """Gets raw pixels from EPICS"""
-        if (rv := self.device.get("image")) is None:
-            return ValueError("no image")
-        if not (
-            (r := self.device.get("num_rows")) and (c := self.device.get("num_cols"))
-        ):
-            raise ValueError("num_rows or num_cols is invalid")
-        return rv.reshape(c, r)
-
-    def is_acquiring_images(self):
-        try:
-            return self.device.get("acquire")
-        except slicops.device.DeviceError as err:
-            # does not return an error, the initial camera may not be currently available
-            return False
-
-    def start(self):
-        self._set_acquire(1)
-
-    def stop(self):
-        self._set_acquire(0)
-
     def _set_acquire(self, is_on):
-        self.device.put("acquire", is_on)
+        self.session.device.put("acquire", is_on)
 
 
 _cfg = pkconfig.init(

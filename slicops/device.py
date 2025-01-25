@@ -10,6 +10,10 @@ import epics
 import slicops.device_meta_raw
 
 
+class AccessorPutError(RuntimeError):
+    pass
+
+
 class DeviceError(RuntimeError):
     pass
 
@@ -29,6 +33,12 @@ class Device:
         self._pv = PKDict()
 
     def get(self, accessor):
+        def _reshape(image):
+            # TODO(robnagler) does get return 0 ever?
+            if not ((r := self.get("num_rows")) and (c := self.get("num_cols"))):
+                raise ValueError("num_rows or num_cols is invalid")
+            return image.reshape(c, r)
+
         a, p = self._accessor_pv(accessor)
         if (rv := p.get()) is None or not p.connected:
             raise DeviceError(
@@ -36,10 +46,15 @@ class Device:
             )
         if a.py_type == "bool":
             return bool(rv)
+        if a.name == "image":
+            return _reshape(rv)
         return rv
 
+    def has_accessor(self, accessor):
+        return accessor in self._meta
+
     def put(self, accessor, value):
-        a, p = self._accessor_pv(accessor)
+        a, p = self._accessor_pv(accessor, write=True)
         # ECA_NORMAL == 0 and None is normal, too, apparently
         if (e := p.put(value)) != 1:
             if not p.connected:
@@ -48,11 +63,13 @@ class Device:
                 f"put error={e} accessor={accessor} value={value} to device={self.name} pv={a.pv_name}"
             )
 
-    def _accessor_pv(self, accessor):
+    def _accessor_pv(self, accessor, write=False):
         a = self._meta.accessor[accessor]
+        if write and not a.pv_writable:
+            raise AccessorPutError(
+                f"not writable accessor={accessor} to device={self.name} pv={a.pv_name}"
+            )
         return (
             a,
-            self._pv.pksetdefault(accessor, lambda: epics.PV(a.pv_name))[
-                accessor
-            ],
+            self._pv.pksetdefault(accessor, lambda: epics.PV(a.pv_name))[accessor],
         )
