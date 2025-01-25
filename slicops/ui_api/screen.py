@@ -8,6 +8,7 @@ from lcls_tools.common.controls.pyepics.utils import PV, PVInvalidError
 from pykern import pkconfig
 from pykern.pkcollections import PKDict
 from pykern.pkdebug import pkdc, pkdlog, pkdp
+import asyncio
 import lcls_tools.common.data.fitting_tool
 import lcls_tools.common.devices.reader
 import numpy
@@ -17,8 +18,6 @@ import slicops.ui_schema
 import time
 
 _NAME = "screen"
-
-_API_PREFIX_LEN = len(f"api_{_NAME}_")
 
 _cfg = None
 
@@ -51,30 +50,11 @@ def _monkey_patch_device_data(area=None, device_type=None, name=None):
 lcls_tools.common.devices.reader._device_data = _monkey_patch_device_data
 
 
-def _hack_wrapper(api_method):
-    """Replace when pykern.quest supports dispatch_api_call method"""
-
-    async def _wrapped(self, api_args):
-        ux = self._session_ui_ctx()
-        rv = PKDict()
-        a = api_method.__name__[_API_PREFIX_LEN:]
-        # TODO(robnagler)
-        if m in ux and "value" in ux[m]:
-            ux[m].value = api_args.field_value
-        if (p := await api_method(self, ux)) is not None:
-            rv.plot = p
-        # TODO(robnagler) qcall should have API name on qcall
-        if m != "single_button":
-            # TODO(robnagler) return edits; have function that updates nested attrs in py and ts
-            rv.ui_ctx = ux
-        return rv
-
-
 class API(slicops.quest.API):
     """Implementation for the Screen (Profile Monitor) application"""
 
-    @_hack_wrapper
-    async def api_screen_beam_path(self, ux):
+    async def api_screen_beam_path(self, api_args):
+        ux = self._save_field("beam_path", api_args)
         # TODO(robnagler) get from device db
         ux.camera.valid_values = self.session.ui_schema.cameras_for_beam_path(
             ux.beam_path.value
@@ -92,10 +72,10 @@ class API(slicops.quest.API):
             ux.single_button.enabled = False
         # TODO(pjm): could return a diff of model changes rather than full model
         # OK to return in place values, not copy, becasue
-        return None
+        return self._return(ux)
 
-    @_hack_wrapper
-    async def api_screen_camera(self, ux):
+    async def api_screen_camera(self, api_args):
+        ux = self._save_field("camera", api_args)
         ux.start_button.enabled = True
         ux.stop_button.enabled = False
         ux.single_button.enabled = True
@@ -103,62 +83,81 @@ class API(slicops.quest.API):
             ux.beam_path.value,
             ux.camera.value,
         )
-        return None
+        return self._return(ux)
 
-    @_hack_wrapper
-    async def api_screen_camera_gain(self, ux):
+    async def api_screen_camera_gain(self, api_args):
+        ux = self._save_field("camera_gain", api_args)
         self.session.screen_device.put_pv("Gain", ux.camera_gain.value)
         return self._return(ux)
 
-    @_hack_wrapper
-    async def api_screen_color_map(self, ux):
-        return None
+    async def api_screen_color_map(self, api_args):
+        ux = self._args("color_map", api_args)
+        return self._return(ux)
 
-    @_hack_wrapper
-    async def api_screen_curve_fit_method(self, ux):
-        return self._get_image(ux, with_retry=True)
+    async def api_screen_curve_fit_method(self, api_args):
+        ux = self._args("curve_fit_method", api_args)
+        return await self._return_with_image(ux)
 
-    @_hack_wrapper
-    async def api_screen_single_button(self, ux):
+    async def api_screen_single_button(self, api_args):
+        ux = self._session_ui_ctx()
         self.session.screen_device.start()
-        i = self._get_image(ux, with_retry=True)
-        self.session.screen_device.stop()
-        return i
+        try:
+            return await self._return_with_image(ux)
+        finally:
+            self.session.screen_device.stop()
 
-    @_hack_wrapper
-    async def api_screen_start_button(self, ux):
+    async def api_screen_start_button(self, api_args):
+        ux = self._session_ui_ctx()
         self.session.screen_device.start()
         ux.start_button.enabled = False
         ux.stop_button.enabled = True
         ux.single_button.enabled = False
-        return self._get_image(ux, with_retry=True)
+        return await self._return_with_image(ux)
 
-    @_hack_wrapper
-    async def api_screen_stop_button(self, ux):
+    async def api_screen_stop_button(self, api_args):
+        ux = self._session_ui_ctx()
         self.session.screen_device.stop()
         ux.start_button.enabled = True
         ux.stop_button.enabled = False
         ux.single_button.enabled = True
-        return None
+        return self._return(ux)
 
     async def api_screen_ui_ctx(self, api_args):
-        # TODO(robnagler) could be used to update all state
-        return PKDict(ui_ctx=self._session_ui_ctx())
+        ux = self._session_ui_ctx()
+        return self._return(ux)
 
-    def _fit_profile(self, profile, method):
-        """Use the lcls_tools FittingTool to match the selected method.
-        Valid methods are (gaussian, super_gaussian).
-        """
-        ft = lcls_tools.common.data.fitting_tool.FittingTool(profile)
-        ft.initial_params = {
-            method: ft.initial_params[method],
-        }
-        try:
-            r = ft.get_fit()
-            # TODO(pjm): FittingTool returns initial params on failure
-            if r[method]["params"] == ft.initial_params[method]["params"]:
-                raise RuntimeError("Fit failed")
-        except RuntimeError:
+    def _return(self, ux):
+        return PKDict(ui_ctx=ux)
+
+    async def _return_with_image(self, ux):
+        def _fit(profile):
+            """Use the lcls_tools FittingTool to match the selected method.
+            Valid methods are (gaussian, super_gaussian).
+            """
+            t = lcls_tools.common.data.fitting_tool.FittingTool(profile)
+            m = ux.curve_fit_method.value
+            return _fit_do(profile, t, m, t.initial_params[m])
+
+        def _fit_do(profile, tool, method, initial_params):
+            # TODO(robnagler) why is this done?
+            tool.initial_params = PKDict({method: initial_params})
+            try:
+                p = tool.get_fit()[method]["params"]
+                # TODO(pjm): FittingTool returns initial params on failure
+                if p == initial_params:
+                    return _fit_error(profile)
+            except RuntimeError:
+                # TODO(robnagler) does this happen?
+                return _fit_error(profile)
+            return PKDict(
+                lineout=profile.tolist(),
+                fit=PKDict(
+                    fit_line=getattr(tool, method)(x=tool.x, **p).tolist(),
+                    results=p,
+                ),
+            )
+
+        def _fit_error(profile):
             return PKDict(
                 lineout=profile.tolist(),
                 fit=PKDict(
@@ -168,35 +167,31 @@ class API(slicops.quest.API):
                     ),
                 ),
             )
-        g = r[method]["params"]
-        return PKDict(
-            lineout=profile.tolist(),
-            fit=PKDict(
-                fit_line=getattr(ft, method)(x=ft.x, **g).tolist(),
-                results=g,
+
+        async def _profile():
+            for i in range(2):
+                try:
+                    return self.session.screen_device.get_image()
+                except ValueError as err:
+                    if i >= 1:
+                        raise err
+                await asyncio.sleep(1)
+            raise AssertionError("should not get here")
+
+        p = await _profile()
+        return self._return(ux).pkupdate(
+            plot=PKDict(
+                # TODO(pjm): output handler should support ndarray, avoiding tolist()
+                raw_pixels=p.tolist(),
+                x=_fit(p.sum(axis=0)),
+                y=_fit(p.sum(axis=1)[::-1]),
             ),
         )
 
-    def _get_image(self, ux, with_retry=False):
-        try:
-            raw_pixels = self.session.screen_device.get_image()
-            return PKDict(
-                # TODO(pjm): output handler should support ndarray, avoiding tolist()
-                raw_pixels=raw_pixels.tolist(),
-                x=self._fit_profile(raw_pixels.sum(axis=0), ux.curve_fit_method.value),
-                y=self._fit_profile(
-                    raw_pixels.sum(axis=1)[::-1],
-                    ux.curve_fit_method.value,
-                ),
-            )
-        except ValueError as err:
-            if with_retry:
-                # TODO(pjm): need a retry with timeout here if first acquiring and no image is available yet
-                #    sleep() needs to be replaced with async sleep?
-                time.sleep(1)
-                # no retry
-                return self._get_image()
-            raise err
+    def _save_field(self, field_name, api_args):
+        ux = self._session_ui_ctx()
+        ux[field_name].value = api_args.field_value
+        return ux
 
     def _session_ui_ctx(self):
         if ux := self.session.get("ui_ctx"):
