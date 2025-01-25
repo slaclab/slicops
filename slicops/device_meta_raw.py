@@ -529,15 +529,6 @@ DB = PKDict(
                         "device_kind": "screen",
                         "device_length": 3661.222,
                         "device_name": "BOD10",
-                        "pv_base": PKDict(
-                            {
-                                "Acquire": "YAGS:UNDS:3575:Acquire",
-                                "IMAGE": "YAGS:UNDS:3575:IMAGE",
-                                "N_OF_BITS": "YAGS:UNDS:3575:N_OF_BITS",
-                                "N_OF_COL": "YAGS:UNDS:3575:N_OF_COL",
-                                "N_OF_ROW": "YAGS:UNDS:3575:N_OF_ROW",
-                            }
-                        ),
                         "pv_prefix": "YAGS:UNDS:3575",
                     }
                 ),
@@ -600,15 +591,6 @@ DB = PKDict(
                         "device_kind": "screen",
                         "device_length": 3670.392,
                         "device_name": "BOD12",
-                        "pv_base": PKDict(
-                            {
-                                "Acquire": "YAGS:UNDS:3795:Acquire",
-                                "IMAGE": "YAGS:UNDS:3795:IMAGE",
-                                "N_OF_BITS": "YAGS:UNDS:3795:N_OF_BITS",
-                                "N_OF_COL": "YAGS:UNDS:3795:N_OF_COL",
-                                "N_OF_ROW": "YAGS:UNDS:3795:N_OF_ROW",
-                            }
-                        ),
                         "pv_prefix": "YAGS:UNDS:3795",
                     }
                 ),
@@ -673,16 +655,6 @@ DB = PKDict(
                         "device_kind": "screen",
                         "device_length": 0.614,
                         "device_name": "DEV_CAMERA",
-                        "pv_base": PKDict(
-                            {
-                                "cam1:Acquire": "13SIM1:cam1:Acquire",
-                                "cam1:ArraySizeX_RBV": "13SIM1:cam1:ArraySizeX_RBV",
-                                "cam1:ArraySizeY_RBV": "13SIM1:cam1:ArraySizeY_RBV",
-                                "cam1:Gain": "13SIM1:cam1:Gain",
-                                "cam1:N_OF_BITS": "13SIM1:cam1:N_OF_BITS",
-                                "image1:ArrayData": "13SIM1:image1:ArrayData",
-                            }
-                        ),
                         "pv_prefix": "13SIM1",
                     }
                 ),
@@ -748,15 +720,6 @@ DB = PKDict(
                         "device_kind": "screen",
                         "device_length": 24.345,
                         "device_name": "OTR0H04",
-                        "pv_base": PKDict(
-                            {
-                                "Acquire": "OTRS:HTR:330:Acquire",
-                                "Image:ArrayData": "OTRS:HTR:330:Image:ArrayData",
-                                "Image:ArraySize0_RBV": "OTRS:HTR:330:Image:ArraySize0_RBV",
-                                "Image:ArraySize1_RBV": "OTRS:HTR:330:Image:ArraySize1_RBV",
-                                "N_OF_BITS": "OTRS:HTR:330:N_OF_BITS",
-                            }
-                        ),
                         "pv_prefix": "OTRS:HTR:330",
                     }
                 ),
@@ -819,15 +782,6 @@ DB = PKDict(
                         "device_kind": "screen",
                         "device_length": 34.834,
                         "device_name": "OTR11",
-                        "pv_base": PKDict(
-                            {
-                                "Acquire": "OTRS:LI21:237:Acquire",
-                                "IMAGE": "OTRS:LI21:237:IMAGE",
-                                "N_OF_BITS": "OTRS:LI21:237:N_OF_BITS",
-                                "N_OF_COL": "OTRS:LI21:237:N_OF_COL",
-                                "N_OF_ROW": "OTRS:LI21:237:N_OF_ROW",
-                            }
-                        ),
                         "pv_prefix": "OTRS:LI21:237",
                     }
                 ),
@@ -892,15 +846,6 @@ DB = PKDict(
                         "device_kind": "screen",
                         "device_length": 135.571,
                         "device_name": "OTR11B",
-                        "pv_base": PKDict(
-                            {
-                                "Acquire": "PROF:BC1B:470:Acquire",
-                                "Image:ArrayData": "PROF:BC1B:470:Image:ArrayData",
-                                "Image:ArraySize0_RBV": "PROF:BC1B:470:Image:ArraySize0_RBV",
-                                "Image:ArraySize1_RBV": "PROF:BC1B:470:Image:ArraySize1_RBV",
-                                "N_OF_BITS": "PROF:BC1B:470:N_OF_BITS",
-                            }
-                        ),
                         "pv_prefix": "PROF:BC1B:470",
                     }
                 ),
@@ -963,15 +908,6 @@ DB = PKDict(
                         "device_kind": "screen",
                         "device_length": 41.512,
                         "device_name": "OTR12",
-                        "pv_base": PKDict(
-                            {
-                                "Acquire": "OTRS:LI21:291:Acquire",
-                                "IMAGE": "OTRS:LI21:291:IMAGE",
-                                "N_OF_BITS": "OTRS:LI21:291:N_OF_BITS",
-                                "N_OF_COL": "OTRS:LI21:291:N_OF_COL",
-                                "N_OF_ROW": "OTRS:LI21:291:N_OF_ROW",
-                            }
-                        ),
                         "pv_prefix": "OTRS:LI21:291",
                     }
                 ),
@@ -1035,15 +971,6 @@ DB = PKDict(
                         "device_kind": "screen",
                         "device_length": 14.241,
                         "device_name": "OTR2",
-                        "pv_base": PKDict(
-                            {
-                                "Acquire": "OTRS:IN20:571:Acquire",
-                                "Image:ArrayData": "OTRS:IN20:571:Image:ArrayData",
-                                "Image:ArraySize0_RBV": "OTRS:IN20:571:Image:ArraySize0_RBV",
-                                "Image:ArraySize1_RBV": "OTRS:IN20:571:Image:ArraySize1_RBV",
-                                "N_OF_BITS": "OTRS:IN20:571:N_OF_BITS",
-                            }
-                        ),
                         "pv_prefix": "OTRS:IN20:571",
                     }
                 ),
@@ -1106,15 +1033,6 @@ DB = PKDict(
                         "device_kind": "screen",
                         "device_length": 410.405,
                         "device_name": "OTR21",
-                        "pv_base": PKDict(
-                            {
-                                "Acquire": "OTRS:LI24:807:Acquire",
-                                "IMAGE": "OTRS:LI24:807:IMAGE",
-                                "N_OF_BITS": "OTRS:LI24:807:N_OF_BITS",
-                                "N_OF_COL": "OTRS:LI24:807:N_OF_COL",
-                                "N_OF_ROW": "OTRS:LI24:807:N_OF_ROW",
-                            }
-                        ),
                         "pv_prefix": "OTRS:LI24:807",
                     }
                 ),
@@ -1179,15 +1097,6 @@ DB = PKDict(
                         "device_kind": "screen",
                         "device_length": 355.091,
                         "device_name": "OTR21B",
-                        "pv_base": PKDict(
-                            {
-                                "Acquire": "PROF:BC2B:545:Acquire",
-                                "Image:ArrayData": "PROF:BC2B:545:Image:ArrayData",
-                                "Image:ArraySize0_RBV": "PROF:BC2B:545:Image:ArraySize0_RBV",
-                                "Image:ArraySize1_RBV": "PROF:BC2B:545:Image:ArraySize1_RBV",
-                                "N_OF_BITS": "PROF:BC2B:545:N_OF_BITS",
-                            }
-                        ),
                         "pv_prefix": "PROF:BC2B:545",
                     }
                 ),
@@ -1251,15 +1160,6 @@ DB = PKDict(
                         "device_kind": "screen",
                         "device_length": 16.155,
                         "device_name": "OTR3",
-                        "pv_base": PKDict(
-                            {
-                                "Acquire": "OTRS:IN20:621:Acquire",
-                                "IMAGE": "OTRS:IN20:621:IMAGE",
-                                "N_OF_BITS": "OTRS:IN20:621:N_OF_BITS",
-                                "N_OF_COL": "OTRS:IN20:621:N_OF_COL",
-                                "N_OF_ROW": "OTRS:IN20:621:N_OF_ROW",
-                            }
-                        ),
                         "pv_prefix": "OTRS:IN20:621",
                     }
                 ),
@@ -1322,15 +1222,6 @@ DB = PKDict(
                         "device_kind": "screen",
                         "device_length": 17.797,
                         "device_name": "OTR4",
-                        "pv_base": PKDict(
-                            {
-                                "Acquire": "OTRS:IN20:711:Acquire",
-                                "IMAGE": "OTRS:IN20:711:IMAGE",
-                                "N_OF_BITS": "OTRS:IN20:711:N_OF_BITS",
-                                "N_OF_COL": "OTRS:IN20:711:N_OF_COL",
-                                "N_OF_ROW": "OTRS:IN20:711:N_OF_ROW",
-                            }
-                        ),
                         "pv_prefix": "OTRS:IN20:711",
                     }
                 ),
@@ -1395,15 +1286,6 @@ DB = PKDict(
                         "device_kind": "screen",
                         "device_length": 63.199,
                         "device_name": "OTRC006",
-                        "pv_base": PKDict(
-                            {
-                                "Acquire": "PROF:COL0:535:Acquire",
-                                "Image:ArrayData": "PROF:COL0:535:Image:ArrayData",
-                                "Image:ArraySize0_RBV": "PROF:COL0:535:Image:ArraySize0_RBV",
-                                "Image:ArraySize1_RBV": "PROF:COL0:535:Image:ArraySize1_RBV",
-                                "N_OF_BITS": "PROF:COL0:535:N_OF_BITS",
-                            }
-                        ),
                         "pv_prefix": "PROF:COL0:535",
                     }
                 ),
@@ -1459,15 +1341,6 @@ DB = PKDict(
                         "device_kind": "screen",
                         "device_length": 56.813,
                         "device_name": "OTRDG02",
-                        "pv_base": PKDict(
-                            {
-                                "Acquire": "OTRS:DIAG0:420:Acquire",
-                                "Image:ArrayData": "OTRS:DIAG0:420:Image:ArrayData",
-                                "Image:ArraySize0_RBV": "OTRS:DIAG0:420:Image:ArraySize0_RBV",
-                                "Image:ArraySize1_RBV": "OTRS:DIAG0:420:Image:ArraySize1_RBV",
-                                "N_OF_BITS": "OTRS:DIAG0:420:N_OF_BITS",
-                            }
-                        ),
                         "pv_prefix": "OTRS:DIAG0:420",
                     }
                 ),
@@ -1523,15 +1396,6 @@ DB = PKDict(
                         "device_kind": "screen",
                         "device_length": 61.871,
                         "device_name": "OTRDG04",
-                        "pv_base": PKDict(
-                            {
-                                "Acquire": "OTRS:DIAG0:525:Acquire",
-                                "Image:ArrayData": "OTRS:DIAG0:525:Image:ArrayData",
-                                "Image:ArraySize0_RBV": "OTRS:DIAG0:525:Image:ArraySize0_RBV",
-                                "Image:ArraySize1_RBV": "OTRS:DIAG0:525:Image:ArraySize1_RBV",
-                                "N_OF_BITS": "OTRS:DIAG0:525:N_OF_BITS",
-                            }
-                        ),
                         "pv_prefix": "OTRS:DIAG0:525",
                     }
                 ),
@@ -1587,15 +1451,6 @@ DB = PKDict(
                         "device_kind": "screen",
                         "device_length": 1746.602,
                         "device_name": "OTRDMP",
-                        "pv_base": PKDict(
-                            {
-                                "Acquire": "OTRS:DMPH:695:Acquire",
-                                "Image:ArrayData": "OTRS:DMPH:695:Image:ArrayData",
-                                "Image:ArraySize0_RBV": "OTRS:DMPH:695:Image:ArraySize0_RBV",
-                                "Image:ArraySize1_RBV": "OTRS:DMPH:695:Image:ArraySize1_RBV",
-                                "N_OF_BITS": "OTRS:DMPH:695:N_OF_BITS",
-                            }
-                        ),
                         "pv_prefix": "OTRS:DMPH:695",
                     }
                 ),
@@ -1651,15 +1506,6 @@ DB = PKDict(
                         "device_kind": "screen",
                         "device_length": 3771.399,
                         "device_name": "OTRDMPB",
-                        "pv_base": PKDict(
-                            {
-                                "Acquire": "OTRS:DMPS:695:Acquire",
-                                "Image:ArrayData": "OTRS:DMPS:695:Image:ArrayData",
-                                "Image:ArraySize0_RBV": "OTRS:DMPS:695:Image:ArraySize0_RBV",
-                                "Image:ArraySize1_RBV": "OTRS:DMPS:695:Image:ArraySize1_RBV",
-                                "N_OF_BITS": "OTRS:DMPS:695:N_OF_BITS",
-                            }
-                        ),
                         "pv_prefix": "OTRS:DMPS:695",
                     }
                 ),
@@ -1724,15 +1570,6 @@ DB = PKDict(
                         "device_kind": "screen",
                         "device_length": 729.924,
                         "device_name": "OTRDOG",
-                        "pv_base": PKDict(
-                            {
-                                "Acquire": "PROF:DOG:195:Acquire",
-                                "Image:ArrayData": "PROF:DOG:195:Image:ArrayData",
-                                "Image:ArraySize0_RBV": "PROF:DOG:195:Image:ArraySize0_RBV",
-                                "Image:ArraySize1_RBV": "PROF:DOG:195:Image:ArraySize1_RBV",
-                                "N_OF_BITS": "PROF:DOG:195:N_OF_BITS",
-                            }
-                        ),
                         "pv_prefix": "PROF:DOG:195",
                     }
                 ),
@@ -1796,15 +1633,6 @@ DB = PKDict(
                         "device_kind": "screen",
                         "device_length": 9.528,
                         "device_name": "OTRH1",
-                        "pv_base": PKDict(
-                            {
-                                "Acquire": "OTRS:IN20:465:Acquire",
-                                "Image:ArrayData": "OTRS:IN20:465:Image:ArrayData",
-                                "Image:ArraySize0_RBV": "OTRS:IN20:465:Image:ArraySize0_RBV",
-                                "Image:ArraySize1_RBV": "OTRS:IN20:465:Image:ArraySize1_RBV",
-                                "N_OF_BITS": "OTRS:IN20:465:N_OF_BITS",
-                            }
-                        ),
                         "pv_prefix": "OTRS:IN20:465",
                     }
                 ),
@@ -1868,15 +1696,6 @@ DB = PKDict(
                         "device_kind": "screen",
                         "device_length": 10.211,
                         "device_name": "OTRH2",
-                        "pv_base": PKDict(
-                            {
-                                "Acquire": "OTRS:IN20:471:Acquire",
-                                "Image:ArrayData": "OTRS:IN20:471:Image:ArrayData",
-                                "Image:ArraySize0_RBV": "OTRS:IN20:471:Image:ArraySize0_RBV",
-                                "Image:ArraySize1_RBV": "OTRS:IN20:471:Image:ArraySize1_RBV",
-                                "N_OF_BITS": "OTRS:IN20:471:N_OF_BITS",
-                            }
-                        ),
                         "pv_prefix": "OTRS:IN20:471",
                     }
                 ),
@@ -1932,15 +1751,6 @@ DB = PKDict(
                         "device_kind": "screen",
                         "device_length": 3014.49,
                         "device_name": "PRDAS12",
-                        "pv_base": PKDict(
-                            {
-                                "Acquire": "PROF:DASEL:440:Acquire",
-                                "Image:ArrayData": "PROF:DASEL:440:Image:ArrayData",
-                                "Image:ArraySize0_RBV": "PROF:DASEL:440:Image:ArraySize0_RBV",
-                                "Image:ArraySize1_RBV": "PROF:DASEL:440:Image:ArraySize1_RBV",
-                                "N_OF_BITS": "PROF:DASEL:440:N_OF_BITS",
-                            }
-                        ),
                         "pv_prefix": "PROF:DASEL:440",
                     }
                 ),
@@ -1996,15 +1806,6 @@ DB = PKDict(
                         "device_kind": "screen",
                         "device_length": 3073.484,
                         "device_name": "PRDAS14",
-                        "pv_base": PKDict(
-                            {
-                                "Acquire": "PROF:DASEL:655:Acquire",
-                                "Image:ArrayData": "PROF:DASEL:655:Image:ArrayData",
-                                "Image:ArraySize0_RBV": "PROF:DASEL:655:Image:ArraySize0_RBV",
-                                "Image:ArraySize1_RBV": "PROF:DASEL:655:Image:ArraySize1_RBV",
-                                "N_OF_BITS": "PROF:DASEL:655:N_OF_BITS",
-                            }
-                        ),
                         "pv_prefix": "PROF:DASEL:655",
                     }
                 ),
@@ -2060,15 +1861,6 @@ DB = PKDict(
                         "device_kind": "screen",
                         "device_length": 3118.053,
                         "device_name": "PRDAS17",
-                        "pv_base": PKDict(
-                            {
-                                "Acquire": "PROF:DASEL:818:Acquire",
-                                "Image:ArrayData": "PROF:DASEL:818:Image:ArrayData",
-                                "Image:ArraySize0_RBV": "PROF:DASEL:818:Image:ArraySize0_RBV",
-                                "Image:ArraySize1_RBV": "PROF:DASEL:818:Image:ArraySize1_RBV",
-                                "N_OF_BITS": "PROF:DASEL:818:N_OF_BITS",
-                            }
-                        ),
                         "pv_prefix": "PROF:DASEL:818",
                     }
                 ),
@@ -2124,15 +1916,6 @@ DB = PKDict(
                         "device_kind": "screen",
                         "device_length": 0.0,
                         "device_name": "VCC",
-                        "pv_base": PKDict(
-                            {
-                                "Acquire": "CAMR:IN20:186:Acquire",
-                                "IMAGE": "CAMR:IN20:186:IMAGE",
-                                "N_OF_BITS": "CAMR:IN20:186:N_OF_BITS",
-                                "N_OF_COL": "CAMR:IN20:186:N_OF_COL",
-                                "N_OF_ROW": "CAMR:IN20:186:N_OF_ROW",
-                            }
-                        ),
                         "pv_prefix": "CAMR:IN20:186",
                     }
                 ),
@@ -2188,15 +1971,6 @@ DB = PKDict(
                         "device_kind": "screen",
                         "device_length": 0.0,
                         "device_name": "VCCB",
-                        "pv_base": PKDict(
-                            {
-                                "Acquire": "CAMR:LGUN:950:Acquire",
-                                "Image:ArrayData": "CAMR:LGUN:950:Image:ArrayData",
-                                "Image:ArraySizeX_RBV": "CAMR:LGUN:950:Image:ArraySizeX_RBV",
-                                "Image:ArraySizeY_RBV": "CAMR:LGUN:950:Image:ArraySizeY_RBV",
-                                "N_OF_BITS": "CAMR:LGUN:950:N_OF_BITS",
-                            }
-                        ),
                         "pv_prefix": "CAMR:LGUN:950",
                     }
                 ),
@@ -2261,15 +2035,6 @@ DB = PKDict(
                         "device_kind": "screen",
                         "device_length": 0.614,
                         "device_name": "YAG01",
-                        "pv_base": PKDict(
-                            {
-                                "Acquire": "YAGS:IN20:211:Acquire",
-                                "IMAGE": "YAGS:IN20:211:IMAGE",
-                                "N_OF_BITS": "YAGS:IN20:211:N_OF_BITS",
-                                "N_OF_COL": "YAGS:IN20:211:N_OF_COL",
-                                "N_OF_ROW": "YAGS:IN20:211:N_OF_ROW",
-                            }
-                        ),
                         "pv_prefix": "YAGS:IN20:211",
                     }
                 ),
@@ -2333,15 +2098,6 @@ DB = PKDict(
                         "device_kind": "screen",
                         "device_length": 1.388,
                         "device_name": "YAG02",
-                        "pv_base": PKDict(
-                            {
-                                "Acquire": "YAGS:IN20:241:Acquire",
-                                "Image:ArrayData": "YAGS:IN20:241:Image:ArrayData",
-                                "Image:ArraySize0_RBV": "YAGS:IN20:241:Image:ArraySize0_RBV",
-                                "Image:ArraySize1_RBV": "YAGS:IN20:241:Image:ArraySize1_RBV",
-                                "N_OF_BITS": "YAGS:IN20:241:N_OF_BITS",
-                            }
-                        ),
                         "pv_prefix": "YAGS:IN20:241",
                     }
                 ),
@@ -2405,15 +2161,6 @@ DB = PKDict(
                         "device_kind": "screen",
                         "device_length": 4.615,
                         "device_name": "YAG03",
-                        "pv_base": PKDict(
-                            {
-                                "Acquire": "YAGS:IN20:351:Acquire",
-                                "IMAGE": "YAGS:IN20:351:IMAGE",
-                                "N_OF_BITS": "YAGS:IN20:351:N_OF_BITS",
-                                "N_OF_COL": "YAGS:IN20:351:N_OF_COL",
-                                "N_OF_ROW": "YAGS:IN20:351:N_OF_ROW",
-                            }
-                        ),
                         "pv_prefix": "YAGS:IN20:351",
                     }
                 ),
@@ -2469,15 +2216,6 @@ DB = PKDict(
                         "device_kind": "screen",
                         "device_length": 1.839,
                         "device_name": "YAGG1",
-                        "pv_base": PKDict(
-                            {
-                                "Acquire": "YAGS:IN20:841:Acquire",
-                                "IMAGE": "YAGS:IN20:841:IMAGE",
-                                "N_OF_BITS": "YAGS:IN20:841:N_OF_BITS",
-                                "N_OF_COL": "YAGS:IN20:841:N_OF_COL",
-                                "N_OF_ROW": "YAGS:IN20:841:N_OF_ROW",
-                            }
-                        ),
                         "pv_prefix": "YAGS:IN20:841",
                     }
                 ),
@@ -2543,15 +2281,6 @@ DB = PKDict(
                         "device_kind": "screen",
                         "device_length": 32.253,
                         "device_name": "YAGH1",
-                        "pv_base": PKDict(
-                            {
-                                "Acquire": "YAGS:HTR:625:Acquire",
-                                "Image:ArrayData": "YAGS:HTR:625:Image:ArrayData",
-                                "Image:ArraySize0_RBV": "YAGS:HTR:625:Image:ArraySize0_RBV",
-                                "Image:ArraySize1_RBV": "YAGS:HTR:625:Image:ArraySize1_RBV",
-                                "N_OF_BITS": "YAGS:HTR:625:N_OF_BITS",
-                            }
-                        ),
                         "pv_prefix": "YAGS:HTR:625",
                     }
                 ),
@@ -2617,15 +2346,6 @@ DB = PKDict(
                         "device_kind": "screen",
                         "device_length": 33.311,
                         "device_name": "YAGH2",
-                        "pv_base": PKDict(
-                            {
-                                "Acquire": "YAGS:HTR:675:Acquire",
-                                "Image:ArrayData": "YAGS:HTR:675:Image:ArrayData",
-                                "Image:ArraySize0_RBV": "YAGS:HTR:675:Image:ArraySize0_RBV",
-                                "Image:ArraySize1_RBV": "YAGS:HTR:675:Image:ArraySize1_RBV",
-                                "N_OF_BITS": "YAGS:HTR:675:N_OF_BITS",
-                            }
-                        ),
                         "pv_prefix": "YAGS:HTR:675",
                     }
                 ),
@@ -2687,15 +2407,6 @@ DB = PKDict(
                         "device_kind": "screen",
                         "device_length": 1461.796,
                         "device_name": "YAGPSI",
-                        "pv_base": PKDict(
-                            {
-                                "Acquire": "YAGS:LTUH:743:Acquire",
-                                "Image:ArrayData": "YAGS:LTUH:743:Image:ArrayData",
-                                "Image:ArraySize0_RBV": "YAGS:LTUH:743:Image:ArraySize0_RBV",
-                                "Image:ArraySize1_RBV": "YAGS:LTUH:743:Image:ArraySize1_RBV",
-                                "N_OF_BITS": "YAGS:LTUH:743:N_OF_BITS",
-                            }
-                        ),
                         "pv_prefix": "YAGS:LTUH:743",
                     }
                 ),
@@ -2751,15 +2462,6 @@ DB = PKDict(
                         "device_kind": "screen",
                         "device_length": 18.588,
                         "device_name": "YAGS1",
-                        "pv_base": PKDict(
-                            {
-                                "Acquire": "YAGS:IN20:921:Acquire",
-                                "IMAGE": "YAGS:IN20:921:IMAGE",
-                                "N_OF_BITS": "YAGS:IN20:921:N_OF_BITS",
-                                "N_OF_COL": "YAGS:IN20:921:N_OF_COL",
-                                "N_OF_ROW": "YAGS:IN20:921:N_OF_ROW",
-                            }
-                        ),
                         "pv_prefix": "YAGS:IN20:921",
                     }
                 ),
@@ -2815,15 +2517,6 @@ DB = PKDict(
                         "device_kind": "screen",
                         "device_length": 21.414,
                         "device_name": "YAGS2",
-                        "pv_base": PKDict(
-                            {
-                                "Acquire": "YAGS:IN20:995:Acquire",
-                                "IMAGE": "YAGS:IN20:995:IMAGE",
-                                "N_OF_BITS": "YAGS:IN20:995:N_OF_BITS",
-                                "N_OF_COL": "YAGS:IN20:995:N_OF_COL",
-                                "N_OF_ROW": "YAGS:IN20:995:N_OF_ROW",
-                            }
-                        ),
                         "pv_prefix": "YAGS:IN20:995",
                     }
                 ),

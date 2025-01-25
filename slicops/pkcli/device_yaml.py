@@ -209,6 +209,8 @@ class _Parser:
                     Acquire=f"{meta.pv_prefix}:Acquire",
                 )
             meta.accessor = _accessor(meta)
+            # No longer needed
+            meta.pkdel("pv_base")
             return meta
 
         if not (s := src.get("screens")):

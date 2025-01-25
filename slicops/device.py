@@ -5,9 +5,9 @@
 """
 
 from pykern.pkcollections import PKDict
-from pykern.pkdebug import pkdc, pkdlog, pkdp
+from pykern.pkdebug import pkdc, pkdexc, pkdlog, pkdp
 import epics
-import slicops.device_meta_raw
+import slicops.device_db
 
 
 class AccessorPutError(RuntimeError):
@@ -21,15 +21,16 @@ class DeviceError(RuntimeError):
 class Device:
 
     def __init__(self, name):
-        if not (m := slicops.device_meta_raw.DB.DEVICE_TO_META.get(name)):
-            raise NameError(f"no such device={name}")
-        # TODO(robnagler) support types based on rules
-        if m.device_kind != "screen":
-            raise NotImplementedError(
-                f"unsupported device_kind={m.device_kind} device={name}"
-            )
         self.name = name
-        self._meta = m
+        self.meta = slicops.device_db.meta_for_device(name)
+        self._pv = PKDict()
+
+    def destroy(self):
+        for n, p in self._pv.items():
+            try:
+                p.disconnect()
+            except Exception as e:
+                pkdlog("disconnect error={} pv={} stack={}", e, p.pvname, pkdexc())
         self._pv = PKDict()
 
     def get(self, accessor):
@@ -51,7 +52,7 @@ class Device:
         return rv
 
     def has_accessor(self, accessor):
-        return accessor in self._meta
+        return accessor in self.meta
 
     def put(self, accessor, value):
         a, p = self._accessor_pv(accessor, write=True)
@@ -64,7 +65,7 @@ class Device:
             )
 
     def _accessor_pv(self, accessor, write=False):
-        a = self._meta.accessor[accessor]
+        a = self.meta.accessor[accessor]
         if write and not a.pv_writable:
             raise AccessorPutError(
                 f"not writable accessor={accessor} to device={self.name} pv={a.pv_name}"
