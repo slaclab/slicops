@@ -36,6 +36,16 @@ async def test_basic():
         r = await c.call_api("screen_camera_gain", PKDict(field_value=99))
         ux = r.ui_ctx
         pkunit.pkeq(99, ux.camera_gain.value)
+        r = await c.call_api("screen_beam_path", PKDict(field_value="CU_SPEC"))
+        ux = r.ui_ctx
+        pkunit.pkeq("CU_SPEC", ux.beam_path.value)
+        pkunit.pkeq(None, ux.camera.value)
+        with pkunit.pkexcept("exception=camera"):
+            r = await c.call_api("screen_camera", PKDict(field_value="DEV_CAMERA"))
+        r = await c.call_api("screen_camera", PKDict(field_value="YAG01"))
+        ux = r.ui_ctx
+        pkunit.pkeq("YAG01", ux.camera.value)
+        pkunit.pkeq("YAGS:IN20:211", ux.pv.value)
 
 
 def _setup():

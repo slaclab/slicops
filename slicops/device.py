@@ -52,7 +52,7 @@ class Device:
         return rv
 
     def has_accessor(self, accessor):
-        return accessor in self.meta
+        return accessor in self.meta.accessor
 
     def put(self, accessor, value):
         a, p = self._accessor_pv(accessor, write=True)
