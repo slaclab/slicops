@@ -303,7 +303,7 @@ def _init():
         ),
         camera=PKDict(choices=(), label="Camera"),
         color_map=PKDict(
-            choices=_choice_map(("Cividis", "Inferno", "Viridis")),
+            choices=_choice_map(("Cividis", "Blues", "Inferno", "Turbo", "Viridis")),
             label="Color Map",
             value="Inferno",
         ),
