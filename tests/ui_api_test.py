@@ -9,6 +9,16 @@ import pytest
 
 @pytest.mark.asyncio
 async def test_basic():
+
+    async def _put(ux, field, new, expect):
+        if expect == Exception:
+            with pkunit.pkexcept(f"exception={field}"):
+                await c.call_api(f"screen_{field}", PKDict(field_value=new))
+            return
+        r = await c.call_api(f"screen_{field}", PKDict(field_value=new))
+        pkunit.pkeq(expect, r.ui_ctx[field].value)
+        return r.ui_ctx
+
     async with _setup() as c:
         from pykern.pkcollections import PKDict
         from pykern import pkunit, pkdebug
@@ -23,28 +33,14 @@ async def test_basic():
         pkunit.pkeq(100, len(r.plot.raw_pixels[0]))
         r = await c.call_api("screen_stop_button", PKDict(field_value=False))
         ux = r.ui_ctx
-        r = await c.call_api("screen_camera_gain", PKDict(field_value="33"))
-        ux = r.ui_ctx
-        pkunit.pkeq(33, ux.camera_gain.value)
-        r = await c.call_api(
-            "screen_curve_fit_method", PKDict(field_value="super_gaussian")
-        )
-        ux = r.ui_ctx
-        pkunit.pkeq("super_gaussian", ux.curve_fit_method.value)
-        with pkunit.pkexcept("exception=camera_gain"):
-            await c.call_api("screen_camera_gain", PKDict(field_value=999999))
-        r = await c.call_api("screen_camera_gain", PKDict(field_value=99))
-        ux = r.ui_ctx
-        pkunit.pkeq(99, ux.camera_gain.value)
-        r = await c.call_api("screen_beam_path", PKDict(field_value="CU_SPEC"))
-        ux = r.ui_ctx
-        pkunit.pkeq("CU_SPEC", ux.beam_path.value)
+        ux = await _put(ux, "camera_gain", "33", 33)
+        ux = await _put(ux, "curve_fit_method", "super_gaussian", "super_gaussian")
+        await _put(ux, "camera_gain", 999999, Exception)
+        ux = await _put(ux, "camera_gain", 99, 99)
+        ux = await _put(ux, "beam_path", "CU_SPEC", "CU_SPEC")
         pkunit.pkeq(None, ux.camera.value)
-        with pkunit.pkexcept("exception=camera"):
-            r = await c.call_api("screen_camera", PKDict(field_value="DEV_CAMERA"))
-        r = await c.call_api("screen_camera", PKDict(field_value="YAG01"))
-        ux = r.ui_ctx
-        pkunit.pkeq("YAG01", ux.camera.value)
+        await _put(ux, "camera", "DEV_CAMERA", Exception)
+        ux = await _put(ux, "camera", "YAG01", "YAG01")
         pkunit.pkeq("YAGS:IN20:211", ux.pv.value)
 
 
