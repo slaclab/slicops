@@ -29,6 +29,7 @@ _cfg = None
 
 
 class InvalidFieldChange(RuntimeError):
+
     pass
 
 

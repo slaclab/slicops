@@ -10,7 +10,7 @@ import numpy
 import sys
 
 
-#TODO(robnagler) to create an error, have a small radius
+# TODO(robnagler) to create an error, have a small radius
 _RADIUS = 50
 
 
