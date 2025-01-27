@@ -48,7 +48,8 @@ class PV:
         pass
 
     def get(self):
-        return _pv_values[self.pvname]
+        #TOOD(robnagler) need to be more sophisticated
+        return _pv_values.get(self.pvname, None)
 
     def put(self, value):
         _pv_values[self.pvname] = value
