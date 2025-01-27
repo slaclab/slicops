@@ -15,12 +15,14 @@ class _ScreenSchema(PKDict):
         return PKDict(
             beam_path=PKDict(
                 # TODO(robnagler) Valid values should be consistent (list of lists or just dict? order matters)
+                label="Beam Path",
                 enabled=True,
                 valid_values=(),
                 value=None,
                 visible=True,
             ),
             camera=PKDict(
+                label="Camera",
                 enabled=True,
                 valid_values=(),
                 value=None,
@@ -28,22 +30,26 @@ class _ScreenSchema(PKDict):
             ),
             # TODO(robnagler) check gain accessor
             camera_gain=PKDict(
+                label="Gain",
                 enabled=True,
                 value=None,
                 visible=True,
             ),
             pv=PKDict(
+                label="PV",
                 enabled=False,
                 value=None,
                 visible=True,
             ),
             color_map=PKDict(
+                label="Color Map",
                 value="Inferno",
-                valid_values=("Cividis", "Inferno", "Viridis"),
+                valid_values=["Cividis", "Blues", "Inferno", "Turbo", "Viridis"],
                 visible=True,
                 enabled=True,
             ),
             curve_fit_method=PKDict(
+                label="Curve Fit Method",
                 value="gaussian",
                 valid_values=(
                     ("gaussian", "Gaussian"),
@@ -53,17 +59,23 @@ class _ScreenSchema(PKDict):
                 enabled=True,
             ),
             single_button=PKDict(
+                buttonClass="outline-info",
                 enabled=True,
+                label="Single",
                 value=None,
                 visible=True,
             ),
             start_button=PKDict(
+                buttonClass="primary",
                 enabled=True,
+                label="Start",
                 value=None,
                 visible=True,
             ),
             stop_button=PKDict(
+                buttonClass="danger",
                 enabled=False,
+                label="Stop",
                 value=None,
                 visible=True,
             ),

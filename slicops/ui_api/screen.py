@@ -102,7 +102,7 @@ class API(slicops.quest.API):
         ux.camera.value = None
         self._device_change(ux, o)
 
-    def _button_setup(self, ux, is_acquiring):
+    def _button_setup(self, ux, is_acquiring=False):
         if is_acquiring:
             ux.single_button.enabled = False
             ux.start_button.enabled = False
@@ -176,7 +176,7 @@ class API(slicops.quest.API):
                 lineout=profile.tolist(),
                 fit=PKDict(
                     fit_line=getattr(tool, method)(x=tool.x, **p).tolist(),
-                    results=p.tolist(),
+                    results=p,
                 ),
             )
 
@@ -218,8 +218,9 @@ class API(slicops.quest.API):
         f = ux[field_name]
         if (o := f.value) == n:
             return ux, None
-        if "valid_values" in f and n not in f.valid_values:
-            raise InvalidFieldChange(f"{field_name}={n}")
+        #TODO(pjm): valid values may be a list of choices or a list of (value, display)
+        # if "valid_values" in f and n not in f.valid_values:
+        #     raise InvalidFieldChange(f"{field_name}={n}, valid values: {f.valid_values}")
         f.value = n
         return ux, o
 
