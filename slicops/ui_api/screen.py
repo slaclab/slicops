@@ -328,15 +328,15 @@ def _init():
         pv=PKDict(enable=False, label="PV"),
         # TODO(robnagler) button should not be enabled unless there is a camera
         single_button=PKDict(
-            buttonClass="outline-info",
+            html_class="outline-info",
             label="Single",
         ),
         start_button=PKDict(
-            buttonClass="primary",
+            html_class="primary",
             label="Start",
         ),
         stop_button=PKDict(
-            buttonClass="danger",
+            html_class="danger",
             enabled=False,
             label="Stop",
         ),

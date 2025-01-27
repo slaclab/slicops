@@ -118,7 +118,7 @@ export class StaticTextComponent {
     selector: 'app-button',
     template: `
       <div *ngIf="ui_ctx[field].visible">
-        <button [disabled]="! ui_ctx[field].enabled" [class]="'btn btn-' + ui_ctx[field].buttonClass" type="button" (click)="onClick()">{{ ui_ctx[field].label }}</button>
+        <button [disabled]="! ui_ctx[field].enabled" [class]="'btn btn-' + ui_ctx[field].html_class" type="button" (click)="onClick()">{{ ui_ctx[field].label }}</button>
       </div>
     `,
     styles: [],
