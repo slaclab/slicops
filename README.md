@@ -6,9 +6,9 @@ allow operators to read and write EPICS controls.  The Python library
 can be used standalone to control accelerators and beamlines
 programmatically.
 
-Learn more at https://github.com/slaclab/slicops.
+Repository: https://github.com/slaclab/slicops
 
-Learn more at https://github.com/slaclab/slicops.
+Documentation: https://slicops.readthedocs.io
 
 #### License
 
