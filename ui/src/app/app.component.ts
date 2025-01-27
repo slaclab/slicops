@@ -34,7 +34,7 @@ export class AppComponent {
         <label class="col-form-label col-form-label-sm">{{ ui_ctx[field].label }}</label>
         <div [formGroup]="formGroup">
           <select [formControlName]="field" class="form-select form-select-sm" (change)="onChange()" >
-            <option *ngFor="let v of ui_ctx[field].valid_values" [value]="ui_ctxValue(v)">{{ displayValue(v) }}</option>
+            <option *ngFor="let v of ui_ctx[field].choices" [value]="v.code">{{ v.display }}</option>
           </select>
         </div>
       </div>
@@ -46,14 +46,6 @@ export class SelectComponent {
     @Input() ui_ctx!: any;
     @Input() field!: string;
     @Input() parent!: any;
-
-    displayValue(validValue: string|string[]) {
-        return typeof validValue === 'string' ? validValue : validValue[1];
-    }
-
-    ui_ctxValue(validValue: string|string[]) {
-        return typeof validValue === 'string' ? validValue : validValue[0];
-    }
 
     onChange() {
         this.parent.serverAction(this.field, (this.formGroup.controls as any)[this.field].value);

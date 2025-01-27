@@ -102,12 +102,6 @@ export class ScreenComponent {
         );
     }
 
-    filterEnterKey(event: KeyboardEvent, field: string) {
-        if (event.key === 'Enter') {
-            this.serverAction(field, (this.form.controls as any)[field].value);
-        }
-    }
-
     handleError(err: any) {
         if (this.errorMessage === undefined) {
             this.log.error(['invalid this', this]);
