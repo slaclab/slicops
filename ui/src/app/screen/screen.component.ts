@@ -7,80 +7,61 @@ import { APIService } from '../api.service';
 import { Component } from '@angular/core';
 import { FormGroup, FormControl, Validators } from '@angular/forms';
 import { LogService } from '../log.service';
+import { SelectComponent, TextComponent, StaticTextComponent, ButtonComponent } from '../app.component';
 
 @Component({
     selector: 'app-screen',
     template: `
-  <form [formGroup]="form">
-  <div class="row" *ngIf="ui_ctx">
-    <div *ngIf="errorMessage" class="alert alert-warning">{{ errorMessage }}</div>
-    <div class="col-sm-3 ">
-
-        <div class="mb-3">
-          <label class="col-form-label col-form-label-sm">Beam Path</label>
-          <select formControlName="beam_path" class="form-select form-select-sm" (change)="selectChanged('beam_path')" >
-            <option *ngFor="let v of ui_ctx.beam_path.choices" [value]="v.code">{{ v.display }}</option>
-          </select>
-        </div>
-        <div class="mb-3">
-          <label class="col-form-label col-form-label-sm">Camera</label>
-          <select formControlName="camera" class="form-select form-select-sm" (change)="selectChanged('camera')">
-            <option *ngFor="let v of ui_ctx.camera.choices" [value]="v.code">{{ v.display }}</option>
-          </select>
-        </div>
-        <div class="mb-3">
-          <label class="col-form-label col-form-label-sm">PV</label>
-          <input formControlName="pv" class="form-control form-control-sm form-control-plaintext" />
-        </div>
-        <div class="mb-3">
-          <label class="col-form-label col-form-label-sm">Gain</label>
-          <input [readonly]="! ui_ctx.camera_gain.enabled" formControlName="camera_gain" class="form-control form-control-sm" (keydown)="filterEnterKey($event, 'camera_gain')"/>
-        </div>
-
-        <div class="mb-3">
-          <div class="row">
-            <div class="col-sm-4">
-              <button [disabled]="! ui_ctx.start_button.enabled" class="btn btn-primary" type="button" (click)="serverAction('start_button', false)">Start</button>
+      <form [formGroup]="form">
+        <div class="row" *ngIf="ui_ctx">
+          <div *ngIf="errorMessage" class="alert alert-warning">{{ errorMessage }}</div>
+          <div class="col-sm-3 ">
+            <div class="mb-3">
+              <app-select [formGroup]="form" [parent]="this" field="beam_path" [ui_ctx]="ui_ctx"></app-select>
             </div>
-            <div class="col-sm-4">
-              <button [disabled]="! ui_ctx.stop_button.enabled" class="btn btn-danger" type="button" (click)="serverAction('stop_button', false)">Stop</button>
+            <div class="mb-3">
+              <app-select [formGroup]="form" [parent]="this" field="camera" [ui_ctx]="ui_ctx"></app-select>
             </div>
-            <div class="col-sm-4">
-              <button [disabled]="! ui_ctx.single_button.enabled" class="btn btn-outline-info" type="button" (click)="serverAction('single_button', false)">Single</button>
+            <div class="mb-3">
+              <app-static-text [formGroup]="form" [parent]="this" field="pv" [ui_ctx]="ui_ctx"></app-static-text>
+            </div>
+            <div class="mb-3">
+              <app-text [formGroup]="form" [parent]="this" field="camera_gain" [ui_ctx]="ui_ctx"></app-text>
+            </div>
+            <div class="mb-3">
+              <div class="row">
+                <div class="col-sm-4">
+                  <app-button [formGroup]="form" [parent]="this" field="start_button" [ui_ctx]="ui_ctx"></app-button>
+                </div>
+                <div class="col-sm-4">
+                  <app-button [formGroup]="form" [parent]="this" field="stop_button" [ui_ctx]="ui_ctx"></app-button>
+                </div>
+                <div class="col-sm-4">
+                  <app-button [formGroup]="form" [parent]="this" field="single_button" [ui_ctx]="ui_ctx"></app-button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-sm-9 col-xxl-7">
+            <div *ngIf="image && image.raw_pixels.length">
+              <app-heatmap-with-lineouts [data]="image" [colorMap]="form.value.color_map"></app-heatmap-with-lineouts>
+            </div>
+          </div>
+          <div class="col-sm-3 "></div>
+          <div *ngIf="image && image.raw_pixels.length" class="col-sm-9">
+            <div class="mb-3">
+              <div class="row">
+                <div class="col-sm-3">
+                  <app-select [formGroup]="form" [parent]="this" field="curve_fit_method" [ui_ctx]="ui_ctx"></app-select>
+                </div>
+                <div class="col-sm-3">
+                  <app-select [formGroup]="form" [parent]="this" field="color_map" [ui_ctx]="ui_ctx"></app-select>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-
-    </div>
-
-    <div class="col-sm-9 col-xxl-7">
-      <div *ngIf="image && image.raw_pixels.length">
-        <app-heatmap-with-lineouts [data]="image" [colorMap]="form.value.color_map"></app-heatmap-with-lineouts>
-      </div>
-    </div>
-    <div class="col-sm-3 "></div>
-    <div *ngIf="image && image.raw_pixels.length" style="margin-top: 3ex" class="col-sm-9">
-
-        <div class="mb-3">
-          <div class="row">
-            <div class="col-sm-3">
-              <label class="col-form-label col-form-label-sm">Curve Fit Method</label>
-              <select formControlName="curve_fit_method" class="form-select form-select-sm" (change)="selectChanged('curve_fit_method')">
-                <option *ngFor="let v of ui_ctx.curve_fit_method.choices" [value]="v.code">{{ v.display }}</option>
-              </select>
-            </div>
-            <div class="col-sm-3">
-              <label class="col-form-label col-form-label-sm">Color Map</label>
-              <select formControlName="color_map" class="form-select form-select-sm" (change)="selectChanged('color_map')">
-                <option *ngFor="let v of ui_ctx.color_map.choices" [value]="v.code">{{ v.display }}</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-    </div>
-  </div>
-  </form>
+      </form>
     `,
     styles: [],
 })
@@ -96,7 +77,10 @@ export class ScreenComponent {
         pv: new FormControl(''),
         color_map: new FormControl(''),
         curve_fit_method: new FormControl(''),
-        camera_gain: new FormControl(''),
+        camera_gain: new FormControl('', [
+            Validators.required,
+            Validators.pattern("^-?[0-9]+$"),
+        ]),
     });
     ui_ctx: any = null;
 
@@ -118,12 +102,6 @@ export class ScreenComponent {
         );
     }
 
-    filterEnterKey(event: KeyboardEvent, field: string) {
-        if (event.key === 'Enter') {
-            this.serverAction(field, (this.form.controls as any)[field].value);
-        }
-    }
-
     handleError(err: any) {
         if (this.errorMessage === undefined) {
             this.log.error(['invalid this', this]);
@@ -131,10 +109,6 @@ export class ScreenComponent {
         }
         this.log.error(['apiService error', err]);
         this.errorMessage = err;
-    }
-
-    selectChanged(field: string) {
-        this.serverAction(field, (this.form.controls as any)[field].value);
     }
 
     serverAction(field: string, value: any) {

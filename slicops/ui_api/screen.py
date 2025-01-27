@@ -308,7 +308,7 @@ def _init():
         ),
         camera=PKDict(choices=(), label="Camera"),
         color_map=PKDict(
-            choices=_choice_map(("Cividis", "Inferno", "Viridis")),
+            choices=_choice_map(("Cividis", "Blues", "Inferno", "Turbo", "Viridis")),
             label="Color Map",
             value="Inferno",
         ),
@@ -319,11 +319,27 @@ def _init():
             label="Curve Fit Method",
             value="gaussian",
         ),
+        camera_gain=PKDict(
+            label="Gain",
+            enabled=True,
+            value=None,
+            visible=True,
+        ),
         pv=PKDict(enable=False, label="PV"),
         # TODO(robnagler) button should not be enabled unless there is a camera
-        single_button=PKDict(label="Single"),
-        start_button=PKDict(label="Start"),
-        stop_button=PKDict(enabled=False, label="Stop"),
+        single_button=PKDict(
+            html_class="outline-info",
+            label="Single",
+        ),
+        start_button=PKDict(
+            html_class="primary",
+            label="Start",
+        ),
+        stop_button=PKDict(
+            html_class="danger",
+            enabled=False,
+            label="Stop",
+        ),
     )
 
 
