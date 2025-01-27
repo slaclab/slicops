@@ -121,7 +121,7 @@ class API(slicops.quest.API):
         ux.camera.value = None
         self._device_change(ux, o)
 
-    def _button_setup(self, ux, is_acquiring=False):
+    def _button_setup(self, ux, is_acquiring):
         if is_acquiring:
             ux.single_button.enabled = False
             ux.start_button.enabled = False
