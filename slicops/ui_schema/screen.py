@@ -72,12 +72,12 @@ class _ScreenSchema(PKDict):
 
 SINGLETON = _ScreenSchema(
     # constants=PKDict(
-        # TODO(robnagler) unused and not clear it will be used
-        # color_map=["Cividis", "Cool", "Inferno", "Magma", "Plasma", "Viridis", "Warm"],
-        # curve_fit_method=[
-        #     ["gaussian", "Gaussian"],
-        #     ["super_gaussian", "Super Gaussian"],
-        # ],
+    # TODO(robnagler) unused and not clear it will be used
+    # color_map=["Cividis", "Cool", "Inferno", "Magma", "Plasma", "Viridis", "Warm"],
+    # curve_fit_method=[
+    #     ["gaussian", "Gaussian"],
+    #     ["super_gaussian", "Super Gaussian"],
+    # ],
     # ),
     # TODO(robnagler) unused and not clear it will be used
     # model=PKDict(
