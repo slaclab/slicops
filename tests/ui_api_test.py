@@ -23,9 +23,19 @@ async def test_basic():
         pkunit.pkeq(100, len(r.plot.raw_pixels[0]))
         r = await c.call_api("screen_stop_button", PKDict(field_value=False))
         ux = r.ui_ctx
-        r = await c.call_api("screen_camera_gain", PKDict(field_value=33))
+        r = await c.call_api("screen_camera_gain", PKDict(field_value="33"))
         ux = r.ui_ctx
         pkunit.pkeq(33, ux.camera_gain.value)
+        r = await c.call_api(
+            "screen_curve_fit_method", PKDict(field_value="super_gaussian")
+        )
+        ux = r.ui_ctx
+        pkunit.pkeq("super_gaussian", ux.curve_fit_method.value)
+        with pkunit.pkexcept("exception=camera_gain"):
+            await c.call_api("screen_camera_gain", PKDict(field_value=999999))
+        r = await c.call_api("screen_camera_gain", PKDict(field_value=99))
+        ux = r.ui_ctx
+        pkunit.pkeq(99, ux.camera_gain.value)
 
 
 def _setup():

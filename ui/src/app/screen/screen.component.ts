@@ -19,13 +19,13 @@ import { LogService } from '../log.service';
         <div class="mb-3">
           <label class="col-form-label col-form-label-sm">Beam Path</label>
           <select formControlName="beam_path" class="form-select form-select-sm" (change)="selectChanged('beam_path')" >
-            <option *ngFor="let bp of ui_ctx.beam_path.valid_values" [value]="bp">{{ bp }}</option>
+            <option *ngFor="let v of ui_ctx.beam_path.choices" [value]="v.code">{{ v.display }}</option>
           </select>
         </div>
         <div class="mb-3">
           <label class="col-form-label col-form-label-sm">Camera</label>
           <select formControlName="camera" class="form-select form-select-sm" (change)="selectChanged('camera')">
-            <option *ngFor="let c of ui_ctx.camera.valid_values" [value]="c">{{ c }}</option>
+            <option *ngFor="let v of ui_ctx.camera.choices" [value]="v.code">{{ v.display }}</option>
           </select>
         </div>
         <div class="mb-3">
@@ -66,13 +66,13 @@ import { LogService } from '../log.service';
             <div class="col-sm-3">
               <label class="col-form-label col-form-label-sm">Curve Fit Method</label>
               <select formControlName="curve_fit_method" class="form-select form-select-sm" (change)="selectChanged('curve_fit_method')">
-                <option *ngFor="let m of ui_ctx.curve_fit_method.valid_values" [value]="m[0]">{{ m[1] }}</option>
+                <option *ngFor="let v of ui_ctx.curve_fit_method.choices" [value]="v.code">{{ v.display }}</option>
               </select>
             </div>
             <div class="col-sm-3">
               <label class="col-form-label col-form-label-sm">Color Map</label>
               <select formControlName="color_map" class="form-select form-select-sm" (change)="selectChanged('color_map')">
-                <option *ngFor="let cm of ui_ctx.color_map.valid_values" [value]="cm">{{ cm }}</option>
+                <option *ngFor="let v of ui_ctx.color_map.choices" [value]="v.code">{{ v.display }}</option>
               </select>
             </div>
           </div>
