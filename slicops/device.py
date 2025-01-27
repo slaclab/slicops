@@ -12,11 +12,13 @@ import slicops.device_db
 
 class AccessorPutError(RuntimeError):
     """The PV for this accessor is not writable"""
+
     pass
 
 
 class DeviceError(RuntimeError):
     """Error communicating with device"""
+
     pass
 
 
@@ -50,6 +52,7 @@ class Device:
         Returns:
           Any: the value from the PV converted to a Python friendly type
         """
+
         def _reshape(image):
             # TODO(robnagler) does get return 0 ever?
             if not ((r := self.get("num_rows")) and (c := self.get("num_cols"))):
