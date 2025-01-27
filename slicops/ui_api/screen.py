@@ -53,8 +53,8 @@ class API(slicops.quest.API):
 
     async def api_screen_beam_path(self, api_args):
         """Set the ``beam_path``"""
-        ux, o = self._save_field("beam_path", api_args)
-        if o:
+        ux, o, c = self._save_field("beam_path", api_args)
+        if c:
             self._beam_path_change(ux, o)
         # TODO(pjm): could return a diff of model changes rather than full model
         # OK to return in place values, not copy, becasue
@@ -62,22 +62,22 @@ class API(slicops.quest.API):
 
     async def api_screen_camera(self, api_args):
         """Set the ``camera`` which may change the ``device``"""
-        ux, o = self._save_field("camera", api_args)
-        if o:
+        ux, o, c = self._save_field("camera", api_args)
+        if c:
             self._device_change(ux, o)
         return self._return(ux)
 
     async def api_screen_camera_gain(self, api_args):
-        ux, _ = self._save_field("camera_gain", api_args)
+        ux, _, _ = self._save_field("camera_gain", api_args)
         self.session.device.put("gain", ux.camera_gain.value)
         return self._return(ux)
 
     async def api_screen_color_map(self, api_args):
-        ux, _ = self._save_field("color_map", api_args)
+        ux, _, _ = self._save_field("color_map", api_args)
         return self._return(ux)
 
     async def api_screen_curve_fit_method(self, api_args):
-        ux, _ = self._save_field("curve_fit_method", api_args)
+        ux, _, _ = self._save_field("curve_fit_method", api_args)
         return await self._return_with_image(ux)
 
     async def api_screen_single_button(self, api_args):
@@ -142,23 +142,27 @@ class API(slicops.quest.API):
         def _clear():
             ux.camera_gain.value = None
             ux.pv.value = None
-            self._button_setup(False)
+            self._button_setup(ux, False)
 
         def _destroy():
             if not old_name or not (d := self.session.get("device")):
                 return
-            self.session.device = None
             try:
                 self._set_acquire(0)
             except Exception as e:
                 pkdlog(
                     "set acquire=0 PV error={} device={} stack={}", e, d.name, pkdexc()
                 )
+            self.session.device = None
             d.destroy()
 
         def _setup():
             d = self.session.device = slicops.device.Device(ux.camera.value)
-            ux.camera_gain.value = ux.camera_gain.value = d.get("gain")
+            if d.has_accessor("gain"):
+                ux.camera_gain.value = d.get("gain")
+            else:
+                # TODO(robnagler) enabled?
+                ux.camera_gain.value = None
             ux.pv.value = d.meta.pv_prefix
             self._button_setup(ux, _acquiring(d))
 
@@ -238,9 +242,9 @@ class API(slicops.quest.API):
             # TODO(robnagler) better error messages
             raise InvalidFieldValue(f"{field_name}={api_args.field_value}")
         if (o := f.value) == n:
-            return ux, None
+            return ux, None, False
         f.value = n
-        return ux, o
+        return ux, o, True
 
     def _session_ui_ctx(self):
         if ux := self.session.get("ui_ctx"):
@@ -253,7 +257,8 @@ class API(slicops.quest.API):
         return ux
 
     def _set_acquire(self, is_on):
-        self.session.device.put("acquire", is_on)
+        if d := self.session.get("device"):
+            d.put("acquire", is_on)
 
 
 def _choice_map(values):
