@@ -6,8 +6,8 @@
 
 from pykern.pkcollections import PKDict
 from pykern.pkdebug import pkdc, pkdlog, pkdp
-import pykern.pkasyncio
 import pykern.pkconfig
+import pykern.pkasyncio
 import pykern.pkunit
 import pykern.util
 
@@ -25,6 +25,24 @@ def cfg():
         PKDict: configuration values. (Make a copy before modifying.)
 
     """
+    global _cfg
+    if _cfg:
+        return _cfg
+    if pykern.pkconfig.channel_in("dev"):
+        global _dev_root_d
+
+        _dev_root_d = pykern.util.dev_run_dir(dev_path)
+    _cfg = pykern.pkconfig.init(
+        ui_api=PKDict(
+            api_uri=("/api-v1", str, "URI for API requests"),
+            tcp_ip=(
+                pykern.pkconst.LOCALHOST_IP,
+                pykern.pkasyncio.cfg_ip,
+                "IP address for server",
+            ),
+            tcp_port=(9030, pykern.pkasyncio.cfg_port, "port of server"),
+        ),
+    )
     return _cfg
 
 
@@ -35,23 +53,3 @@ def dev_path(path, **ensure_kwargs):
         py.path: absolute path with parent directories created
     """
     return _dev_root_d.join(path)
-
-
-def _init():
-    global _cfg
-    if _cfg:
-        return
-    if pykern.pkconfig.channel_in("dev"):
-        global _dev_root_d
-
-        _dev_root_d = pykern.util.dev_run_dir(dev_path)
-    _cfg = pykern.pkconfig.init(
-        ui_api=PKDict(
-            api_uri=("/api-v1", str, "URI for API requests"),
-            tcp_ip=(None, pykern.pkasyncio.cfg_ip, "IP address for server"),
-            tcp_port=(9030, pykern.pkasyncio.cfg_ip, "port of server"),
-        ),
-    )
-
-
-_init()
