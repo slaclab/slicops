@@ -22,8 +22,19 @@ class DeviceMeta(PKDict):
         device_name (str): name of device
         pv_prefix (str): prefix to all accessor PVs for device
     """
+
     def __init__(self, values):
         super().__init__(copy.deepcopy(values))
+
+
+# TODO(robnagler) are we selecting a machine?
+def beam_paths():
+    """Get all beam path names
+
+    Returns:
+        tuple: sorted beams path names
+    """
+    return tuple(sorted(slicops.device_meta_raw.DB.BEAM_PATH_TO_DEVICE.keys()))
 
 
 def devices_for_beam_path(beam_path, device_kind):

@@ -8,7 +8,6 @@ invokes changes to the underlying device, also stored in the
 
 :copyright: Copyright (c) 2025 The Board of Trustees of the Leland Stanford Junior University, through SLAC National Accelerator Laboratory (subject to receipt of any required approvals from the U.S. Dept. of Energy).  All Rights Reserved.
 :license: http://github.com/slaclab/slicops/LICENSE
-
 """
 
 from pykern import pkconfig
@@ -28,15 +27,17 @@ _KIND = "screen"
 
 _cfg = None
 
+
 class InvalidFieldChange(RuntimeError):
     pass
+
 
 class API(slicops.quest.API):
     """Implementation for the Screen (Profile Monitor) application"""
 
     async def api_screen_beam_path(self, api_args):
         """Set the ``beam_path``"""
-        ux, o := self._save_field("beam_path", api_args)
+        ux, o = self._save_field("beam_path", api_args)
         if o:
             self._beam_path_change(ux, o)
         # TODO(pjm): could return a diff of model changes rather than full model
@@ -47,8 +48,6 @@ class API(slicops.quest.API):
         """Set the ``camera`` which may change the ``device``"""
         ux, o = self._save_field("camera", api_args)
         if o:
-            if ux.camera.value not in ux.camera.valid_values:
-                raise InvalidFieldChange(f"camera={ux.camera.value} not on beam_path={ux.beam_path.value}")
             self._device_change(ux, o)
         return self._return(ux)
 
@@ -67,7 +66,7 @@ class API(slicops.quest.API):
 
     async def api_screen_single_button(self, api_args):
         ux = self._session_ui_ctx()
-        #TODO(robnagler) buttons should always change and be sent back,
+        # TODO(robnagler) buttons should always change and be sent back,
         # because image acquisition could take time.
         self._set_acquire(1)
         try:
@@ -92,9 +91,11 @@ class API(slicops.quest.API):
         ux = self._session_ui_ctx()
         return self._return(ux)
 
-    def _beam_path_change(self, old_name):
+    def _beam_path_change(self, ux, old_name):
         # TODO(robnagler) get from device db
-        ux.camera.valid_values = slicops.device_db.cameras_for_beam_path(ux.beam_path.value, _KIND)
+        ux.camera.valid_values = slicops.device_db.devices_for_beam_path(
+            ux.beam_path.value, _KIND
+        )
         if ux.camera.value in ux.camera.valid_values or (o := ux.camera.value) is None:
             return
         ux.camera.value = None
@@ -130,7 +131,9 @@ class API(slicops.quest.API):
             try:
                 self._set_acquire(0)
             except Exception as e:
-                pkdlog("set acquire=0 PV error={} device={} stack={}", e, d.name, pkdexc())
+                pkdlog(
+                    "set acquire=0 PV error={} device={} stack={}", e, d.name, pkdexc()
+                )
             d.destroy()
 
         def _setup():
@@ -163,7 +166,7 @@ class API(slicops.quest.API):
             try:
                 p = tool.get_fit()[method]["params"]
                 # TODO(pjm): FittingTool returns initial params on failure
-                if p == initial_params:
+                if p == initial_params["params"]:
                     return _fit_error(profile)
             except RuntimeError:
                 # TODO(robnagler) does this happen?
@@ -172,11 +175,12 @@ class API(slicops.quest.API):
                 lineout=profile.tolist(),
                 fit=PKDict(
                     fit_line=getattr(tool, method)(x=tool.x, **p).tolist(),
-                    results=p,
+                    results=p.tolist(),
                 ),
             )
 
         def _fit_error(profile):
+            # TODO(robnagler) why doesn't display the error somewhere?
             return PKDict(
                 lineout=profile.tolist(),
                 fit=PKDict(
@@ -209,9 +213,13 @@ class API(slicops.quest.API):
 
     def _save_field(self, field_name, api_args):
         ux = self._session_ui_ctx()
-        if (o := ux[field_name].value) == api_args.field_name:
+        n = api_args.field_value
+        f = ux[field_name]
+        if (o := f.value) == n:
             return ux, None
-        ux[field_name].value = api_args.field_value
+        if "valid_values" in f and n not in f.valid_values:
+            raise InvalidFieldChange(f"{field_name}={n}")
+        f.value = n
         return ux, o
 
     def _session_ui_ctx(self):
@@ -219,6 +227,7 @@ class API(slicops.quest.API):
             return ux
         self.session.ui_schema = slicops.ui_schema.load(_KIND)
         self.session.ui_ctx = ux = self.session.ui_schema.default_ui_ctx()
+        ux.beam_path.valid_values = slicops.device_db.beam_paths()
         ux.beam_path.value = _cfg.dev.beam_path
         self._beam_path_change(ux, None)
         ux.camera.value = _cfg.dev.camera_name
@@ -231,7 +240,7 @@ class API(slicops.quest.API):
 
 _cfg = pkconfig.init(
     dev=PKDict(
-        beam_path=("SC_SXR", str, "dev beampath name"),
+        beam_path=("DEV_BEAM_PATH", str, "dev beampath name"),
         camera_name=("DEV_CAMERA", str, "dev camera name"),
     ),
 )
