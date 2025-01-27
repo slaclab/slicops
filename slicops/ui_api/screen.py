@@ -161,7 +161,7 @@ class API(slicops.quest.API):
             if d.has_accessor("gain"):
                 ux.camera_gain.value = d.get("gain")
             else:
-                #TODO(robnagler) enabled?
+                # TODO(robnagler) enabled?
                 ux.camera_gain.value = None
             ux.pv.value = d.meta.pv_prefix
             self._button_setup(ux, _acquiring(d))
