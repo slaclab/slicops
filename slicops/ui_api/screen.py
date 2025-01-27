@@ -20,15 +20,30 @@ import random
 import slicops.device
 import slicops.device_db
 import slicops.quest
-import slicops.ui_schema
 import time
 
 _KIND = "screen"
 
 _cfg = None
 
+_FIELDS = (
+    "beam_path",
+    "camera",
+    "camera_gain",
+    "color_map",
+    "curve_fit_method",
+    "pv",
+    "single_button",
+    "start_button",
+    "stop_button",
+)
 
-class InvalidFieldChange(RuntimeError):
+_FIELD_VALIDATOR = None
+
+_FIELD_DEFAULT = None
+
+
+class InvalidFieldValue(RuntimeError):
 
     pass
 
@@ -90,14 +105,18 @@ class API(slicops.quest.API):
 
     async def api_screen_ui_ctx(self, api_args):
         ux = self._session_ui_ctx()
+        # TODO(robnagler) if accepting ui_ctx, then need to update valid_values here
         return self._return(ux)
 
     def _beam_path_change(self, ux, old_name):
         # TODO(robnagler) get from device db
-        ux.camera.valid_values = slicops.device_db.devices_for_beam_path(
-            ux.beam_path.value, _KIND
+        ux.camera.choices = _choice_map(
+            slicops.device_db.devices_for_beam_path(ux.beam_path.value, _KIND),
         )
-        if ux.camera.value in ux.camera.valid_values or (o := ux.camera.value) is None:
+        if (
+            _validate_field(ux.camera, ux.camera.value) is not None
+            or (o := ux.camera.value) is None
+        ):
             return
         ux.camera.value = None
         self._device_change(ux, o)
@@ -176,7 +195,7 @@ class API(slicops.quest.API):
                 lineout=profile.tolist(),
                 fit=PKDict(
                     fit_line=getattr(tool, method)(x=tool.x, **p).tolist(),
-                    results=p.tolist(),
+                    results=p,
                 ),
             )
 
@@ -214,21 +233,19 @@ class API(slicops.quest.API):
 
     def _save_field(self, field_name, api_args):
         ux = self._session_ui_ctx()
-        n = api_args.field_value
         f = ux[field_name]
+        if (n := _validate_field(f, api_args.field_value)) is None:
+            # TODO(robnagler) better error messages
+            raise InvalidFieldValue(f"{field_name}={api_args.field_value}")
         if (o := f.value) == n:
             return ux, None
-        if "valid_values" in f and n not in f.valid_values:
-            raise InvalidFieldChange(f"{field_name}={n}")
         f.value = n
         return ux, o
 
     def _session_ui_ctx(self):
         if ux := self.session.get("ui_ctx"):
             return ux
-        self.session.ui_schema = slicops.ui_schema.load(_KIND)
-        self.session.ui_ctx = ux = self.session.ui_schema.default_ui_ctx()
-        ux.beam_path.valid_values = slicops.device_db.beam_paths()
+        self.session.ui_ctx = ux = _ui_ctx_default()
         ux.beam_path.value = _cfg.dev.beam_path
         self._beam_path_change(ux, None)
         ux.camera.value = _cfg.dev.camera_name
@@ -239,9 +256,91 @@ class API(slicops.quest.API):
         self.session.device.put("acquire", is_on)
 
 
-_cfg = pkconfig.init(
-    dev=PKDict(
-        beam_path=("DEV_BEAM_PATH", str, "dev beampath name"),
-        camera_name=("DEV_CAMERA", str, "dev camera name"),
-    ),
-)
+def _choice_map(values):
+    def _values():
+        if isinstance(values[0], (tuple, list)):
+            return values
+        return zip(values, values)
+
+    return tuple((PKDict(code=v[0], display=v[1]) for v in _values()))
+
+
+def _choice_validator(field, value):
+    for v in field.choices:
+        if v.code == value:
+            return value
+    return None
+
+
+def _gain_validator(field, value):
+    try:
+        rv = int(value)
+    except Exception:
+        return None
+    return rv if 0 <= rv <= 1000 else None
+
+
+def _init():
+    global _cfg, _FIELD_VALIDATOR, _FIELD_DEFAULT
+
+    _cfg = pkconfig.init(
+        dev=PKDict(
+            beam_path=("DEV_BEAM_PATH", str, "dev beam path name"),
+            camera_name=("DEV_CAMERA", str, "dev camera name"),
+        ),
+    )
+    _FIELD_VALIDATOR = PKDict(
+        beam_path=_choice_validator,
+        camera=_choice_validator,
+        camera_gain=_gain_validator,
+        color_map=_choice_validator,
+        curve_fit_method=_choice_validator,
+    )
+    _FIELD_DEFAULT = PKDict(
+        beam_path=PKDict(
+            choices=_choice_map(slicops.device_db.beam_paths()),
+            label="Beam Path",
+        ),
+        camera=PKDict(choices=(), label="Camera"),
+        color_map=PKDict(
+            choices=_choice_map(("Cividis", "Inferno", "Viridis")),
+            label="Color Map",
+            value="Inferno",
+        ),
+        curve_fit_method=PKDict(
+            choices=_choice_map(
+                (("gaussian", "Gaussian"), ("super_gaussian", "Super Gaussian"))
+            ),
+            label="Curve Fit Method",
+            value="gaussian",
+        ),
+        pv=PKDict(enable=False, label="PV"),
+        # TODO(robnagler) button should not be enabled unless there is a camera
+        single_button=PKDict(label="Single"),
+        start_button=PKDict(label="Start"),
+        stop_button=PKDict(enabled=False, label="Stop"),
+    )
+
+
+def _ui_ctx_default():
+    # TODO(pjm): create field values from schema above with default values
+    # TODO(robnagler): return an object
+
+    def _value(name):
+        return _FIELD_DEFAULT.get(name, PKDict()).pksetdefault(
+            enabled=True,
+            name=name,
+            value=None,
+            visible=True,
+        )
+
+    return PKDict({n: _value(n) for n in _FIELDS})
+
+
+def _validate_field(field, value):
+    if p := _FIELD_VALIDATOR.get(field.name):
+        return p(field, value)
+    return value
+
+
+_init()
