@@ -11,14 +11,22 @@ import slicops.device_db
 
 
 class AccessorPutError(RuntimeError):
+    """The PV for this accessor is not writable"""
     pass
 
 
 class DeviceError(RuntimeError):
+    """Error communicating with device"""
     pass
 
 
 class Device:
+    """Wrapper around physical device
+
+    Attributes:
+      name (str): name of device
+      meta (slicops.device_db.DeviceMeta): information about device
+    """
 
     def __init__(self, name):
         self.name = name
@@ -26,6 +34,7 @@ class Device:
         self._pv = PKDict()
 
     def destroy(self):
+        """Disconnect from PV's and remove state about device"""
         for n, p in self._pv.items():
             try:
                 p.disconnect()
@@ -34,6 +43,13 @@ class Device:
         self._pv = PKDict()
 
     def get(self, accessor):
+        """Read from PV
+
+        Args:
+          accessor (str): Friendly name for PV
+        Returns:
+          Any: the value from the PV converted to a Python friendly type
+        """
         def _reshape(image):
             # TODO(robnagler) does get return 0 ever?
             if not ((r := self.get("num_rows")) and (c := self.get("num_cols"))):
@@ -52,9 +68,22 @@ class Device:
         return rv
 
     def has_accessor(self, accessor):
+        """Check whether device has accessor
+
+        Args:
+          accessor (str): Friendly name for PV
+        Returns:
+          bool: True if PV is bound to device
+        """
         return accessor in self.meta.accessor
 
     def put(self, accessor, value):
+        """Set PV to value
+
+        Args:
+          accessor (str): Friendly name for PV
+          value (Any): Value to write to PV
+        """
         a, p = self._accessor_pv(accessor, write=True)
         # ECA_NORMAL == 0 and None is normal, too, apparently
         if (e := p.put(value)) != 1:

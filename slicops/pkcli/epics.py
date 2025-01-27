@@ -46,6 +46,11 @@ def init_sim_detector():
 
 
 def sim_detector(ioc_sim_detector_dir=None):
+    """Run an EPICS IOC Sim Detector
+
+    Args:
+      ioc_sim_detector_dir (str, optional): Directory containing EPICS code for iocSimDetector
+    """
     # TODO(robnagler) use https://github.com/ralphlange/procServ
     # Macs don't have /dev/stdin|out so /dev/tty is more portable
 

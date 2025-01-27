@@ -72,6 +72,11 @@ screens:
 
 
 def to_python():
+    """Convert device yaml file to python file
+
+    Returns:
+      pykern.pkio.py_path: Path of python file
+    """
     return _Parser().output_path
 
 
