@@ -10,7 +10,7 @@ invokes changes to the underlying device, also stored in the
 :license: http://github.com/slaclab/slicops/LICENSE
 """
 
-from pykern import pkconfig
+from pykern import pkconfig, pkresource, pkyaml
 from pykern.pkcollections import PKDict
 from pykern.pkdebug import pkdc, pkdexc, pkdlog, pkdp
 import asyncio
@@ -25,18 +25,6 @@ import time
 _KIND = "screen"
 
 _cfg = None
-
-_FIELDS = (
-    "beam_path",
-    "camera",
-    "camera_gain",
-    "color_map",
-    "curve_fit_method",
-    "pv",
-    "single_button",
-    "start_button",
-    "stop_button",
-)
 
 _FIELD_VALIDATOR = None
 
@@ -80,6 +68,9 @@ class API(slicops.quest.API):
         ux, _, _ = self._save_field("curve_fit_method", api_args)
         return await self._return_with_image(ux)
 
+    async def api_screen_plot(self, api_args):
+        return await self._return_with_image(self._session_ui_ctx())
+
     async def api_screen_single_button(self, api_args):
         ux = self._session_ui_ctx()
         # TODO(robnagler) buttons should always change and be sent back,
@@ -95,10 +86,12 @@ class API(slicops.quest.API):
         ux = self._session_ui_ctx()
         self._set_acquire(1)
         self._button_setup(ux, True)
+        ux.plot.auto_refresh = True
         return await self._return_with_image(ux)
 
     async def api_screen_stop_button(self, api_args):
         ux = self._session_ui_ctx()
+        ux.plot.auto_refresh = False
         self._set_acquire(0)
         self._button_setup(ux, False)
         return self._return(ux)
@@ -106,7 +99,10 @@ class API(slicops.quest.API):
     async def api_screen_ui_ctx(self, api_args):
         ux = self._session_ui_ctx()
         # TODO(robnagler) if accepting ui_ctx, then need to update valid_values here
-        return self._return(ux)
+        return self._return(ux).pkupdate(
+            # TODO(pjm): need a better way to load a resource for a sliclet
+            layout=pkyaml.load_file(pkresource.file_path("layout/screen.yaml")),
+        )
 
     def _beam_path_change(self, ux, old_name):
         # TODO(robnagler) get from device db
@@ -164,7 +160,9 @@ class API(slicops.quest.API):
                 # TODO(robnagler) enabled?
                 ux.camera_gain.value = None
             ux.pv.value = d.meta.pv_prefix
-            self._button_setup(ux, _acquiring(d))
+            a = _acquiring(d)
+            self._button_setup(ux, a)
+            ux.plot.auto_refresh = a
 
         _destroy()
         if ux.camera.value is None:
@@ -195,6 +193,8 @@ class API(slicops.quest.API):
             except RuntimeError:
                 # TODO(robnagler) does this happen?
                 return _fit_error(profile)
+            ux.curve_fit_method.visible = True
+            ux.color_map.visible = True
             return PKDict(
                 lineout=profile.tolist(),
                 fit=PKDict(
@@ -295,56 +295,19 @@ def _init():
         ),
     )
     _FIELD_VALIDATOR = PKDict(
+        # TODO(pjm): validators could be based on field widget
         beam_path=_choice_validator,
         camera=_choice_validator,
         camera_gain=_gain_validator,
         color_map=_choice_validator,
         curve_fit_method=_choice_validator,
     )
-    _FIELD_DEFAULT = PKDict(
-        beam_path=PKDict(
-            choices=_choice_map(slicops.device_db.beam_paths()),
-            label="Beam Path",
-        ),
-        camera=PKDict(choices=(), label="Camera"),
-        color_map=PKDict(
-            choices=_choice_map(("Cividis", "Blues", "Inferno", "Turbo", "Viridis")),
-            label="Color Map",
-            value="Inferno",
-        ),
-        curve_fit_method=PKDict(
-            choices=_choice_map(
-                (("gaussian", "Gaussian"), ("super_gaussian", "Super Gaussian"))
-            ),
-            label="Curve Fit Method",
-            value="gaussian",
-        ),
-        camera_gain=PKDict(
-            label="Gain",
-            enabled=True,
-            value=None,
-            visible=True,
-        ),
-        pv=PKDict(enable=False, label="PV"),
-        # TODO(robnagler) button should not be enabled unless there is a camera
-        single_button=PKDict(
-            html_class="outline-info",
-            label="Single",
-        ),
-        start_button=PKDict(
-            html_class="primary",
-            label="Start",
-        ),
-        stop_button=PKDict(
-            html_class="danger",
-            enabled=False,
-            label="Stop",
-        ),
-    )
+
+    _FIELD_DEFAULT = pkyaml.load_file(pkresource.file_path("schema/screen.yaml"))
+    _FIELD_DEFAULT.beam_path.choices = _choice_map(slicops.device_db.beam_paths())
 
 
 def _ui_ctx_default():
-    # TODO(pjm): create field values from schema above with default values
     # TODO(robnagler): return an object
 
     def _value(name):
@@ -355,7 +318,7 @@ def _ui_ctx_default():
             visible=True,
         )
 
-    return PKDict({n: _value(n) for n in _FIELDS})
+    return PKDict({n: _value(n) for n in _FIELD_DEFAULT.keys()})
 
 
 def _validate_field(field, value):
