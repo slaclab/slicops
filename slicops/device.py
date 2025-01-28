@@ -34,6 +34,7 @@ class Device:
         self.name = name
         self.meta = slicops.device_db.meta_for_device(name)
         self._pv = PKDict()
+        self.connected = False
 
     def destroy(self):
         """Disconnect from PV's and remove state about device"""
@@ -80,6 +81,17 @@ class Device:
         """
         return accessor in self.meta.accessor
 
+    def monitor(self, accessor, callback):
+        # ../d/monitor.py:8:_cb {'access': 'read/write', 'cb_info': (1, <PV '13SIM1:image1:ArrayData', count=786432/12000000, type=time_char, access=read/write>), 'char_value': '<array size=786432, type=time_char>', 'chid': 44568296, 'count': 786432, 'enum_strs': None, 'ftype': 18, 'host': 'localhost:5064', 'lower_alarm_limit': 0, 'lower_ctrl_limit': 0, 'lower_disp_limit': 0, 'lower_warning_limit': 0, 'nanoseconds': 872421249, 'nelm': 12000000, 'posixseconds': 1738098522.0, 'precision': None, 'pvname': '13SIM1:image1:ArrayData', 'read_access': True, 'severity': 0, 'status': 0, 'timestamp': 1738098522.872421, 'type': 'time_char', 'typefull': 'time_char', 'units': '', 'upper_alarm_limit': 0, 'upper_ctrl_limit': 0, 'upper_disp_limit': 0, 'upper_warning_limit': 0, 'value': [43  9  4 ... 19 10 45], 'write_access': True}
+        a, p = self._accessor_pv(accessor)
+        p.add_callback(callback)
+        p.auto_monitor = True
+
+    def monitor_stop(self, accessor):
+        a, p = self._accessor_pv(accessor)
+        p.auto_monitor = False
+        p.clear_callbacks()
+
     def put(self, accessor, value):
         """Set PV to value
 
@@ -97,6 +109,8 @@ class Device:
             )
 
     def _accessor_pv(self, accessor, write=False):
+        def _init_pv(
+        lambda: epics.PV(a.pv_name, connection_callback=self._connection_cb)
         a = self.meta.accessor[accessor]
         if write and not a.pv_writable:
             raise AccessorPutError(
@@ -104,5 +118,21 @@ class Device:
             )
         return (
             a,
-            self._pv.pksetdefault(accessor, lambda: epics.PV(a.pv_name))[accessor],
+            self._pv.pksetdefault(accessor, lambda: _init_pv(PKDict(accessor_meta=a))[accessor],
         )
+
+    def _connection_cb(self, **kwargs):
+        pass
+
+    def _format_result(self, raw, accessor_meta):
+        def _reshape(image):
+            # TODO(robnagler) does get return 0 ever?
+            if not ((r := self.get("num_rows")) and (c := self.get("num_cols"))):
+                raise ValueError("num_rows or num_cols is invalid")
+            return image.reshape(c, r)
+
+        if accessor_meta.py_type == "bool":
+            return bool(raw)
+        if accessor_meta.name == "image":
+            return _reshape(raw)
+        return raw

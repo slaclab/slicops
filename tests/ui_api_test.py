@@ -7,7 +7,7 @@
 import pytest
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio(loop_scope="session")
 async def test_basic():
 
     async def _put(ux, field, new, expect):
