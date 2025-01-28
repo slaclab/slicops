@@ -27,16 +27,17 @@ export class AppComponent {
     }
 }
 
+/**
+ * An HTML SELECT element with a list of choices.
+ */
 @Component({
-    selector: 'app-select',
+    selector: 'widget-select',
     template: `
-      <div *ngIf="ui_ctx[field].visible">
-        <label class="col-form-label col-form-label-sm">{{ ui_ctx[field].label }}</label>
-        <div [formGroup]="formGroup">
-          <select [formControlName]="field" class="form-select form-select-sm" (change)="onChange()" >
-            <option *ngFor="let v of ui_ctx[field].choices" [value]="v.code">{{ v.display }}</option>
-          </select>
-        </div>
+      <label class="col-form-label col-form-label-sm">{{ ui_ctx[field].label }}</label>
+      <div [formGroup]="formGroup">
+        <select [formControlName]="field" class="form-select form-select-sm" (change)="onChange()" >
+          <option *ngFor="let v of ui_ctx[field].choices" [value]="v.code">{{ v.display }}</option>
+        </select>
       </div>
     `,
     styles: [],
@@ -52,14 +53,16 @@ export class SelectComponent {
     }
 }
 
+/**
+ * An HTML INPUT field. Submits a value when the enter key is pressed within the input field.
+ */
 @Component({
-    selector: 'app-text',
+    selector: 'widget-text',
     template: `
-      <div *ngIf="ui_ctx[field].visible">
-        <label class="col-form-label col-form-label-sm">{{ ui_ctx[field].label }}</label>
-        <div [formGroup]="formGroup">
-          <input [readonly]="! ui_ctx[field].enabled" [formControlName]="field" class="form-control form-control-sm" (keydown)="onKeydown($event)" (blur)="onBlur()"/>
-        </div>
+      <label class="col-form-label col-form-label-sm">{{ ui_ctx[field].label }}</label>
+      <div [formGroup]="formGroup">
+        <input [readonly]="! ui_ctx[field].enabled" [formControlName]="field"
+          class="form-control form-control-sm" (keydown)="onKeydown($event)" (blur)="onBlur()"/>
       </div>
     `,
     styles: [],
@@ -71,11 +74,12 @@ export class TextComponent implements OnInit {
     @Input() parent!: any;
 
     ngOnInit() {
-        /* const p = (this.formGroup.get(this.field) as FormControl);
-         * p.addValidators([Validators.required]);
-         * p.addValidators([
-         *     Validators.pattern(/^\-?[0-9]+$/),
-         * ]);*/
+        const p = (this.formGroup.get(this.field) as FormControl);
+        p.addValidators([Validators.required]);
+        //TODO(pjm): this is hard-coded for integer input, it should be determined from ui_ctx[field].type
+        p.addValidators([
+            Validators.pattern(/^\-?[0-9]+$/),
+        ]);
     }
 
     onBlur() {
@@ -95,14 +99,16 @@ export class TextComponent implements OnInit {
     }
 }
 
+/**
+ * A component which shows a label and read-only value.
+ */
 @Component({
-    selector: 'app-static-text',
+    selector: 'widget-static-text',
     template: `
-      <div *ngIf="ui_ctx[field].visible">
-        <label class="col-form-label col-form-label-sm">{{ ui_ctx[field].label }}</label>
-        <div [formGroup]="formGroup">
-          <input [formControlName]="field" class="form-control form-control-sm form-control-plaintext" />
-        </div>
+      <label class="col-form-label col-form-label-sm">{{ ui_ctx[field].label }}</label>
+      <div [formGroup]="formGroup">
+        <input [formControlName]="field"
+          class="form-control form-control-sm form-control-plaintext" />
       </div>
     `,
     styles: [],
@@ -114,12 +120,15 @@ export class StaticTextComponent {
     @Input() parent!: any;
 }
 
+/**
+ * An HTML BUTTON.
+ */
 @Component({
-    selector: 'app-button',
+    selector: 'widget-button',
     template: `
-      <div *ngIf="ui_ctx[field].visible">
-        <button [disabled]="! ui_ctx[field].enabled" [class]="'btn btn-' + ui_ctx[field].html_class" type="button" (click)="onClick()">{{ ui_ctx[field].label }}</button>
-      </div>
+      <button [disabled]="! ui_ctx[field].enabled"
+        [class]="'btn btn-' + ui_ctx[field].html_class" type="button"
+        (click)="onClick()">{{ ui_ctx[field].label }}</button>
     `,
     styles: [],
 })

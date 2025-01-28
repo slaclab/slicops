@@ -1,0 +1,21 @@
+columns:
+- layout: sm-3
+  rows:
+  - name: beam_path
+  - name: camera
+  - name: pv
+  - name: camera_gain
+  - cell:
+    - start_button
+    - stop_button
+    - single_button
+- layout: sm-9 xxl-7
+  rows:
+  - name: plot
+  - columns:
+    - layout: sm-3
+      rows:
+      - name: curve_fit_method
+    - layout: sm-3
+      rows:
+      - name: color_map
