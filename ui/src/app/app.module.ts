@@ -1,5 +1,5 @@
 import { AppComponent, ButtonComponent, SelectComponent, StaticTextComponent, TextComponent } from './app.component';
-import { ColumnsComponent, FieldEditorComponent, LayoutComponent, RowComponent } from './app.layout';
+import { CellComponent, ColumnsComponent, FieldEditorComponent, LayoutComponent } from './app.layout';
 import { AppRoutingModule } from './app-routing.module';
 import { BrowserModule } from '@angular/platform-browser';
 import { ReactiveFormsModule } from '@angular/forms';
@@ -14,12 +14,12 @@ import { ScreenComponent } from './screen/screen.component';
     declarations: [
         AppComponent,
         ButtonComponent,
+        CellComponent,
         ColumnsComponent,
         FieldEditorComponent,
         HeatmapCanvasComponent,
         HeatmapWithLineoutsComponent,
         LayoutComponent,
-        RowComponent,
         ScreenComponent,
         SelectComponent,
         StaticTextComponent,

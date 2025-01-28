@@ -101,7 +101,7 @@ class API(slicops.quest.API):
         # TODO(robnagler) if accepting ui_ctx, then need to update valid_values here
         return self._return(ux).pkupdate(
             # TODO(pjm): need a better way to load a resource for a sliclet
-            layout=pkyaml.load_file(pkresource.file_path("static/layout/screen.yaml")),
+            layout=pkyaml.load_file(pkresource.file_path("layout/screen.yaml")),
         )
 
     def _beam_path_change(self, ux, old_name):
@@ -295,7 +295,7 @@ def _init():
         ),
     )
     _FIELD_VALIDATOR = PKDict(
-        # TODO(pjm): validators could be based on field type
+        # TODO(pjm): validators could be based on field widget
         beam_path=_choice_validator,
         camera=_choice_validator,
         camera_gain=_gain_validator,
@@ -303,7 +303,8 @@ def _init():
         curve_fit_method=_choice_validator,
     )
 
-    _FIELD_DEFAULT = pkyaml.load_file(pkresource.file_path("static/schema/screen.yaml"))
+    _FIELD_DEFAULT = pkyaml.load_file(pkresource.file_path("schema/screen.yaml"))
+    _FIELD_DEFAULT.beam_path.choices = _choice_map(slicops.device_db.beam_paths())
 
 
 def _ui_ctx_default():

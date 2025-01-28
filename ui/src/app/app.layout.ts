@@ -29,27 +29,27 @@ export class ColumnsComponent {
 }
 
 /**
- * Field editor based on ui_ctx field type.
+ * Field editor based on ui_ctx field widget.
  */
 @Component({
     selector: 'app-field-editor',
     template: `
-      <div [ngSwitch]="ui_ctx[name].type">
+      <div [ngSwitch]="ui_ctx[name].widget">
       <div *ngSwitchCase="'select'">
-        <app-select [formGroup]="formGroup" [parent]="parent" [field]="name"
-          [ui_ctx]="ui_ctx"></app-select>
+        <widget-select [formGroup]="formGroup" [parent]="parent" [field]="name"
+          [ui_ctx]="ui_ctx"></widget-select>
       </div>
       <div *ngSwitchCase="'text'">
-        <app-text [formGroup]="formGroup" [parent]="parent" [field]="name"
-          [ui_ctx]="ui_ctx"></app-text>
+        <widget-text [formGroup]="formGroup" [parent]="parent" [field]="name"
+          [ui_ctx]="ui_ctx"></widget-text>
       </div>
       <div *ngSwitchCase="'static'">
-        <app-static-text [formGroup]="formGroup" [parent]="parent" [field]="name"
-          [ui_ctx]="ui_ctx"></app-static-text>
+        <widget-static-text [formGroup]="formGroup" [parent]="parent" [field]="name"
+          [ui_ctx]="ui_ctx"></widget-static-text>
       </div>
       <div *ngSwitchCase="'button'">
-        <app-button [formGroup]="formGroup" [parent]="parent" [field]="name"
-          [ui_ctx]="ui_ctx"></app-button>
+        <widget-button [formGroup]="formGroup" [parent]="parent" [field]="name"
+          [ui_ctx]="ui_ctx"></widget-button>
       </div>
       <div *ngSwitchCase="'heatmap_with_lineouts'">
         <div *ngIf="parent.image && parent.image.raw_pixels.length">
@@ -74,9 +74,9 @@ export class FieldEditorComponent implements OnInit{
 }
 
 /**
- * Top level page layout. Supports three types:
+ * Top level page layout. Supports three options:
  *  - name: field editor
- *  - row: a group of field editors arranged in a horizontal row
+ *  - cell: a group of field editors arranged in a horizontal row
  *  - columns: a group of columns
  */
 @Component({
@@ -87,9 +87,9 @@ export class FieldEditorComponent implements OnInit{
           <app-field-editor [name]="item.value" [formGroup]="formGroup" [parent]="parent"
             [ui_ctx]="ui_ctx"></app-field-editor>
         </div>
-        <div *ngIf="item.key == 'row'">
-          <app-row [row]="item.value" [formGroup]="formGroup" [parent]="parent"
-            [ui_ctx]="ui_ctx"></app-row>
+        <div *ngIf="item.key == 'cell'">
+          <app-cell [fields]="item.value" [formGroup]="formGroup" [parent]="parent"
+            [ui_ctx]="ui_ctx"></app-cell>
         </div>
         <div *ngIf="item.key == 'columns'">
           <app-columns [columns]="item.value" [formGroup]="formGroup" [parent]="parent"
@@ -105,19 +105,22 @@ export class LayoutComponent {
     @Input() parent!: any;
 }
 
+/**
+ * A collection of fields displayed horizontally in a row.
+ */
 @Component({
-    selector: 'app-row',
+    selector: 'app-cell',
     template: `
-      <div [style]="'column-count:' + row.length">
-        <div *ngFor="let item of row" style="display: inline">
+      <div [style]="'column-count:' + fields.length">
+        <div *ngFor="let item of fields" style="display: inline">
           <app-field-editor [name]="item" [formGroup]="formGroup" [parent]="parent"
             [ui_ctx]="ui_ctx"></app-field-editor>
         </div>
       </div>
     `,
 })
-export class RowComponent {
-    @Input() row!: any;
+export class CellComponent {
+    @Input() fields!: any;
     @Input() formGroup!: FormGroup;
     @Input() ui_ctx!: any;
     @Input() parent!: any;

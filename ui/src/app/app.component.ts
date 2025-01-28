@@ -31,7 +31,7 @@ export class AppComponent {
  * An HTML SELECT element with a list of choices.
  */
 @Component({
-    selector: 'app-select',
+    selector: 'widget-select',
     template: `
       <div class="mb-3" *ngIf="ui_ctx[field].visible">
         <label class="col-form-label col-form-label-sm">{{ ui_ctx[field].label }}</label>
@@ -59,7 +59,7 @@ export class SelectComponent {
  * An HTML INPUT field. Submits a value when the enter key is pressed within the input field.
  */
 @Component({
-    selector: 'app-text',
+    selector: 'widget-text',
     template: `
       <div class="mb-3" *ngIf="ui_ctx[field].visible">
         <label class="col-form-label col-form-label-sm">{{ ui_ctx[field].label }}</label>
@@ -107,7 +107,7 @@ export class TextComponent implements OnInit {
  * A component which shows a label and read-only value.
  */
 @Component({
-    selector: 'app-static-text',
+    selector: 'widget-static-text',
     template: `
       <div class="mb-3" *ngIf="ui_ctx[field].visible">
         <label class="col-form-label col-form-label-sm">{{ ui_ctx[field].label }}</label>
@@ -130,7 +130,7 @@ export class StaticTextComponent {
  * An HTML BUTTON.
  */
 @Component({
-    selector: 'app-button',
+    selector: 'widget-button',
     template: `
       <div class="mb-3" *ngIf="ui_ctx[field].visible">
         <button [disabled]="! ui_ctx[field].enabled"

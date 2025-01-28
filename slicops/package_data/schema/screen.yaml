@@ -1,14 +1,14 @@
 beam_path:
   choices: []
   label: Beam Path
-  type: select
+  widget: select
 camera:
   choices: []
   label: Camera
-  type: select
+  widget: select
 camera_gain:
   label: Gain
-  type: text
+  widget: text
 color_map:
   choices:
   - code: Cividis
@@ -22,7 +22,7 @@ color_map:
   - code: Viridis
     display: Viridis
   label: Color Map
-  type: select
+  widget: select
   value: Inferno
   visible: false
 curve_fit_method:
@@ -32,24 +32,24 @@ curve_fit_method:
   - code: super_gaussian
     display: Super Gaussian
   label: Curve Fit Method
-  type: select
+  widget: select
   value: gaussian
   visible: false
 plot:
   auto_refresh: false
-  type: heatmap_with_lineouts
+  widget: heatmap_with_lineouts
 pv:
   label: PV
-  type: static
+  widget: static
 single_button:
   html_class: outline-info
   label: Single
-  type: button
+  widget: button
 start_button:
   html_class: primary
   label: Start
-  type: button
+  widget: button
 stop_button:
   html_class: danger
   label: Stop
-  type: button
+  widget: button

@@ -5,7 +5,7 @@ columns:
   - name: camera
   - name: pv
   - name: camera_gain
-  - row:
+  - cell:
     - start_button
     - stop_button
     - single_button
