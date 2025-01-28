@@ -4,10 +4,98 @@
 // http://github.com/slaclab/slicops/LICENSE
 
 import { APIService } from '../api.service';
-import { Component } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { FormGroup, FormControl, Validators } from '@angular/forms';
 import { LogService } from '../log.service';
 import { SelectComponent, TextComponent, StaticTextComponent, ButtonComponent } from '../app.component';
+
+//TODO(pjm): move editor components out of this module
+@Component({
+    selector: 'app-buttons',
+    template: `
+      <div *ngFor="let item of buttons" style="display: inline">
+        <app-field-editor [name]="item" [formGroup]="formGroup" [parent]="parent" [ui_ctx]="ui_ctx"></app-field-editor>
+      </div>
+    `,
+})
+export class ButtonsComponent {
+    @Input() buttons!: any;
+    @Input() formGroup!: FormGroup;
+    @Input() ui_ctx!: any;
+    @Input() parent!: any;
+}
+
+@Component({
+    selector: 'app-columns',
+    template: `
+      <div class="row">
+        <div *ngFor="let item of columns" [ngClass]="'col-' + item.layout">
+          <div *ngFor="let row of item.rows">
+            <app-layout [layout]="row" [formGroup]="formGroup" [parent]="parent" [ui_ctx]="ui_ctx"></app-layout>
+          </div>
+        </div>
+      </div>
+    `,
+})
+export class ColumnsComponent {
+    @Input() columns!: any;
+    @Input() formGroup!: FormGroup;
+    @Input() ui_ctx!: any;
+    @Input() parent!: any;
+}
+
+@Component({
+    selector: 'app-field-editor',
+    template: `
+      <div *ngIf="parent.schema[name] == 'select'">
+        <app-select [formGroup]="formGroup" [parent]="parent" [field]="name" [ui_ctx]="ui_ctx"></app-select>
+      </div>
+      <div *ngIf="parent.schema[name] == 'text'">
+        <app-text [formGroup]="formGroup" [parent]="parent" [field]="name" [ui_ctx]="ui_ctx"></app-text>
+      </div>
+      <div *ngIf="parent.schema[name] == 'static'">
+        <app-static-text [formGroup]="formGroup" [parent]="parent" [field]="name" [ui_ctx]="ui_ctx"></app-static-text>
+      </div>
+      <div *ngIf="parent.schema[name] == 'button'">
+        <app-button [formGroup]="formGroup" [parent]="parent" [field]="name" [ui_ctx]="ui_ctx"></app-button>
+      </div>
+      <div *ngIf="parent.schema[name] == 'plot'">
+        <div *ngIf="parent.image && parent.image.raw_pixels.length">
+          <app-heatmap-with-lineouts [data]="parent.image" [colorMap]="formGroup.value.color_map"></app-heatmap-with-lineouts>
+        </div>
+      </div>
+    `,
+})
+export class FieldEditorComponent {
+    @Input() name!: any;
+    @Input() formGroup!: FormGroup;
+    @Input() ui_ctx!: any;
+    @Input() parent!: any;
+}
+
+
+@Component({
+    selector: 'app-layout',
+    template: `
+      <div *ngFor="let item of layout | keyvalue">
+        <div *ngIf="item.key == 'name'">
+          <app-field-editor [name]="item.value" [formGroup]="formGroup" [parent]="parent" [ui_ctx]="ui_ctx"></app-field-editor>
+        </div>
+        <div *ngIf="item.key == 'buttons'">
+          <app-buttons [buttons]="item.value" [formGroup]="formGroup" [parent]="parent" [ui_ctx]="ui_ctx"></app-buttons>
+        </div>
+        <div *ngIf="item.key == 'columns'">
+          <app-columns [columns]="item.value" [formGroup]="formGroup" [parent]="parent" [ui_ctx]="ui_ctx"></app-columns>
+        </div>
+      </div>
+    `,
+})
+export class LayoutComponent {
+    @Input() layout!: any;
+    @Input() formGroup!: FormGroup;
+    @Input() ui_ctx!: any;
+    @Input() parent!: any;
+}
 
 @Component({
     selector: 'app-screen',
@@ -15,51 +103,7 @@ import { SelectComponent, TextComponent, StaticTextComponent, ButtonComponent } 
       <form [formGroup]="form">
         <div class="row" *ngIf="ui_ctx">
           <div *ngIf="errorMessage" class="alert alert-warning">{{ errorMessage }}</div>
-          <div class="col-sm-3 ">
-            <div class="mb-3">
-              <app-select [formGroup]="form" [parent]="this" field="beam_path" [ui_ctx]="ui_ctx"></app-select>
-            </div>
-            <div class="mb-3">
-              <app-select [formGroup]="form" [parent]="this" field="camera" [ui_ctx]="ui_ctx"></app-select>
-            </div>
-            <div class="mb-3">
-              <app-static-text [formGroup]="form" [parent]="this" field="pv" [ui_ctx]="ui_ctx"></app-static-text>
-            </div>
-            <div class="mb-3">
-              <app-text [formGroup]="form" [parent]="this" field="camera_gain" [ui_ctx]="ui_ctx"></app-text>
-            </div>
-            <div class="mb-3">
-              <div class="row">
-                <div class="col-sm-4">
-                  <app-button [formGroup]="form" [parent]="this" field="start_button" [ui_ctx]="ui_ctx"></app-button>
-                </div>
-                <div class="col-sm-4">
-                  <app-button [formGroup]="form" [parent]="this" field="stop_button" [ui_ctx]="ui_ctx"></app-button>
-                </div>
-                <div class="col-sm-4">
-                  <app-button [formGroup]="form" [parent]="this" field="single_button" [ui_ctx]="ui_ctx"></app-button>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="col-sm-9 col-xxl-7">
-            <div *ngIf="image && image.raw_pixels.length">
-              <app-heatmap-with-lineouts [data]="image" [colorMap]="form.value.color_map"></app-heatmap-with-lineouts>
-            </div>
-          </div>
-          <div class="col-sm-3 "></div>
-          <div *ngIf="image && image.raw_pixels.length" class="col-sm-9">
-            <div class="mb-3">
-              <div class="row">
-                <div class="col-sm-3">
-                  <app-select [formGroup]="form" [parent]="this" field="curve_fit_method" [ui_ctx]="ui_ctx"></app-select>
-                </div>
-                <div class="col-sm-3">
-                  <app-select [formGroup]="form" [parent]="this" field="color_map" [ui_ctx]="ui_ctx"></app-select>
-                </div>
-              </div>
-            </div>
-          </div>
+          <app-layout [layout]="layout" [formGroup]="form" [parent]="this" [ui_ctx]="ui_ctx"></app-layout>
         </div>
       </form>
     `,
@@ -68,10 +112,63 @@ import { SelectComponent, TextComponent, StaticTextComponent, ButtonComponent } 
 export class ScreenComponent {
     errorMessage: string = "";
     image: any = null;
-    imageInterval: any = null;
+    imageTimeout: any = null;
 
-    //TODO(pjm): build form and ui components dynamically from schema view layout
+    //TODO(pjm): get schema and layout from yaml def
+    schema: any = {
+        beam_path: 'select',
+        camera: 'select',
+        pv: 'static',
+        camera_gain: 'text',
+        start_button: 'button',
+        stop_button: 'button',
+        single_button: 'button',
+        plot: 'plot',
+        curve_fit_method: 'select',
+        color_map: 'select',
+    }
+    layout: any = {
+        'columns': [
+            {
+                'layout': 'sm-3',
+                'rows': [
+                    {'name': 'beam_path'},
+                    {'name': 'camera'},
+                    {'name': 'pv'},
+                    {'name': 'camera_gain'},
+                    {'buttons': [
+                        'start_button',
+                        'stop_button',
+                        'single_button'
+                    ]}
+                ]
+            },
+            {
+                'layout': 'sm-9 xxl-7',
+                'rows': [
+                    {'name': 'plot'},
+                    {'columns': [
+                        {
+                            'layout': 'sm-3',
+                            'rows': [
+                                {'name': 'curve_fit_method'}
+                            ]
+                        },
+                        {
+                            'layout': 'sm-3',
+                            'rows': [
+                                {'name': 'color_map'}
+                            ]
+                        }
+                    ]}
+                ]
+            }
+        ]
+    };
+
+    //TODO(pjm): individual editors should add their field to the FormGroup
     form = new FormGroup({
+
         beam_path: new FormControl(''),
         camera: new FormControl(''),
         pv: new FormControl(''),
@@ -97,9 +194,29 @@ export class ScreenComponent {
                     v[f] = result.ui_ctx[f].value;
                 }
                 this.form.patchValue(v);
+                this.checkAutoRefresh(result);
             },
             this.handleError.bind(this),
         );
+    }
+
+    checkAutoRefresh(result: any) {
+        if (! result.ui_ctx) {
+            return;
+        }
+        //TODO(pjm): until server callbacks are supported - run a timeout on each plot
+        if (result.ui_ctx.plot.auto_refresh) {
+            if (! this.imageTimeout) {
+                this.imageTimeout = setTimeout(() => {
+                    this.serverAction('plot', true);
+                    this.imageTimeout = null;
+                }, 1000);
+            }
+        }
+        else if (this.imageTimeout) {
+            clearTimeout(this.imageTimeout);
+            this.imageTimeout = null;
+        }
     }
 
     handleError(err: any) {
@@ -119,6 +236,7 @@ export class ScreenComponent {
                 field_value: value,
             },
             (result) => {
+                this.checkAutoRefresh(result);
                 if (result.plot) {
                     this.image = result.plot;
                 }
@@ -127,7 +245,10 @@ export class ScreenComponent {
                 else {
                     this.ui_ctx[field].enabled = true;
                 }
-                if (result.ui_ctx) {
+                //TODO(pjm): need to only update changed fields
+                // for now, do no updates on "plot" field changes to avoid all fields refreshing
+                // otherwise changing gain or curve_fit_method acts badly when plots are being streaming
+                if (result.ui_ctx && field != 'plot') {
                     Object.assign(this.ui_ctx, result.ui_ctx);
                     const values: any = {};
                     for (let f in result.ui_ctx) {
@@ -144,19 +265,4 @@ export class ScreenComponent {
             }
         );
     }
-
-    //TODO(pjm): add poll time to serverAction response to refresh image for now
-    /*
-    private getImages() {
-        let ready = true;
-        this.imageInterval = setInterval(() => {
-            if (ready) {
-                ready = false;
-                this.getImage(() => {
-                    ready = true;
-                });
-            }
-        }, 1000);
-    }
-    */
 }

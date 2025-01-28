@@ -30,7 +30,7 @@ export class AppComponent {
 @Component({
     selector: 'app-select',
     template: `
-      <div *ngIf="ui_ctx[field].visible">
+      <div class="mb-3" *ngIf="ui_ctx[field].visible">
         <label class="col-form-label col-form-label-sm">{{ ui_ctx[field].label }}</label>
         <div [formGroup]="formGroup">
           <select [formControlName]="field" class="form-select form-select-sm" (change)="onChange()" >
@@ -55,7 +55,7 @@ export class SelectComponent {
 @Component({
     selector: 'app-text',
     template: `
-      <div *ngIf="ui_ctx[field].visible">
+      <div class="mb-3" *ngIf="ui_ctx[field].visible">
         <label class="col-form-label col-form-label-sm">{{ ui_ctx[field].label }}</label>
         <div [formGroup]="formGroup">
           <input [readonly]="! ui_ctx[field].enabled" [formControlName]="field" class="form-control form-control-sm" (keydown)="onKeydown($event)" (blur)="onBlur()"/>
@@ -98,7 +98,7 @@ export class TextComponent implements OnInit {
 @Component({
     selector: 'app-static-text',
     template: `
-      <div *ngIf="ui_ctx[field].visible">
+      <div class="mb-3" *ngIf="ui_ctx[field].visible">
         <label class="col-form-label col-form-label-sm">{{ ui_ctx[field].label }}</label>
         <div [formGroup]="formGroup">
           <input [formControlName]="field" class="form-control form-control-sm form-control-plaintext" />
@@ -117,7 +117,7 @@ export class StaticTextComponent {
 @Component({
     selector: 'app-button',
     template: `
-      <div *ngIf="ui_ctx[field].visible">
+      <div class="mb-3" *ngIf="ui_ctx[field].visible">
         <button [disabled]="! ui_ctx[field].enabled" [class]="'btn btn-' + ui_ctx[field].html_class" type="button" (click)="onClick()">{{ ui_ctx[field].label }}</button>
       </div>
     `,

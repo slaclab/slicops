@@ -32,6 +32,7 @@ _FIELDS = (
     "camera_gain",
     "color_map",
     "curve_fit_method",
+    "plot",
     "pv",
     "single_button",
     "start_button",
@@ -80,6 +81,9 @@ class API(slicops.quest.API):
         ux, _, _ = self._save_field("curve_fit_method", api_args)
         return await self._return_with_image(ux)
 
+    async def api_screen_plot(self, api_args):
+        return await self._return_with_image(self._session_ui_ctx())
+
     async def api_screen_single_button(self, api_args):
         ux = self._session_ui_ctx()
         # TODO(robnagler) buttons should always change and be sent back,
@@ -95,10 +99,12 @@ class API(slicops.quest.API):
         ux = self._session_ui_ctx()
         self._set_acquire(1)
         self._button_setup(ux, True)
+        ux.plot.auto_refresh = True
         return await self._return_with_image(ux)
 
     async def api_screen_stop_button(self, api_args):
         ux = self._session_ui_ctx()
+        ux.plot.auto_refresh = False
         self._set_acquire(0)
         self._button_setup(ux, False)
         return self._return(ux)
@@ -164,7 +170,9 @@ class API(slicops.quest.API):
                 # TODO(robnagler) enabled?
                 ux.camera_gain.value = None
             ux.pv.value = d.meta.pv_prefix
-            self._button_setup(ux, _acquiring(d))
+            a = _acquiring(d)
+            self._button_setup(ux, a)
+            ux.plot.auto_refresh = a
 
         _destroy()
         if ux.camera.value is None:
@@ -324,6 +332,11 @@ def _init():
             enabled=True,
             value=None,
             visible=True,
+        ),
+        plot=PKDict(
+            # TODO(pjm): could configure with plot type and
+            # input field names for plot (color_map, curve_fit_method)
+            auto_refresh=False,
         ),
         pv=PKDict(enable=False, label="PV"),
         # TODO(robnagler) button should not be enabled unless there is a camera

@@ -7,18 +7,22 @@ import { HeatmapWithLineoutsComponent } from './heatmap-with-lineouts/heatmap-wi
 import { HttpClientModule } from "@angular/common/http";
 import { NgModule } from '@angular/core';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
-import { ScreenComponent } from './screen/screen.component';
+import { ScreenComponent, LayoutComponent, ColumnsComponent, ButtonsComponent, FieldEditorComponent } from './screen/screen.component';
 
 @NgModule({
     declarations: [
         AppComponent,
-        HeatmapWithLineoutsComponent,
+        ButtonComponent,
+        ButtonsComponent,
+        ColumnsComponent,
+        FieldEditorComponent,
         HeatmapCanvasComponent,
+        HeatmapWithLineoutsComponent,
+        LayoutComponent,
         ScreenComponent,
         SelectComponent,
         StaticTextComponent,
         TextComponent,
-        ButtonComponent,
     ],
     imports: [
         AppRoutingModule,
