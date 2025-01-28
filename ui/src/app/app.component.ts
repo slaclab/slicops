@@ -27,6 +27,9 @@ export class AppComponent {
     }
 }
 
+/**
+ * An HTML SELECT element with a list of choices.
+ */
 @Component({
     selector: 'app-select',
     template: `
@@ -52,13 +55,17 @@ export class SelectComponent {
     }
 }
 
+/**
+ * An HTML INPUT field. Submits a value when the enter key is pressed within the input field.
+ */
 @Component({
     selector: 'app-text',
     template: `
       <div class="mb-3" *ngIf="ui_ctx[field].visible">
         <label class="col-form-label col-form-label-sm">{{ ui_ctx[field].label }}</label>
         <div [formGroup]="formGroup">
-          <input [readonly]="! ui_ctx[field].enabled" [formControlName]="field" class="form-control form-control-sm" (keydown)="onKeydown($event)" (blur)="onBlur()"/>
+          <input [readonly]="! ui_ctx[field].enabled" [formControlName]="field"
+            class="form-control form-control-sm" (keydown)="onKeydown($event)" (blur)="onBlur()"/>
         </div>
       </div>
     `,
@@ -71,11 +78,12 @@ export class TextComponent implements OnInit {
     @Input() parent!: any;
 
     ngOnInit() {
-        /* const p = (this.formGroup.get(this.field) as FormControl);
-         * p.addValidators([Validators.required]);
-         * p.addValidators([
-         *     Validators.pattern(/^\-?[0-9]+$/),
-         * ]);*/
+        const p = (this.formGroup.get(this.field) as FormControl);
+        p.addValidators([Validators.required]);
+        //TODO(pjm): this is hard-coded for integer input, it should be determined from ui_ctx[field].type
+        p.addValidators([
+            Validators.pattern(/^\-?[0-9]+$/),
+        ]);
     }
 
     onBlur() {
@@ -95,13 +103,17 @@ export class TextComponent implements OnInit {
     }
 }
 
+/**
+ * A component which shows a label and read-only value.
+ */
 @Component({
     selector: 'app-static-text',
     template: `
       <div class="mb-3" *ngIf="ui_ctx[field].visible">
         <label class="col-form-label col-form-label-sm">{{ ui_ctx[field].label }}</label>
         <div [formGroup]="formGroup">
-          <input [formControlName]="field" class="form-control form-control-sm form-control-plaintext" />
+          <input [formControlName]="field"
+            class="form-control form-control-sm form-control-plaintext" />
         </div>
       </div>
     `,
@@ -114,11 +126,16 @@ export class StaticTextComponent {
     @Input() parent!: any;
 }
 
+/**
+ * An HTML BUTTON.
+ */
 @Component({
     selector: 'app-button',
     template: `
       <div class="mb-3" *ngIf="ui_ctx[field].visible">
-        <button [disabled]="! ui_ctx[field].enabled" [class]="'btn btn-' + ui_ctx[field].html_class" type="button" (click)="onClick()">{{ ui_ctx[field].label }}</button>
+        <button [disabled]="! ui_ctx[field].enabled"
+          [class]="'btn btn-' + ui_ctx[field].html_class" type="button"
+          (click)="onClick()">{{ ui_ctx[field].label }}</button>
       </div>
     `,
     styles: [],

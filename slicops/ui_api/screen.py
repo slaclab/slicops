@@ -10,7 +10,7 @@ invokes changes to the underlying device, also stored in the
 :license: http://github.com/slaclab/slicops/LICENSE
 """
 
-from pykern import pkconfig
+from pykern import pkconfig, pkresource, pkyaml
 from pykern.pkcollections import PKDict
 from pykern.pkdebug import pkdc, pkdexc, pkdlog, pkdp
 import asyncio
@@ -112,7 +112,10 @@ class API(slicops.quest.API):
     async def api_screen_ui_ctx(self, api_args):
         ux = self._session_ui_ctx()
         # TODO(robnagler) if accepting ui_ctx, then need to update valid_values here
-        return self._return(ux)
+        return self._return(ux).pkupdate(
+            # TODO(pjm): need a better way to load a resource for a sliclet
+            layout=pkyaml.load_file(pkresource.file_path("static/layout/screen.yaml")),
+        )
 
     def _beam_path_change(self, ux, old_name):
         # TODO(robnagler) get from device db
@@ -203,6 +206,8 @@ class API(slicops.quest.API):
             except RuntimeError:
                 # TODO(robnagler) does this happen?
                 return _fit_error(profile)
+            ux.curve_fit_method.visible = True
+            ux.color_map.visible = True
             return PKDict(
                 lineout=profile.tolist(),
                 fit=PKDict(
@@ -311,44 +316,62 @@ def _init():
     )
     _FIELD_DEFAULT = PKDict(
         beam_path=PKDict(
+            type="select",
             choices=_choice_map(slicops.device_db.beam_paths()),
             label="Beam Path",
         ),
-        camera=PKDict(choices=(), label="Camera"),
-        color_map=PKDict(
-            choices=_choice_map(("Cividis", "Blues", "Inferno", "Turbo", "Viridis")),
-            label="Color Map",
-            value="Inferno",
-        ),
-        curve_fit_method=PKDict(
-            choices=_choice_map(
-                (("gaussian", "Gaussian"), ("super_gaussian", "Super Gaussian"))
-            ),
-            label="Curve Fit Method",
-            value="gaussian",
+        camera=PKDict(
+            type="select",
+            choices=(),
+            label="Camera",
         ),
         camera_gain=PKDict(
+            type="text",
             label="Gain",
             enabled=True,
             value=None,
             visible=True,
         ),
+        color_map=PKDict(
+            type="select",
+            choices=_choice_map(("Cividis", "Blues", "Inferno", "Turbo", "Viridis")),
+            label="Color Map",
+            value="Inferno",
+            visible=False,
+        ),
+        curve_fit_method=PKDict(
+            type="select",
+            choices=_choice_map(
+                (("gaussian", "Gaussian"), ("super_gaussian", "Super Gaussian"))
+            ),
+            label="Curve Fit Method",
+            value="gaussian",
+            visible=False,
+        ),
         plot=PKDict(
+            type="heatmap_with_lineouts",
             # TODO(pjm): could configure with plot type and
             # input field names for plot (color_map, curve_fit_method)
             auto_refresh=False,
         ),
-        pv=PKDict(enable=False, label="PV"),
+        pv=PKDict(
+            type="static",
+            enable=False,
+            label="PV",
+        ),
         # TODO(robnagler) button should not be enabled unless there is a camera
         single_button=PKDict(
+            type="button",
             html_class="outline-info",
             label="Single",
         ),
         start_button=PKDict(
+            type="button",
             html_class="primary",
             label="Start",
         ),
         stop_button=PKDict(
+            type="button",
             html_class="danger",
             enabled=False,
             label="Stop",

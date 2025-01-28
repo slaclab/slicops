@@ -1,4 +1,5 @@
 import { AppComponent, ButtonComponent, SelectComponent, StaticTextComponent, TextComponent } from './app.component';
+import { ColumnsComponent, FieldEditorComponent, LayoutComponent, RowComponent } from './app.layout';
 import { AppRoutingModule } from './app-routing.module';
 import { BrowserModule } from '@angular/platform-browser';
 import { ReactiveFormsModule } from '@angular/forms';
@@ -7,18 +8,18 @@ import { HeatmapWithLineoutsComponent } from './heatmap-with-lineouts/heatmap-wi
 import { HttpClientModule } from "@angular/common/http";
 import { NgModule } from '@angular/core';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
-import { ScreenComponent, LayoutComponent, ColumnsComponent, ButtonsComponent, FieldEditorComponent } from './screen/screen.component';
+import { ScreenComponent } from './screen/screen.component';
 
 @NgModule({
     declarations: [
         AppComponent,
         ButtonComponent,
-        ButtonsComponent,
         ColumnsComponent,
         FieldEditorComponent,
         HeatmapCanvasComponent,
         HeatmapWithLineoutsComponent,
         LayoutComponent,
+        RowComponent,
         ScreenComponent,
         SelectComponent,
         StaticTextComponent,
