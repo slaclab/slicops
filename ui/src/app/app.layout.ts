@@ -34,27 +34,30 @@ export class ColumnsComponent {
 @Component({
     selector: 'app-field-editor',
     template: `
-      <div [ngSwitch]="ui_ctx[name].widget">
-      <div *ngSwitchCase="'select'">
-        <widget-select [formGroup]="formGroup" [parent]="parent" [field]="name"
-          [ui_ctx]="ui_ctx"></widget-select>
-      </div>
-      <div *ngSwitchCase="'text'">
-        <widget-text [formGroup]="formGroup" [parent]="parent" [field]="name"
-          [ui_ctx]="ui_ctx"></widget-text>
-      </div>
-      <div *ngSwitchCase="'static'">
-        <widget-static-text [formGroup]="formGroup" [parent]="parent" [field]="name"
-          [ui_ctx]="ui_ctx"></widget-static-text>
-      </div>
-      <div *ngSwitchCase="'button'">
-        <widget-button [formGroup]="formGroup" [parent]="parent" [field]="name"
-          [ui_ctx]="ui_ctx"></widget-button>
-      </div>
-      <div *ngSwitchCase="'heatmap_with_lineouts'">
-        <div *ngIf="parent.image && parent.image.raw_pixels.length">
-          <app-heatmap-with-lineouts [data]="parent.image"
-            [colorMap]="formGroup.value.color_map"></app-heatmap-with-lineouts>
+      <div class="mb-3" *ngIf="ui_ctx[name].visible">
+        <div [ngSwitch]="ui_ctx[name].widget">
+          <div *ngSwitchCase="'select'">
+            <widget-select [formGroup]="formGroup" [parent]="parent" [field]="name"
+              [ui_ctx]="ui_ctx"></widget-select>
+          </div>
+          <div *ngSwitchCase="'text'">
+            <widget-text [formGroup]="formGroup" [parent]="parent" [field]="name"
+              [ui_ctx]="ui_ctx"></widget-text>
+          </div>
+          <div *ngSwitchCase="'static'">
+            <widget-static-text [formGroup]="formGroup" [parent]="parent" [field]="name"
+              [ui_ctx]="ui_ctx"></widget-static-text>
+          </div>
+          <div *ngSwitchCase="'button'">
+            <widget-button [formGroup]="formGroup" [parent]="parent" [field]="name"
+              [ui_ctx]="ui_ctx"></widget-button>
+          </div>
+          <div *ngSwitchCase="'heatmap_with_lineouts'">
+            <div *ngIf="parent.image && parent.image.raw_pixels.length">
+              <app-heatmap-with-lineouts [data]="parent.image"
+                [colorMap]="formGroup.value.color_map"></app-heatmap-with-lineouts>
+            </div>
+          </div>
         </div>
       </div>
     `,

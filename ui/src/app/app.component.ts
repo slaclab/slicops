@@ -33,13 +33,11 @@ export class AppComponent {
 @Component({
     selector: 'widget-select',
     template: `
-      <div class="mb-3" *ngIf="ui_ctx[field].visible">
-        <label class="col-form-label col-form-label-sm">{{ ui_ctx[field].label }}</label>
-        <div [formGroup]="formGroup">
-          <select [formControlName]="field" class="form-select form-select-sm" (change)="onChange()" >
-            <option *ngFor="let v of ui_ctx[field].choices" [value]="v.code">{{ v.display }}</option>
-          </select>
-        </div>
+      <label class="col-form-label col-form-label-sm">{{ ui_ctx[field].label }}</label>
+      <div [formGroup]="formGroup">
+        <select [formControlName]="field" class="form-select form-select-sm" (change)="onChange()" >
+          <option *ngFor="let v of ui_ctx[field].choices" [value]="v.code">{{ v.display }}</option>
+        </select>
       </div>
     `,
     styles: [],
@@ -61,12 +59,10 @@ export class SelectComponent {
 @Component({
     selector: 'widget-text',
     template: `
-      <div class="mb-3" *ngIf="ui_ctx[field].visible">
-        <label class="col-form-label col-form-label-sm">{{ ui_ctx[field].label }}</label>
-        <div [formGroup]="formGroup">
-          <input [readonly]="! ui_ctx[field].enabled" [formControlName]="field"
-            class="form-control form-control-sm" (keydown)="onKeydown($event)" (blur)="onBlur()"/>
-        </div>
+      <label class="col-form-label col-form-label-sm">{{ ui_ctx[field].label }}</label>
+      <div [formGroup]="formGroup">
+        <input [readonly]="! ui_ctx[field].enabled" [formControlName]="field"
+          class="form-control form-control-sm" (keydown)="onKeydown($event)" (blur)="onBlur()"/>
       </div>
     `,
     styles: [],
@@ -109,12 +105,10 @@ export class TextComponent implements OnInit {
 @Component({
     selector: 'widget-static-text',
     template: `
-      <div class="mb-3" *ngIf="ui_ctx[field].visible">
-        <label class="col-form-label col-form-label-sm">{{ ui_ctx[field].label }}</label>
-        <div [formGroup]="formGroup">
-          <input [formControlName]="field"
-            class="form-control form-control-sm form-control-plaintext" />
-        </div>
+      <label class="col-form-label col-form-label-sm">{{ ui_ctx[field].label }}</label>
+      <div [formGroup]="formGroup">
+        <input [formControlName]="field"
+          class="form-control form-control-sm form-control-plaintext" />
       </div>
     `,
     styles: [],
@@ -132,11 +126,9 @@ export class StaticTextComponent {
 @Component({
     selector: 'widget-button',
     template: `
-      <div class="mb-3" *ngIf="ui_ctx[field].visible">
-        <button [disabled]="! ui_ctx[field].enabled"
-          [class]="'btn btn-' + ui_ctx[field].html_class" type="button"
-          (click)="onClick()">{{ ui_ctx[field].label }}</button>
-      </div>
+      <button [disabled]="! ui_ctx[field].enabled"
+        [class]="'btn btn-' + ui_ctx[field].html_class" type="button"
+        (click)="onClick()">{{ ui_ctx[field].label }}</button>
     `,
     styles: [],
 })
