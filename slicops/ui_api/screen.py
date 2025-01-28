@@ -26,19 +26,6 @@ _KIND = "screen"
 
 _cfg = None
 
-_FIELDS = (
-    "beam_path",
-    "camera",
-    "camera_gain",
-    "color_map",
-    "curve_fit_method",
-    "plot",
-    "pv",
-    "single_button",
-    "start_button",
-    "stop_button",
-)
-
 _FIELD_VALIDATOR = None
 
 _FIELD_DEFAULT = None
@@ -308,79 +295,18 @@ def _init():
         ),
     )
     _FIELD_VALIDATOR = PKDict(
+        # TODO(pjm): validators could be based on field type
         beam_path=_choice_validator,
         camera=_choice_validator,
         camera_gain=_gain_validator,
         color_map=_choice_validator,
         curve_fit_method=_choice_validator,
     )
-    _FIELD_DEFAULT = PKDict(
-        beam_path=PKDict(
-            type="select",
-            choices=_choice_map(slicops.device_db.beam_paths()),
-            label="Beam Path",
-        ),
-        camera=PKDict(
-            type="select",
-            choices=(),
-            label="Camera",
-        ),
-        camera_gain=PKDict(
-            type="text",
-            label="Gain",
-            enabled=True,
-            value=None,
-            visible=True,
-        ),
-        color_map=PKDict(
-            type="select",
-            choices=_choice_map(("Cividis", "Blues", "Inferno", "Turbo", "Viridis")),
-            label="Color Map",
-            value="Inferno",
-            visible=False,
-        ),
-        curve_fit_method=PKDict(
-            type="select",
-            choices=_choice_map(
-                (("gaussian", "Gaussian"), ("super_gaussian", "Super Gaussian"))
-            ),
-            label="Curve Fit Method",
-            value="gaussian",
-            visible=False,
-        ),
-        plot=PKDict(
-            type="heatmap_with_lineouts",
-            # TODO(pjm): could configure with plot type and
-            # input field names for plot (color_map, curve_fit_method)
-            auto_refresh=False,
-        ),
-        pv=PKDict(
-            type="static",
-            enable=False,
-            label="PV",
-        ),
-        # TODO(robnagler) button should not be enabled unless there is a camera
-        single_button=PKDict(
-            type="button",
-            html_class="outline-info",
-            label="Single",
-        ),
-        start_button=PKDict(
-            type="button",
-            html_class="primary",
-            label="Start",
-        ),
-        stop_button=PKDict(
-            type="button",
-            html_class="danger",
-            enabled=False,
-            label="Stop",
-        ),
-    )
+
+    _FIELD_DEFAULT = pkyaml.load_file(pkresource.file_path("static/schema/screen.yaml"))
 
 
 def _ui_ctx_default():
-    # TODO(pjm): create field values from schema above with default values
     # TODO(robnagler): return an object
 
     def _value(name):
@@ -391,7 +317,7 @@ def _ui_ctx_default():
             visible=True,
         )
 
-    return PKDict({n: _value(n) for n in _FIELDS})
+    return PKDict({n: _value(n) for n in _FIELD_DEFAULT.keys()})
 
 
 def _validate_field(field, value):
