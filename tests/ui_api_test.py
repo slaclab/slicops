@@ -63,6 +63,7 @@ def _setup():
 
         def _server_config(self, *args, **kwargs):
             from slicops import mock_epics
+            mock_epics.reset_state()
 
             return super()._server_config(*args, **kwargs)
 

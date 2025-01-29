@@ -142,7 +142,7 @@ class _Accessor:
                 raise ValueError(f"already monitoring {self}")
             # should lock
             self._callback_index = self._pv.add_callback(self._on_value)
-            a._pv.auto_monitor = True
+            self._pv.auto_monitor = True
             self._callback = callback
 
     def monitor_stop(self):
