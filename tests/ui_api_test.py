@@ -29,8 +29,11 @@ async def test_basic():
         pkunit.pkeq(93, ux.camera_gain.value)
         r = await c.call_api("screen_start_button", PKDict(field_value=False))
         ux = r.ui_ctx
-        pkunit.pkeq(100, len(r.plot.raw_pixels))
-        pkunit.pkeq(100, len(r.plot.raw_pixels[0]))
+        pkunit.pkeq(65, len(r.plot.raw_pixels))
+        pkunit.pkeq(50, len(r.plot.raw_pixels[0]))
+        # x fit should be 10
+        pkunit.pkeq(10.00, round(r.plot.x.fit.results.sig, 2))
+        pkunit.pkeq(13.00, round(r.plot.y.fit.results.sig, 2))
         r = await c.call_api("screen_stop_button", PKDict(field_value=False))
         ux = r.ui_ctx
         ux = await _put(ux, "camera_gain", "33", 33)
@@ -63,6 +66,8 @@ def _setup():
 
         def _server_config(self, *args, **kwargs):
             from slicops import mock_epics
+
+            mock_epics.reset_state()
 
             return super()._server_config(*args, **kwargs)
 
