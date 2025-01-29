@@ -10,30 +10,32 @@ import numpy
 import sys
 import threading
 
-# TODO(robnagler) to create an error, have a small radius
-_RADIUS = 50
+_SIZE = 50
+_SIGMA = _SIZE // 5
+_Y_FACTOR = 1.3
 
+def _y_adjust(value):
+    return int(value * _Y_FACTOR)
 
-def _sphere(radius):
+def _gaussian(size, sigma, y_factor):
 
-    def _scale(heatmap):
-        return (
-            (heatmap - heatmap.min()) / (heatmap.max() - heatmap.min()) * 255
-        ).astype(int)
+    def _dist(vec, sigma_factor):
+        return (vec - vec.shape[0] // 2) ** 2 / (2 * (_y_adjust(sigma) ** 2))
 
-    y, x = numpy.ogrid[-radius:radius, -radius:radius]
-    # This has to be a variable otherwise doesn't compute right in where
-    c = numpy.sqrt(x**2 + y**2)
-    return _scale(numpy.sqrt(radius**2 - x**2 - y**2, where=c <= radius)).flatten()
+    def _vec(size):
+        return numpy.linspace(0, size - 1, size)
+
+    x, y = numpy.meshgrid(_vec(size), _vec(_y_adjust(size)))
+    return numpy.exp(-(_dist(x, 1) + _dist(y, y_factor)))
 
 
 _pv_values = PKDict(
     {
         "13SIM1:cam1:Gain": 93,
-        "13SIM1:image1:ArrayData": _sphere(_RADIUS),
+        "13SIM1:image1:ArrayData": _gaussian(_SIZE, _SIGMA, _Y_FACTOR),
         "13SIM1:cam1:Acquire": 0,
-        "13SIM1:cam1:ArraySizeX_RBV": _RADIUS * 2,
-        "13SIM1:cam1:ArraySizeY_RBV": _RADIUS * 2,
+        "13SIM1:cam1:ArraySizeX_RBV": _SIZE,
+        "13SIM1:cam1:ArraySizeY_RBV": _y_adjust(_SIZE),
         "13SIM1:cam1:N_OF_BITS": 8,
     }
 )

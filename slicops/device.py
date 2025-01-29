@@ -1,4 +1,4 @@
-"""Device operations
+"""Basic device operations
 
 :copyright: Copyright (c) 2024 The Board of Trustees of the Leland Stanford Junior University, through SLAC National Accelerator Laboratory (subject to receipt of any required approvals from the U.S. Dept. of Energy).  All Rights Reserved.
 :license: http://github.com/slaclab/slicops/LICENSE
@@ -54,7 +54,7 @@ class Device:
         x = list(self._accessor.values())
         self._accessor = PKDict()
         for a in x:
-            a.destroy()
+            a.disconnect()
 
     def get(self, accessor_name):
         """Read from PV
@@ -95,13 +95,13 @@ class _Accessor:
     """
 
     def __init__(self, device, name):
-        self.meta = self.device.meta.accessor[name]
         self.device = device
+        self.meta = device.meta.accessor[name]
         self._callback = None
         self._mutex = threading.Lock()
         self._pv = epics.PV(self.meta.pv_name, connection_callback=self._on_connection)
 
-    def disconnect():
+    def disconnect(self):
         """Stop all monitoring and disconnect from PV"""
         self._callback = None
         try:
@@ -110,7 +110,7 @@ class _Accessor:
         except Exception as e:
             pkdlog("error={} {} stack={}", e, self, pkdexc())
 
-    def get(self, accessor_name):
+    def get(self):
         """Read from PV
 
         Returns:
@@ -169,16 +169,19 @@ class _Accessor:
         if not self._pv.connected:
             raise DeviceError(f"disconnected {self}")
 
-    def _fixup_value(self, raw, accessor_meta):
+    def _fixup_value(self, raw):
         def _reshape(image):
             # TODO(robnagler) does get return 0 ever?
-            if not ((r := self.get("num_rows")) and (c := self.get("num_cols"))):
+            if not (
+                (r := self.device.get("num_rows"))
+                and (c := self.device.get("num_cols"))
+            ):
                 raise ValueError("num_rows or num_cols is invalid")
             return image.reshape(c, r)
 
-        if accessor_meta.py_type == "bool":
+        if self.meta.py_type == "bool":
             return bool(raw)
-        if accessor_meta.name == "image":
+        if self.meta.name == "image":
             return _reshape(raw)
         return raw
 
@@ -198,7 +201,7 @@ class _Accessor:
             self._run_callback(value=self._fixup_value(v))
 
     def __repr__(self):
-        return f"<_Accessor {self.device.name}.{self.name} {self.meta.pv_name}>"
+        return f"<_Accessor {self.device.name}.{self.meta.name} {self.meta.pv_name}>"
 
     def _run_callback(self, **kwargs):
         k = PKDict(accessor=self, **kwargs)
