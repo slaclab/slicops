@@ -47,15 +47,17 @@ class PV:
 
     @auto_monitor.setter
     def auto_monitor(self, value):
-        def _image():
+        def _update():
+            self.connection_callback(conn=True)
             for s in MONITOR_X_SIZE:
                 time.sleep(MONITOR_SLEEP)
                 _PV.pkupdate(_pv_image(s))
                 self.monitor_callback(value=_PV[self.pvname])
+            self.connection_callback(conn=False)
 
         self._auto_monitor = value
         if value:
-            t = threading.Thread(target=_image)
+            t = threading.Thread(target=_update)
             t.start()
 
     def get(self):

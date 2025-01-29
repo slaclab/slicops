@@ -30,12 +30,28 @@ def test_monitor():
     mock_epics.reset_state()
     x_size = list(reversed(mock_epics.MONITOR_X_SIZE))
     count = len(x_size)
+    connected = None
 
-    # TODO teset test conn
+    def _connected(update):
+        nonlocal connected
+
+        if connected is None:
+            # starting: gets connected
+            pkunit.pkeq(True, update.connected)
+            connected = True
+        elif connected:
+            # disconnects after connected
+            pkunit.pkeq(False, update.connected)
+            connected = False
+        else:
+            pkunit.pkfail("connected is already false update={}", update)
 
     def _monitor(update):
-        nonlocal x_size, count
+        nonlocal x_size, count, connected
 
+        if "connected" in update:
+            _connected(update)
+            return
         # reshape will switch x & y
         pkunit.pkeq(x_size.pop(), update.value.shape[1])
         count -= 1
@@ -43,6 +59,5 @@ def test_monitor():
     a = device.Device("DEV_CAMERA").accessor("image")
     a.monitor(_monitor)
     time.sleep(count * 2 * mock_epics.MONITOR_SLEEP)
-    if count != 0:
-        # mock_epics issues 4 updates
-        pkunit.pkfail("image sizes didn't match count={}", count)
+    pkunit.pkeq(0, count)
+    pkunit.pkeq(False, connected)
