@@ -87,21 +87,26 @@ class Device:
 
 
 class _Accessor:
+    """Container for a PV, metadata, and dynamic state
+
+    Attributes:
+        device (Device): object holding this accessor
+        meta (PKDict): meta data about the accessor, e.g. pv_name, pv_writable
+    """
 
     def __init__(self, device, name):
         self.meta = self.device.meta.accessor[name]
         self.device = device
-        self.pv = epics.PV(self.meta.pv_name, connection_callback=self._on_connection)
         self._callback = None
         self._mutex = threading.Lock()
-        self._destroyed = False
+        self._pv = epics.PV(self.meta.pv_name, connection_callback=self._on_connection)
 
     def disconnect():
         """Stop all monitoring and disconnect from PV"""
         self._callback = None
         try:
             # Clears all callbacks
-            self.pv.disconnect()
+            self._pv.disconnect()
         except Exception as e:
             pkdlog("error={} {} stack={}", e, self, pkdexc())
 
@@ -112,28 +117,42 @@ class _Accessor:
             object: the value from the PV converted to a Python type
         """
 
-        if (rv := self.pv.get()) is None:
+        if (rv := self._pv.get()) is None:
             raise DeviceError(f"unable to get {self}")
-        if not self.pv.connected:
+        if not self._pv.connected:
             raise DeviceError(f"disconnected {self}")
         return self._fixup_value(rv)
 
     def monitor(self, callback):
+        """Monitor PV and call callback with updates and connection changes
+
+        The argument to the callback is a `PKDict` with one or more of:
+            error : str
+                error occured in the values from the PV callback (unlikely)
+            value : object
+                PV reported this change
+            connected : bool
+                connection state changed: True if connected
+
+        Args:
+            callback (callable): accepts a single `PKDict` as ag
+        """
         with self._mutex:
             if self._callback:
                 raise ValueError(f"already monitoring {self}")
             # should lock
-            self._callback_index = self.pv.add_callback(self._on_value)
-            a.pv.auto_monitor = True
+            self._callback_index = self._pv.add_callback(self._on_value)
+            a._pv.auto_monitor = True
             self._callback = callback
 
     def monitor_stop(self):
+        """Stops monitoring PV"""
         with self._mutex:
             if not self._callback:
                 return
             self._callback = None
-            self.pv.auto_monitor = False
-            self.pv.remove_callback(self._callback_index)
+            self._pv.auto_monitor = False
+            self._pv.remove_callback(self._callback_index)
             self._callback_index = None
 
     def put(self, value):
@@ -145,9 +164,9 @@ class _Accessor:
         if not self.meta.pv_writable:
             raise AccessorPutError(f"read-only {self}")
         # ECA_NORMAL == 0 and None is normal, too, apparently
-        if (e := self.pv.put(value)) != 1:
+        if (e := self._pv.put(value)) != 1:
             raise DeviceError(f"put error={e} value={value} {self}")
-        if not self.pv.connected:
+        if not self._pv.connected:
             raise DeviceError(f"disconnected {self}")
 
     def _fixup_value(self, raw, accessor_meta):
@@ -169,7 +188,7 @@ class _Accessor:
             pkdlog("missing 'conn' in kwargs={}", kwargs)
             self._run_callback(error="missing conn")
         else:
-            self._run_callback(conn=conn)
+            self._run_callback(connected=conn)
 
     def _on_value(self, **kwargs):
         if (v := kwargs.get("value")) is None:
@@ -179,7 +198,7 @@ class _Accessor:
             self._run_callback(value=self._fixup_value(v))
 
     def __repr__(self):
-        return f"_Accessor({self.device.name}.{self.name}, {self.meta.pv_name})"
+        return f"<_Accessor {self.device.name}.{self.name} {self.meta.pv_name}>"
 
     def _run_callback(self, **kwargs):
         k = PKDict(accessor=self, **kwargs)

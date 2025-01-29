@@ -8,7 +8,7 @@ from pykern.pkcollections import PKDict
 from pykern.pkdebug import pkdc, pkdlog, pkdp
 import numpy
 import sys
-
+import threading
 
 # TODO(robnagler) to create an error, have a small radius
 _RADIUS = 50
@@ -40,23 +40,46 @@ _pv_values = PKDict(
 
 
 class PV:
-    def __init__(self, name):
+    _CB_INDEX = 1
+
+    def __init__(self, name, connection_callback=None):
         self.pvname = name
         self.connected = True
+        self.connection_callback = connection_callback
+        self.monitor_callback = None
+        self._auto_monitor = False
 
     def disconnect(self):
         pass
 
+    def add_callback(self, callback):
+        if self.monitor_callback:
+            raise AssertionError("too many callbacks")
+        self.monitor_callback = callback
+        return self._CB_INDEX
+
+    @property
+    def auto_monitor(self):
+        return self._auto_monitor
+
+    @auto_monitor.setter
+    def auto_monitor(self, value):
+        self._auto_monitor = value
+
     def get(self):
         # TOOD(robnagler) need to be more sophisticated
         return _pv_values.get(self.pvname, None)
+
+    def remove_callback(self, index):
+        if index != self._CB_INDEX:
+            raise AssertionError(f"invalid index={index}")
+        self.monitor_callback = None
 
     def put(self, value):
         _pv_values[self.pvname] = value
         return 1
 
 
-assert (
-    "epics" not in sys.modules
-), "epics already imported, this module must be imported first"
+if "epics" in sys.modules:
+    raise AssertionError("epics already imported, 'import mock_epics' first")
 sys.modules["epics"] = sys.modules[PV.__module__]
