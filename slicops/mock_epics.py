@@ -72,14 +72,15 @@ class PV:
         # TOOD(robnagler) need to be more sophisticated
         return _pv_values.get(self.pvname, None)
 
+    def put(self, value):
+        _pv_values[self.pvname] = value
+        return 1
+
     def remove_callback(self, index):
         if index != self._CB_INDEX:
             raise AssertionError(f"invalid index={index}")
         self.monitor_callback = None
 
-    def put(self, value):
-        _pv_values[self.pvname] = value
-        return 1
 
 
 if "epics" in sys.modules:
