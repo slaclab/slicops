@@ -31,6 +31,8 @@ def test_monitor():
     x_size = list(reversed(mock_epics.MONITOR_X_SIZE))
     count = len(x_size)
 
+    # TODO teset test conn
+
     def _monitor(update):
         nonlocal x_size, count
 

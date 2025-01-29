@@ -3,7 +3,7 @@
 **DO NOT EDIT; automatically generated**
 
 * generator: slicops.pkcli.device_yaml
-* input: /home/vagrant/src/slaclab/lcls-tools/lcls_tools/common/devices/yaml/*.yaml
+* input: /home/vagrant/.pyenv/versions/3.9.15/envs/py3/lib/python3.9/site-packages/lcls_tools/common/devices/yaml/*.yaml
 
 :copyright: Copyright (c) 2024 The Board of Trustees of the Leland Stanford Junior University, through SLAC National Accelerator Laboratory (subject to receipt of any required approvals from the U.S. Dept. of Energy).  All Rights Reserved.
 :license: http://github.com/slaclab/slicops/LICENSE
@@ -493,6 +493,7 @@ DB = PKDict(
                                 ),
                                 "image": PKDict(
                                     {
+                                        "array_is_row_major": False,
                                         "name": "image",
                                         "pv_base": "IMAGE",
                                         "pv_name": "YAGS:UNDS:3575:IMAGE",
@@ -507,9 +508,9 @@ DB = PKDict(
                                         "py_type": "int",
                                     }
                                 ),
-                                "num_rols": PKDict(
+                                "num_rows": PKDict(
                                     {
-                                        "name": "num_rols",
+                                        "name": "num_rows",
                                         "pv_base": "N_OF_ROW",
                                         "pv_name": "YAGS:UNDS:3575:N_OF_ROW",
                                         "py_type": "int",
@@ -555,6 +556,7 @@ DB = PKDict(
                                 ),
                                 "image": PKDict(
                                     {
+                                        "array_is_row_major": False,
                                         "name": "image",
                                         "pv_base": "IMAGE",
                                         "pv_name": "YAGS:UNDS:3795:IMAGE",
@@ -569,9 +571,9 @@ DB = PKDict(
                                         "py_type": "int",
                                     }
                                 ),
-                                "num_rols": PKDict(
+                                "num_rows": PKDict(
                                     {
-                                        "name": "num_rols",
+                                        "name": "num_rows",
                                         "pv_base": "N_OF_ROW",
                                         "pv_name": "YAGS:UNDS:3795:N_OF_ROW",
                                         "py_type": "int",
@@ -626,6 +628,7 @@ DB = PKDict(
                                 ),
                                 "image": PKDict(
                                     {
+                                        "array_is_row_major": True,
                                         "name": "image",
                                         "pv_base": "image1:ArrayData",
                                         "pv_name": "13SIM1:image1:ArrayData",
@@ -635,16 +638,16 @@ DB = PKDict(
                                 "num_cols": PKDict(
                                     {
                                         "name": "num_cols",
-                                        "pv_base": "cam1:ArraySizeY_RBV",
-                                        "pv_name": "13SIM1:cam1:ArraySizeY_RBV",
+                                        "pv_base": "cam1:ArraySizeX_RBV",
+                                        "pv_name": "13SIM1:cam1:ArraySizeX_RBV",
                                         "py_type": "int",
                                     }
                                 ),
                                 "num_rows": PKDict(
                                     {
                                         "name": "num_rows",
-                                        "pv_base": "cam1:ArraySizeX_RBV",
-                                        "pv_name": "13SIM1:cam1:ArraySizeX_RBV",
+                                        "pv_base": "cam1:ArraySizeY_RBV",
+                                        "pv_name": "13SIM1:cam1:ArraySizeY_RBV",
                                         "py_type": "int",
                                     }
                                 ),
@@ -681,6 +684,7 @@ DB = PKDict(
                                 ),
                                 "image": PKDict(
                                     {
+                                        "array_is_row_major": False,
                                         "name": "image",
                                         "pv_base": "Image:ArrayData",
                                         "pv_name": "OTRS:HTR:330:Image:ArrayData",
@@ -746,6 +750,7 @@ DB = PKDict(
                                 ),
                                 "image": PKDict(
                                     {
+                                        "array_is_row_major": False,
                                         "name": "image",
                                         "pv_base": "IMAGE",
                                         "pv_name": "OTRS:LI21:237:IMAGE",
@@ -760,9 +765,9 @@ DB = PKDict(
                                         "py_type": "int",
                                     }
                                 ),
-                                "num_rols": PKDict(
+                                "num_rows": PKDict(
                                     {
-                                        "name": "num_rols",
+                                        "name": "num_rows",
                                         "pv_base": "N_OF_ROW",
                                         "pv_name": "OTRS:LI21:237:N_OF_ROW",
                                         "py_type": "int",
@@ -808,6 +813,7 @@ DB = PKDict(
                                 ),
                                 "image": PKDict(
                                     {
+                                        "array_is_row_major": False,
                                         "name": "image",
                                         "pv_base": "Image:ArrayData",
                                         "pv_name": "PROF:BC1B:470:Image:ArrayData",
@@ -872,6 +878,7 @@ DB = PKDict(
                                 ),
                                 "image": PKDict(
                                     {
+                                        "array_is_row_major": False,
                                         "name": "image",
                                         "pv_base": "IMAGE",
                                         "pv_name": "OTRS:LI21:291:IMAGE",
@@ -886,9 +893,9 @@ DB = PKDict(
                                         "py_type": "int",
                                     }
                                 ),
-                                "num_rols": PKDict(
+                                "num_rows": PKDict(
                                     {
-                                        "name": "num_rols",
+                                        "name": "num_rows",
                                         "pv_base": "N_OF_ROW",
                                         "pv_name": "OTRS:LI21:291:N_OF_ROW",
                                         "py_type": "int",
@@ -934,6 +941,7 @@ DB = PKDict(
                                 ),
                                 "image": PKDict(
                                     {
+                                        "array_is_row_major": False,
                                         "name": "image",
                                         "pv_base": "Image:ArrayData",
                                         "pv_name": "OTRS:IN20:571:Image:ArrayData",
@@ -997,6 +1005,7 @@ DB = PKDict(
                                 ),
                                 "image": PKDict(
                                     {
+                                        "array_is_row_major": False,
                                         "name": "image",
                                         "pv_base": "IMAGE",
                                         "pv_name": "OTRS:LI24:807:IMAGE",
@@ -1011,9 +1020,9 @@ DB = PKDict(
                                         "py_type": "int",
                                     }
                                 ),
-                                "num_rols": PKDict(
+                                "num_rows": PKDict(
                                     {
-                                        "name": "num_rols",
+                                        "name": "num_rows",
                                         "pv_base": "N_OF_ROW",
                                         "pv_name": "OTRS:LI24:807:N_OF_ROW",
                                         "py_type": "int",
@@ -1059,6 +1068,7 @@ DB = PKDict(
                                 ),
                                 "image": PKDict(
                                     {
+                                        "array_is_row_major": False,
                                         "name": "image",
                                         "pv_base": "Image:ArrayData",
                                         "pv_name": "PROF:BC2B:545:Image:ArrayData",
@@ -1123,6 +1133,7 @@ DB = PKDict(
                                 ),
                                 "image": PKDict(
                                     {
+                                        "array_is_row_major": False,
                                         "name": "image",
                                         "pv_base": "IMAGE",
                                         "pv_name": "OTRS:IN20:621:IMAGE",
@@ -1137,9 +1148,9 @@ DB = PKDict(
                                         "py_type": "int",
                                     }
                                 ),
-                                "num_rols": PKDict(
+                                "num_rows": PKDict(
                                     {
-                                        "name": "num_rols",
+                                        "name": "num_rows",
                                         "pv_base": "N_OF_ROW",
                                         "pv_name": "OTRS:IN20:621:N_OF_ROW",
                                         "py_type": "int",
@@ -1186,6 +1197,7 @@ DB = PKDict(
                                 ),
                                 "image": PKDict(
                                     {
+                                        "array_is_row_major": False,
                                         "name": "image",
                                         "pv_base": "IMAGE",
                                         "pv_name": "OTRS:IN20:711:IMAGE",
@@ -1200,9 +1212,9 @@ DB = PKDict(
                                         "py_type": "int",
                                     }
                                 ),
-                                "num_rols": PKDict(
+                                "num_rows": PKDict(
                                     {
-                                        "name": "num_rols",
+                                        "name": "num_rows",
                                         "pv_base": "N_OF_ROW",
                                         "pv_name": "OTRS:IN20:711:N_OF_ROW",
                                         "py_type": "int",
@@ -1248,6 +1260,7 @@ DB = PKDict(
                                 ),
                                 "image": PKDict(
                                     {
+                                        "array_is_row_major": False,
                                         "name": "image",
                                         "pv_base": "Image:ArrayData",
                                         "pv_name": "PROF:COL0:535:Image:ArrayData",
@@ -1312,6 +1325,7 @@ DB = PKDict(
                                 ),
                                 "image": PKDict(
                                     {
+                                        "array_is_row_major": False,
                                         "name": "image",
                                         "pv_base": "Image:ArrayData",
                                         "pv_name": "OTRS:DIAG0:420:Image:ArrayData",
@@ -1367,6 +1381,7 @@ DB = PKDict(
                                 ),
                                 "image": PKDict(
                                     {
+                                        "array_is_row_major": False,
                                         "name": "image",
                                         "pv_base": "Image:ArrayData",
                                         "pv_name": "OTRS:DIAG0:525:Image:ArrayData",
@@ -1422,6 +1437,7 @@ DB = PKDict(
                                 ),
                                 "image": PKDict(
                                     {
+                                        "array_is_row_major": False,
                                         "name": "image",
                                         "pv_base": "Image:ArrayData",
                                         "pv_name": "OTRS:DMPH:695:Image:ArrayData",
@@ -1477,6 +1493,7 @@ DB = PKDict(
                                 ),
                                 "image": PKDict(
                                     {
+                                        "array_is_row_major": False,
                                         "name": "image",
                                         "pv_base": "Image:ArrayData",
                                         "pv_name": "OTRS:DMPS:695:Image:ArrayData",
@@ -1532,6 +1549,7 @@ DB = PKDict(
                                 ),
                                 "image": PKDict(
                                     {
+                                        "array_is_row_major": False,
                                         "name": "image",
                                         "pv_base": "Image:ArrayData",
                                         "pv_name": "PROF:DOG:195:Image:ArrayData",
@@ -1596,6 +1614,7 @@ DB = PKDict(
                                 ),
                                 "image": PKDict(
                                     {
+                                        "array_is_row_major": False,
                                         "name": "image",
                                         "pv_base": "Image:ArrayData",
                                         "pv_name": "OTRS:IN20:465:Image:ArrayData",
@@ -1659,6 +1678,7 @@ DB = PKDict(
                                 ),
                                 "image": PKDict(
                                     {
+                                        "array_is_row_major": False,
                                         "name": "image",
                                         "pv_base": "Image:ArrayData",
                                         "pv_name": "OTRS:IN20:471:Image:ArrayData",
@@ -1722,6 +1742,7 @@ DB = PKDict(
                                 ),
                                 "image": PKDict(
                                     {
+                                        "array_is_row_major": False,
                                         "name": "image",
                                         "pv_base": "Image:ArrayData",
                                         "pv_name": "PROF:DASEL:440:Image:ArrayData",
@@ -1777,6 +1798,7 @@ DB = PKDict(
                                 ),
                                 "image": PKDict(
                                     {
+                                        "array_is_row_major": False,
                                         "name": "image",
                                         "pv_base": "Image:ArrayData",
                                         "pv_name": "PROF:DASEL:655:Image:ArrayData",
@@ -1832,6 +1854,7 @@ DB = PKDict(
                                 ),
                                 "image": PKDict(
                                     {
+                                        "array_is_row_major": False,
                                         "name": "image",
                                         "pv_base": "Image:ArrayData",
                                         "pv_name": "PROF:DASEL:818:Image:ArrayData",
@@ -1887,6 +1910,7 @@ DB = PKDict(
                                 ),
                                 "image": PKDict(
                                     {
+                                        "array_is_row_major": False,
                                         "name": "image",
                                         "pv_base": "IMAGE",
                                         "pv_name": "CAMR:IN20:186:IMAGE",
@@ -1901,9 +1925,9 @@ DB = PKDict(
                                         "py_type": "int",
                                     }
                                 ),
-                                "num_rols": PKDict(
+                                "num_rows": PKDict(
                                     {
-                                        "name": "num_rols",
+                                        "name": "num_rows",
                                         "pv_base": "N_OF_ROW",
                                         "pv_name": "CAMR:IN20:186:N_OF_ROW",
                                         "py_type": "int",
@@ -1942,6 +1966,7 @@ DB = PKDict(
                                 ),
                                 "image": PKDict(
                                     {
+                                        "array_is_row_major": False,
                                         "name": "image",
                                         "pv_base": "Image:ArrayData",
                                         "pv_name": "CAMR:LGUN:950:Image:ArrayData",
@@ -1951,16 +1976,16 @@ DB = PKDict(
                                 "num_cols": PKDict(
                                     {
                                         "name": "num_cols",
-                                        "pv_base": "Image:ArraySizeY_RBV",
-                                        "pv_name": "CAMR:LGUN:950:Image:ArraySizeY_RBV",
+                                        "pv_base": "Image:ArraySizeX_RBV",
+                                        "pv_name": "CAMR:LGUN:950:Image:ArraySizeX_RBV",
                                         "py_type": "int",
                                     }
                                 ),
                                 "num_rows": PKDict(
                                     {
                                         "name": "num_rows",
-                                        "pv_base": "Image:ArraySizeX_RBV",
-                                        "pv_name": "CAMR:LGUN:950:Image:ArraySizeX_RBV",
+                                        "pv_base": "Image:ArraySizeY_RBV",
+                                        "pv_name": "CAMR:LGUN:950:Image:ArraySizeY_RBV",
                                         "py_type": "int",
                                     }
                                 ),
@@ -1997,6 +2022,7 @@ DB = PKDict(
                                 ),
                                 "image": PKDict(
                                     {
+                                        "array_is_row_major": False,
                                         "name": "image",
                                         "pv_base": "IMAGE",
                                         "pv_name": "YAGS:IN20:211:IMAGE",
@@ -2011,9 +2037,9 @@ DB = PKDict(
                                         "py_type": "int",
                                     }
                                 ),
-                                "num_rols": PKDict(
+                                "num_rows": PKDict(
                                     {
-                                        "name": "num_rols",
+                                        "name": "num_rows",
                                         "pv_base": "N_OF_ROW",
                                         "pv_name": "YAGS:IN20:211:N_OF_ROW",
                                         "py_type": "int",
@@ -2061,6 +2087,7 @@ DB = PKDict(
                                 ),
                                 "image": PKDict(
                                     {
+                                        "array_is_row_major": False,
                                         "name": "image",
                                         "pv_base": "Image:ArrayData",
                                         "pv_name": "YAGS:IN20:241:Image:ArrayData",
@@ -2124,6 +2151,7 @@ DB = PKDict(
                                 ),
                                 "image": PKDict(
                                     {
+                                        "array_is_row_major": False,
                                         "name": "image",
                                         "pv_base": "IMAGE",
                                         "pv_name": "YAGS:IN20:351:IMAGE",
@@ -2138,9 +2166,9 @@ DB = PKDict(
                                         "py_type": "int",
                                     }
                                 ),
-                                "num_rols": PKDict(
+                                "num_rows": PKDict(
                                     {
-                                        "name": "num_rols",
+                                        "name": "num_rows",
                                         "pv_base": "N_OF_ROW",
                                         "pv_name": "YAGS:IN20:351:N_OF_ROW",
                                         "py_type": "int",
@@ -2187,6 +2215,7 @@ DB = PKDict(
                                 ),
                                 "image": PKDict(
                                     {
+                                        "array_is_row_major": False,
                                         "name": "image",
                                         "pv_base": "IMAGE",
                                         "pv_name": "YAGS:IN20:841:IMAGE",
@@ -2201,9 +2230,9 @@ DB = PKDict(
                                         "py_type": "int",
                                     }
                                 ),
-                                "num_rols": PKDict(
+                                "num_rows": PKDict(
                                     {
-                                        "name": "num_rols",
+                                        "name": "num_rows",
                                         "pv_base": "N_OF_ROW",
                                         "pv_name": "YAGS:IN20:841:N_OF_ROW",
                                         "py_type": "int",
@@ -2242,6 +2271,7 @@ DB = PKDict(
                                 ),
                                 "image": PKDict(
                                     {
+                                        "array_is_row_major": False,
                                         "name": "image",
                                         "pv_base": "Image:ArrayData",
                                         "pv_name": "YAGS:HTR:625:Image:ArrayData",
@@ -2307,6 +2337,7 @@ DB = PKDict(
                                 ),
                                 "image": PKDict(
                                     {
+                                        "array_is_row_major": False,
                                         "name": "image",
                                         "pv_base": "Image:ArrayData",
                                         "pv_name": "YAGS:HTR:675:Image:ArrayData",
@@ -2372,6 +2403,7 @@ DB = PKDict(
                                 ),
                                 "image": PKDict(
                                     {
+                                        "array_is_row_major": False,
                                         "name": "image",
                                         "pv_base": "Image:ArrayData",
                                         "pv_name": "YAGS:LTUH:743:Image:ArrayData",
@@ -2433,6 +2465,7 @@ DB = PKDict(
                                 ),
                                 "image": PKDict(
                                     {
+                                        "array_is_row_major": False,
                                         "name": "image",
                                         "pv_base": "IMAGE",
                                         "pv_name": "YAGS:IN20:921:IMAGE",
@@ -2447,9 +2480,9 @@ DB = PKDict(
                                         "py_type": "int",
                                     }
                                 ),
-                                "num_rols": PKDict(
+                                "num_rows": PKDict(
                                     {
-                                        "name": "num_rols",
+                                        "name": "num_rows",
                                         "pv_base": "N_OF_ROW",
                                         "pv_name": "YAGS:IN20:921:N_OF_ROW",
                                         "py_type": "int",
@@ -2488,6 +2521,7 @@ DB = PKDict(
                                 ),
                                 "image": PKDict(
                                     {
+                                        "array_is_row_major": False,
                                         "name": "image",
                                         "pv_base": "IMAGE",
                                         "pv_name": "YAGS:IN20:995:IMAGE",
@@ -2502,9 +2536,9 @@ DB = PKDict(
                                         "py_type": "int",
                                     }
                                 ),
-                                "num_rols": PKDict(
+                                "num_rows": PKDict(
                                     {
-                                        "name": "num_rols",
+                                        "name": "num_rows",
                                         "pv_base": "N_OF_ROW",
                                         "pv_name": "YAGS:IN20:995:N_OF_ROW",
                                         "py_type": "int",

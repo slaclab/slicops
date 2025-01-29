@@ -32,15 +32,15 @@ _DEVICE_KIND_TO_ACCESSOR = PKDict(
             "Image:ArrayData": PKDict(name="image", py_type="ndarray"),
             "Image:ArraySize0_RBV": PKDict(name="num_rows"),
             "Image:ArraySize1_RBV": PKDict(name="num_cols"),
-            "Image:ArraySizeX_RBV": PKDict(name="num_rows"),
-            "Image:ArraySizeY_RBV": PKDict(name="num_cols"),
+            "Image:ArraySizeX_RBV": PKDict(name="num_cols"),
+            "Image:ArraySizeY_RBV": PKDict(name="num_rows"),
             "N_OF_BITS": PKDict(name="bit_depth"),
             "N_OF_COL": PKDict(name="num_cols"),
-            "N_OF_ROW": PKDict(name="num_rols"),
+            "N_OF_ROW": PKDict(name="num_rows"),
             # Devlement: AreaDetector SimDetector default definitions
             # TODO(robnagler) simplify the st.cmd for the SimDetector
-            "cam1:ArraySizeX_RBV": PKDict(name="num_rows"),
-            "cam1:ArraySizeY_RBV": PKDict(name="num_cols"),
+            "cam1:ArraySizeX_RBV": PKDict(name="num_cols"),
+            "cam1:ArraySizeY_RBV": PKDict(name="num_rows"),
             "cam1:N_OF_BITS": PKDict(name="bit_depth"),
             "cam1:Acquire": PKDict(name="acquire", py_type="bool", pv_writable=True),
             "cam1:Gain": PKDict(name="gain", pv_writable=True),
@@ -68,6 +68,7 @@ screens:
       - DEV_BEAM_PATH
       sum_l_meters: 0.614
       type: PROF
+      array_is_row_major: true
 """
 
 
@@ -159,7 +160,7 @@ class _Parser:
 
         def _accessor(meta):
             a = _DEVICE_KIND_TO_ACCESSOR[meta.device_kind]
-            return PKDict(
+            rv = PKDict(
                 {
                     a[k]
                     .name: a[k]
@@ -168,6 +169,9 @@ class _Parser:
                     for k, v in meta.pv_base.items()
                 }
             )
+            if "image" in rv:
+                rv.image.array_is_row_major = meta.array_is_row_major
+            return rv
 
         def _assign(device, meta):
             """Corrections to input data"""
@@ -200,6 +204,7 @@ class _Parser:
                     )
                 rv.pv_base[m.group(1)] = v
             return rv.pkupdate(
+                array_is_row_major=md.get("array_is_row_major", False),
                 # TODO(robnagler) meta.type is not always set (see vcc.yaml), so ignoring for now
                 area=md.area,
                 beam_path=tuple(sorted(md.beam_path)),
@@ -216,6 +221,7 @@ class _Parser:
             meta.accessor = _accessor(meta)
             # No longer needed
             meta.pkdel("pv_base")
+            meta.pkdel("array_is_row_major")
             return meta
 
         if not (s := src.get("screens")):

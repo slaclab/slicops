@@ -171,13 +171,12 @@ class _Accessor:
 
     def _fixup_value(self, raw):
         def _reshape(image):
-            # TODO(robnagler) does get return 0 ever?
             if not (
                 (r := self.device.get("num_rows"))
                 and (c := self.device.get("num_cols"))
             ):
                 raise ValueError("num_rows or num_cols is invalid")
-            return image.reshape(c, r)
+            return image.reshape((r, c) if self.meta.array_is_row_major else (c, r))
 
         if self.meta.py_type == "bool":
             return bool(raw)
@@ -191,7 +190,7 @@ class _Accessor:
             pkdlog("missing 'conn' in kwargs={}", kwargs)
             self._run_callback(error="missing conn")
         else:
-            self._run_callback(connected=conn)
+            self._run_callback(connected=kwargs["conn"])
 
     def _on_value(self, **kwargs):
         if (v := kwargs.get("value")) is None:
