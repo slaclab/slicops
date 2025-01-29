@@ -14,7 +14,7 @@ import time
 
 MONITOR_X_SIZE = [50, 100, 150, 200]
 
-MONITOR_SLEEP = .1
+MONITOR_SLEEP = 0.1
 
 _X_SIZE = 50
 _Y_FACTOR = 1.3
