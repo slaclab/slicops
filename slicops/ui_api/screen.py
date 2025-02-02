@@ -196,9 +196,9 @@ class API(slicops.quest.API):
             ux.curve_fit_method.visible = True
             ux.color_map.visible = True
             return PKDict(
-                lineout=profile.tolist(),
+                lineout=profile,
                 fit=PKDict(
-                    fit_line=getattr(tool, method)(x=tool.x, **p).tolist(),
+                    fit_line=getattr(tool, method)(x=tool.x, **p),
                     results=p,
                 ),
             )
@@ -206,9 +206,9 @@ class API(slicops.quest.API):
         def _fit_error(profile):
             # TODO(robnagler) why doesn't display the error somewhere?
             return PKDict(
-                lineout=profile.tolist(),
+                lineout=profile,
                 fit=PKDict(
-                    fit_line=numpy.zeros(len(profile)).tolist(),
+                    fit_line=numpy.zeros(len(profile)),
                     results=PKDict(
                         error="Curve fit was unsuccessful",
                     ),
@@ -228,8 +228,7 @@ class API(slicops.quest.API):
         p = await _profile()
         return self._return(ux).pkupdate(
             plot=PKDict(
-                # TODO(pjm): output handler should support ndarray, avoiding tolist()
-                raw_pixels=p.tolist(),
+                raw_pixels=p,
                 x=_fit(p.sum(axis=0)),
                 y=_fit(p.sum(axis=1)[::-1]),
             ),
