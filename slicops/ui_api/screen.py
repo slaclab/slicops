@@ -1,7 +1,7 @@
 """Screen (Profile Monitor) UI API
 
 `API` stores ``ui_ctx`` (UI Context, local var ``ux``) in the
-`pykern.http.Session`. The ``ui_ctx`` is a mirror of all state in the
+`pykern.api.server.Session`. The ``ui_ctx`` is a mirror of all state in the
 client. Calls to this `API` changes the ``ui_ctx`` and possibly
 invokes changes to the underlying device, also stored in the
 `Session`.

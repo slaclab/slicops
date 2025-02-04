@@ -19,7 +19,7 @@ def cfg():
 
     db_api
        api_uri, auth_secret, tcp_ip, and tcp_port values. `PKDict`
-       is compatible with `pykern.http.server_start`,
+       is compatible with `pykern.api.server.start`,
 
     Returns:
         PKDict: configuration values. (Make a copy before modifying.)
