@@ -45,19 +45,13 @@ export class ScreenComponent {
             },
             this.handleError.bind(this),
         );
-        return;
         this.apiService.subscribe(
             'screen_update',
             {},
             (result) => {
-                this.ui_ctx = result.ui_ctx;
-                this.layout = result.layout;
-                let v:any = {};
-                for (let f in result.ui_ctx) {
-                    v[f] = result.ui_ctx[f].value;
-                    this.form.addControl(f, new FormControl(''));
+                if (result.plot) {
+                    this.image = result.plot;
                 }
-                this.form.patchValue(v);
             },
             this.handleError.bind(this),
         );
@@ -73,12 +67,6 @@ export class ScreenComponent {
         this.errorMessage = err;
     }
 
-    serverUpdate(result: any) {
-        if (result.plot) {
-            this.image = result.plot;
-        }
-    }
-
     serverAction(field: string, value: any) {
         this.errorMessage = '';
         this.ui_ctx[field].enabled = false;
@@ -87,16 +75,27 @@ export class ScreenComponent {
                 field_value: value,
             },
             (result) => {
+                if (result.plot) {
+                    // Plots probably never come back this way because screen_update is
+                    // subscribed
+                    this.image = result.plot;
+                }
                 if (result.ui_ctx && field in result.ui_ctx && 'enabled' in result.ui_ctx[field]) {
                 }
                 else {
                     this.ui_ctx[field].enabled = true;
                 }
+                if (! result.ui_ctx) {
+                    return;
+                }
                 //TODO(pjm): need to only update changed fields
                 // for now, do no updates on "plot" field changes to avoid all fields refreshing
-                // otherwise changing gain or curve_fit_method acts badly when plots are being streamed
-                this.serverUpdate(result);
-
+                // otherwise changing gain or curve_fit_method acts badly when plots are being streaming
+                if (field == 'plot') {
+                    //TODO(robnagler) not sure this happens
+                    this.log.dbg(["field is plot"]);
+                    return;
+                }
                 Object.assign(this.ui_ctx, result.ui_ctx);
                 const values: any = {};
                 for (let f in result.ui_ctx) {

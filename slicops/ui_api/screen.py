@@ -195,6 +195,7 @@ class API(slicops.quest.API):
                 ux.camera_gain.value = None
             ux.pv.value = d.meta.pv_prefix
             self._button_setup(ux, _acquiring(d))
+            pkdp([d.accessor("num_rows").get(), d.accessor("num_cols").get()])
             d.accessor("image").monitor(_Monitor(self.session))
 
         _destroy()
@@ -209,7 +210,12 @@ class API(slicops.quest.API):
     def _return_with_plot(self, ux):
         rv = self._return(ux)
         if p := self.session.get(_PLOT_KEY):
-            rv.pkupdate(p.api_result(ux))
+            r = p.api_result(ux)
+            if q := self.session.get(_UPDATE_Q_KEY):
+                q.put_nowait(q)
+            else:
+                # TODO(robnagler) this shouldn't ever happen, but good for ui_api_test
+                rv.pkupdate(r)
         return rv
 
     def _save_field(self, field_name, api_args):
@@ -258,6 +264,8 @@ class _Monitor:
         if d := self.session.get(_DEVICE_KEY):
             self.session[_DEVICE_KEY] = None
             d.destroy()
+        self.session.pkdel(_MONITOR_KEY)
+        self.session.pkdel(_PLOT_KEY)
         self.session = None
 
     def __call__(self, change):

@@ -100,6 +100,12 @@ class _Accessor:
         self._callback = None
         self._mutex = threading.Lock()
         self._pv = epics.PV(self.meta.pv_name, connection_callback=self._on_connection)
+        if name == "image":
+            # TODO(robnagler) this has to be done here, because you can't get pvs
+            # from within a monitor callback
+            r = self.device.get("num_rows")
+            c = self.device.get("num_cols")
+            self._image_shape = (r, c) if self.meta.array_is_row_major else (c, r)
 
     def disconnect(self):
         """Stop all monitoring and disconnect from PV"""
@@ -171,12 +177,7 @@ class _Accessor:
 
     def _fixup_value(self, raw):
         def _reshape(image):
-            if not (
-                (r := self.device.get("num_rows"))
-                and (c := self.device.get("num_cols"))
-            ):
-                raise ValueError("num_rows or num_cols is invalid")
-            return image.reshape((r, c) if self.meta.array_is_row_major else (c, r))
+            return image.reshape(self._image_shape)
 
         if self.meta.py_type == "bool":
             return bool(raw)

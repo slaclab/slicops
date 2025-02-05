@@ -238,7 +238,6 @@ export class APIService {
         if (this.#socketRetryBackoff < 60) {
             this.#socketRetryBackoff *= 2;
         }
-        this.log.dbg(['socketRetryBackoff', this.#socketRetryBackoff]);
         setTimeout(this.#socketOpen.bind(this), this.#socketRetryBackoff * 1000);
     };
 
@@ -254,7 +253,6 @@ export class APIService {
                 c.handleError(m.api_error);
             }
             else {
-                this.log.dbg(['api_result', m.api_result, c.api_name, c.call_id]);
                 c.handleResult(m.api_result!);
             }
         }
