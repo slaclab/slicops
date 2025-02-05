@@ -42,29 +42,25 @@ export class ScreenComponent {
                     this.form.addControl(f, new FormControl(''));
                 }
                 this.form.patchValue(v);
-                this.checkAutoRefresh(result);
             },
             this.handleError.bind(this),
         );
-    }
-
-    checkAutoRefresh(result: any) {
-        if (! result.ui_ctx) {
-            return;
-        }
-        //TODO(pjm): until server callbacks are supported - run a timeout on each plot
-        if (result.ui_ctx.plot.auto_refresh) {
-            if (! this.imageTimeout) {
-                this.imageTimeout = setTimeout(() => {
-                    this.serverAction('plot', true);
-                    this.imageTimeout = null;
-                }, 1000);
-            }
-        }
-        else if (this.imageTimeout) {
-            clearTimeout(this.imageTimeout);
-            this.imageTimeout = null;
-        }
+        return;
+        this.apiService.subscribe(
+            'screen_update',
+            {},
+            (result) => {
+                this.ui_ctx = result.ui_ctx;
+                this.layout = result.layout;
+                let v:any = {};
+                for (let f in result.ui_ctx) {
+                    v[f] = result.ui_ctx[f].value;
+                    this.form.addControl(f, new FormControl(''));
+                }
+                this.form.patchValue(v);
+            },
+            this.handleError.bind(this),
+        );
     }
 
     handleError(err: any) {
@@ -77,6 +73,12 @@ export class ScreenComponent {
         this.errorMessage = err;
     }
 
+    serverUpdate(result: any) {
+        if (result.plot) {
+            this.image = result.plot;
+        }
+    }
+
     serverAction(field: string, value: any) {
         this.errorMessage = '';
         this.ui_ctx[field].enabled = false;
@@ -85,10 +87,6 @@ export class ScreenComponent {
                 field_value: value,
             },
             (result) => {
-                this.checkAutoRefresh(result);
-                if (result.plot) {
-                    this.image = result.plot;
-                }
                 if (result.ui_ctx && field in result.ui_ctx && 'enabled' in result.ui_ctx[field]) {
                 }
                 else {
@@ -96,17 +94,17 @@ export class ScreenComponent {
                 }
                 //TODO(pjm): need to only update changed fields
                 // for now, do no updates on "plot" field changes to avoid all fields refreshing
-                // otherwise changing gain or curve_fit_method acts badly when plots are being streaming
-                if (result.ui_ctx && field != 'plot') {
-                    Object.assign(this.ui_ctx, result.ui_ctx);
-                    const values: any = {};
-                    for (let f in result.ui_ctx) {
-                        if ('value' in result.ui_ctx[f]) {
-                            values[f] = result.ui_ctx[f].value;
-                        }
+                // otherwise changing gain or curve_fit_method acts badly when plots are being streamed
+                this.serverUpdate(result);
+
+                Object.assign(this.ui_ctx, result.ui_ctx);
+                const values: any = {};
+                for (let f in result.ui_ctx) {
+                    if ('value' in result.ui_ctx[f]) {
+                        values[f] = result.ui_ctx[f].value;
                     }
-                    this.form.patchValue(values);
                 }
+                this.form.patchValue(values);
             },
             (err) => {
                 this.handleError(err);

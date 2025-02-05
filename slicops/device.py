@@ -185,19 +185,27 @@ class _Accessor:
         return raw
 
     def _on_connection(self, **kwargs):
-        if "conn" not in kwargs:
-            # This shouldn't happen
-            pkdlog("missing 'conn' in kwargs={}", kwargs)
-            self._run_callback(error="missing conn")
-        else:
-            self._run_callback(connected=kwargs["conn"])
+        try:
+            if "conn" not in kwargs:
+                # This shouldn't happen
+                pkdlog("missing 'conn' in kwargs={}", kwargs)
+                self._run_callback(error="missing conn")
+            else:
+                self._run_callback(connected=kwargs["conn"])
+        except Exception as e:
+            pkdlog("error={} {} stack={}", e, self, pkdexc())
+            raise
 
     def _on_value(self, **kwargs):
-        if (v := kwargs.get("value")) is None:
-            pkdlog("missing 'value' in kwargs={} {}", kwargs, self)
-            self._run_callback(error="missing value or None")
-        else:
-            self._run_callback(value=self._fixup_value(v))
+        try:
+            if (v := kwargs.get("value")) is None:
+                pkdlog("missing 'value' in kwargs={} {}", kwargs, self)
+                self._run_callback(error="missing value or None")
+            else:
+                self._run_callback(value=self._fixup_value(v))
+        except Exception as e:
+            pkdlog("error={} {} stack={}", e, self, pkdexc())
+            raise
 
     def __repr__(self):
         return f"<_Accessor {self.device.name}.{self.meta.name} {self.meta.pv_name}>"
