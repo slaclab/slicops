@@ -100,6 +100,12 @@ class _Accessor:
         self._callback = None
         self._mutex = threading.Lock()
         self._pv = epics.PV(self.meta.pv_name, connection_callback=self._on_connection)
+        if name == "image":
+            # TODO(robnagler) this has to be done here, because you can't get pvs
+            # from within a monitor callback
+            r = self.device.get("num_rows")
+            c = self.device.get("num_cols")
+            self._image_shape = (r, c) if self.meta.array_is_row_major else (c, r)
 
     def disconnect(self):
         """Stop all monitoring and disconnect from PV"""
@@ -171,12 +177,7 @@ class _Accessor:
 
     def _fixup_value(self, raw):
         def _reshape(image):
-            if not (
-                (r := self.device.get("num_rows"))
-                and (c := self.device.get("num_cols"))
-            ):
-                raise ValueError("num_rows or num_cols is invalid")
-            return image.reshape((r, c) if self.meta.array_is_row_major else (c, r))
+            return image.reshape(self._image_shape)
 
         if self.meta.py_type == "bool":
             return bool(raw)
@@ -185,19 +186,27 @@ class _Accessor:
         return raw
 
     def _on_connection(self, **kwargs):
-        if "conn" not in kwargs:
-            # This shouldn't happen
-            pkdlog("missing 'conn' in kwargs={}", kwargs)
-            self._run_callback(error="missing conn")
-        else:
-            self._run_callback(connected=kwargs["conn"])
+        try:
+            if "conn" not in kwargs:
+                # This shouldn't happen
+                pkdlog("missing 'conn' in kwargs={}", kwargs)
+                self._run_callback(error="missing conn")
+            else:
+                self._run_callback(connected=kwargs["conn"])
+        except Exception as e:
+            pkdlog("error={} {} stack={}", e, self, pkdexc())
+            raise
 
     def _on_value(self, **kwargs):
-        if (v := kwargs.get("value")) is None:
-            pkdlog("missing 'value' in kwargs={} {}", kwargs, self)
-            self._run_callback(error="missing value or None")
-        else:
-            self._run_callback(value=self._fixup_value(v))
+        try:
+            if (v := kwargs.get("value")) is None:
+                pkdlog("missing 'value' in kwargs={} {}", kwargs, self)
+                self._run_callback(error="missing value or None")
+            else:
+                self._run_callback(value=self._fixup_value(v))
+        except Exception as e:
+            pkdlog("error={} {} stack={}", e, self, pkdexc())
+            raise
 
     def __repr__(self):
         return f"<_Accessor {self.device.name}.{self.meta.name} {self.meta.pv_name}>"

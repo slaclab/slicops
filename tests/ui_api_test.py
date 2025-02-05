@@ -19,6 +19,10 @@ async def test_basic():
         pkunit.pkeq(expect, r.ui_ctx[field].value)
         return r.ui_ctx
 
+    async def _plot(client):
+        with await client.subscribe_api("screen_update", PKDict()) as s:
+            return await s.result_get()
+
     async with _setup() as c:
         from pykern.pkcollections import PKDict
         from pykern import pkunit, pkdebug
@@ -29,6 +33,7 @@ async def test_basic():
         pkunit.pkeq(93, ux.camera_gain.value)
         r = await c.call_api("screen_start_button", PKDict(field_value=False))
         ux = r.ui_ctx
+        r = await _plot(c)
         pkunit.pkeq(65, len(r.plot.raw_pixels))
         pkunit.pkeq(50, len(r.plot.raw_pixels[0]))
         # x fit should be 10
@@ -48,9 +53,9 @@ async def test_basic():
 
 
 def _setup():
-    from pykern import http_unit
+    from pykern.api import unit_util
 
-    class _Setup(http_unit.Setup):
+    class _Setup(unit_util.Setup):
         def _global_config(self, **kwargs):
             from pykern import util
 

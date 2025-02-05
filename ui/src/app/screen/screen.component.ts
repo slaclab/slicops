@@ -42,29 +42,19 @@ export class ScreenComponent {
                     this.form.addControl(f, new FormControl(''));
                 }
                 this.form.patchValue(v);
-                this.checkAutoRefresh(result);
             },
             this.handleError.bind(this),
         );
-    }
-
-    checkAutoRefresh(result: any) {
-        if (! result.ui_ctx) {
-            return;
-        }
-        //TODO(pjm): until server callbacks are supported - run a timeout on each plot
-        if (result.ui_ctx.plot.auto_refresh) {
-            if (! this.imageTimeout) {
-                this.imageTimeout = setTimeout(() => {
-                    this.serverAction('plot', true);
-                    this.imageTimeout = null;
-                }, 1000);
-            }
-        }
-        else if (this.imageTimeout) {
-            clearTimeout(this.imageTimeout);
-            this.imageTimeout = null;
-        }
+        this.apiService.subscribe(
+            'screen_update',
+            {},
+            (result) => {
+                if (result.plot) {
+                    this.image = result.plot;
+                }
+            },
+            this.handleError.bind(this),
+        );
     }
 
     handleError(err: any) {
@@ -85,8 +75,9 @@ export class ScreenComponent {
                 field_value: value,
             },
             (result) => {
-                this.checkAutoRefresh(result);
                 if (result.plot) {
+                    // Plots probably never come back this way because screen_update is
+                    // subscribed
                     this.image = result.plot;
                 }
                 if (result.ui_ctx && field in result.ui_ctx && 'enabled' in result.ui_ctx[field]) {
@@ -94,19 +85,25 @@ export class ScreenComponent {
                 else {
                     this.ui_ctx[field].enabled = true;
                 }
+                if (! result.ui_ctx) {
+                    return;
+                }
                 //TODO(pjm): need to only update changed fields
                 // for now, do no updates on "plot" field changes to avoid all fields refreshing
                 // otherwise changing gain or curve_fit_method acts badly when plots are being streaming
-                if (result.ui_ctx && field != 'plot') {
-                    Object.assign(this.ui_ctx, result.ui_ctx);
-                    const values: any = {};
-                    for (let f in result.ui_ctx) {
-                        if ('value' in result.ui_ctx[f]) {
-                            values[f] = result.ui_ctx[f].value;
-                        }
-                    }
-                    this.form.patchValue(values);
+                if (field == 'plot') {
+                    //TODO(robnagler) not sure this happens
+                    this.log.dbg(["field is plot"]);
+                    return;
                 }
+                Object.assign(this.ui_ctx, result.ui_ctx);
+                const values: any = {};
+                for (let f in result.ui_ctx) {
+                    if ('value' in result.ui_ctx[f]) {
+                        values[f] = result.ui_ctx[f].value;
+                    }
+                }
+                this.form.patchValue(values);
             },
             (err) => {
                 this.handleError(err);

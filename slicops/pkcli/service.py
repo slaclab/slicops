@@ -17,11 +17,11 @@ class Commands(slicops.pkcli.CommandsBase):
         This web server provides a friendly and secure API for the
 
         """
-        from pykern import http
-        from slicops import config, auth_api, ui_api, quest
+        from pykern.api import server
+        from slicops import config, ui_api, quest
 
-        http.server_start(
+        server.start(
             attr_classes=quest.attr_classes(),
-            api_classes=ui_api.api_classes() + (auth_api.AuthAPI,),
+            api_classes=ui_api.api_classes(),
             http_config=config.cfg().ui_api.copy(),
         )
