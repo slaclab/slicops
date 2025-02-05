@@ -211,7 +211,7 @@ class API(slicops.quest.API):
         if p := self.session.get(_PLOT_KEY):
             r = p.api_result(ux)
             if q := self.session.get(_UPDATE_Q_KEY):
-                q.put_nowait(q)
+                q.put_nowait(r)
             else:
                 # TODO(robnagler) this shouldn't ever happen, but good for ui_api_test
                 rv.pkupdate(r)

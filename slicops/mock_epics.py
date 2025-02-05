@@ -12,7 +12,7 @@ import sys
 import threading
 import time
 
-MONITOR_X_SIZE = [50, 100, 150, 200]
+MONITOR_X_SIZE = [50]  # , 100, 150, 200]
 
 MONITOR_SLEEP = 0.1
 
@@ -62,6 +62,7 @@ class PV:
 
     def get(self):
         # TOOD(robnagler) need to be more sophisticated
+
         return _PV.get(self.pvname, None)
 
     def put(self, value):
@@ -82,6 +83,8 @@ def reset_state():
             "13SIM1:cam1:Gain": 93,
             "13SIM1:cam1:Acquire": 0,
             "13SIM1:cam1:N_OF_BITS": 8,
+            "YAGS:IN20:211:N_OF_COL": 100,
+            "YAGS:IN20:211:N_OF_ROW": 100,
         }
     ).pkupdate(_pv_image(_X_SIZE))
 
