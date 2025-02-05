@@ -30,33 +30,83 @@ const MSG_KIND_UNSUBSCRIBE = 4 + MSG_KIND_BASE;
 
 
 class Call {
-    call_id: number;
-    api_name: string;
-    resultHandler: ResultHandler;
-    destroyed: boolean = false;
-    msg: any;
     apiErrorHandler?: APIErrorHandler;
+    api_args: any;
+    api_name: string;
+    call_id: number;
+    destroyed: boolean = false;
+    isSubscription: boolean;
+    resultHandler: ResultHandler;
 
-    constructor(call_id: number, api_name: string, api_args: any, resultHandler: ResultHandler, apiErrorHandler?: APIErrorHandler) {
-        this.call_id = call_id;
-        this.api_name = api_name;
-        this.resultHandler = resultHandler;
+    constructor(apiService: APIClass, isSubscription: boolean, call_id: number, api_name: string, api_args: any, resultHandler: ResultHandler, apiErrorHandler?: APIErrorHandler) {
         this.apiErrorHandler = apiErrorHandler;
-        this.msg = encode({
-            call_id: call_id,
-            msg_kind: MSG_KIND_CALL,
-            api_name: api_name,
-            api_args: api_args,
-        });
+        this.apiService = apiService;
+        this.api_name = api_name;
+        this.call_id = call_id;
+        this.isSubscription = isSubscription;
+        this.resultHandler = resultHandler;
+        this.api_args;
     }
 
     destroy() {
+        if (this.destroyed) {
+            return;
+        }
         this.destroyed = true;
+        send unsub?
+    }
+
+    handleError(api_error: any) {
+        // unsub implicit
+        log;
+        if (this.apiErrorHandler) {
+            this.apiErrorHandler(api_error);
+        }
+        else {
+            this.log.dbg(['api_error, calling errorHandler', api_error, this]);
+            this.#defaultErrorHandler(api_error);
+        }
+        this.destroy();
     }
 
     handleResult(api_result: any) {
+        t
         this.resultHandler(api_result);
+        if (api_result == null || ! this.isSubscription) {
+            this.destroy();
+        }
+    }
+
+    msg() : any {
+        const a = this.api_args;
+        this.api_args = null;
+        return encode({
+            api_args: a,
+            api_name: this.api_name,
+            call_id: this.call_id,
+            msg_kind: this.isSubscription ? MSG_KIND_SUBSCRIBE : MSG_KIND_CALL,
+        });
+    }
+
+    unsubscribe() {
+        if (this.destroyed) {
+            return;
+        }
+        if (! this.isSubscription) {
+            throw new Error(`call to api_name=${this.api_name} is not a subscription`);
+        }
+        this.apiService.sendUnsubscribe(
+            encode({
+                call_id: this.call_id,
+                msg_kind: MSG_KIND_UNSUBSCRIBE,
+            }),
+        );
         this.destroy();
+
+    }
+
+    #defaultErrorHandler(error: any) {
+        this.log.error(['call error', error, call]);
     }
 }
 
@@ -68,23 +118,24 @@ export class APIService {
     #call_id: number = 0;
     #client_id: string | null = null;
     //TODO(robnagler) registration interface
-    #errorHandler = this.#defaultErrorHandler;
     #pendingCalls: Map<number, Call> = new Map<number,Call>();
     #socket: WebSocket | null = null;
     #socketRetryBackoff: number = 0;
-    #unsentCalls: Array<Call> = new Array<Call>;
+    #unsentMsgs: Array<any> = new Array<any>;
 
     constructor(private log: LogService) {
         this.log.info('create websocket');
         this.#socketOpen();
     }
 
-    // Send a message to the server
+    // Single send and a reply
     call(api_name: string, api_args: any, resultHandler: ResultHandler, apiErrorHandler?: APIErrorHandler) : Call {
-        const rv = new Call(++this.#call_id, api_name, api_args, resultHandler, apiErrorHandler);
-        this.#unsentCalls.push(rv);
-        this.#send();
-        return rv;
+        return this.#sendCall(new Call(this, false, ++this.#call_id, api_name, api_args, resultHandler, apiErrorHandler));
+    }
+
+    // not a public interface
+    callDestroy(call: Call) {
+        self.#pendingCalls.delete(call.call_id);
     }
 
     ngOnDestroy() {
@@ -94,6 +145,17 @@ export class APIService {
             this.#socket = null;
         }
         this.#clearCalls('ngOnDestroy');
+    }
+
+    // not a public interface
+    sendUnsubscribe(msg: any) {
+        this.#unsentMsgs.push(msg);
+        this.#send();
+    }
+
+    // Single send and a reply
+    subscribe(api_name: string, api_args: any, resultHandler: ResultHandler, apiErrorHandler?: APIErrorHandler) : Call {
+        return this.#sendCall(new Call(this, true, ++this.#call_id, api_name, api_args, resultHandler, apiErrorHandler));
     }
 
     #authError(error: string) {
@@ -113,27 +175,12 @@ export class APIService {
     }
 
     #clearCalls(error: string) {
-        const a = [...this.#pendingCalls.values(), ...this.#unsentCalls];
+        const a = [...this.#pendingCalls.values()];
         this.#pendingCalls = new Map<number,Call>();
-        this.#unsentCalls = new Array<Call>();
+        this.#unsentMsgs = new Array<any>();
         for (const c of a) {
-            if (c.destroyed) {
-                continue;
-            }
-            if (c.apiErrorHandler) {
-                c.apiErrorHandler(error);
-            }
             c.destroy();
         }
-    }
-
-
-    #defaultErrorHandler(error: any, call?: Call) {
-        const m = ['error', error];
-        if (call) {
-            m.push(call.call_id, call.api_name);
-        }
-        this.log.error(m);
     }
 
     #findCall(calls: Map<number, Call>, call_id: number) : Call | null {
@@ -141,35 +188,41 @@ export class APIService {
         if (! rv) {
             return null;
         }
-        calls.delete(call_id);
         if (rv.destroyed) {
+            // TODO(robnagler) raise error? This should not happen.
+            calls.delete(call_id);
             return null;
         }
         return rv;
     }
 
     #send() {
-        if (! this.#socket || this.#unsentCalls.length <= 0 || ! this.#authOK) {
+        if (! this.#socket || this.#unsentMsgs.length <= 0 || ! this.#authOK) {
             return;
         }
-        let c = null;
-        while (c = this.#unsentCalls.shift()) {
-            this.#sendOne(c);
+        let m = null;
+        while (m = this.#unsentMsgs.shift()) {
+            this.#sendOne(m);
         }
     };
 
-    #sendOne(call: Call) {
+    #sendCall(call: Call) : Call {
+        this.#pendingCalls.set(call.call_id, call);
+        this.#unsentMsgs.push(call.msg());
+        this.#send();
+        return call;
+    }
+
+    #sendOne(msg: Call) {
         // the latter test is to pacify typescript
-        if (call.destroyed || ! this.#socket) {
+        if (! this.#socket) {
             return;
         }
-        this.log.dbg(['call', call.call_id, call.api_name]);
-        this.#pendingCalls.set(call.call_id, call);
-        this.#socket.send(call.msg);
+        this.#socket.send(call.msg());
     }
 
     #socketOnError(event: any) {
-        // close: event.code : short, event.reason : str, wasClean : bool
+        // close: event.code : short, event.reason : str, wasClean : boolean
         // error: app specific
         this.#socket = null;
         if (this.#socketRetryBackoff <= 0) {
@@ -188,22 +241,26 @@ export class APIService {
         const m = decode(msg) as ReplyMsg;
         const c = this.#findCall(this.#pendingCalls, m.call_id);
         if (! c) {
-            this.log.error(['call not found, ignoring', m.call_id])
+            // happens on unsubscribe
             return;
         }
-        if (m.api_error) {
-            if (c.apiErrorHandler) {
-                c.apiErrorHandler(m.api_error);
+        if (MSG_KIND_REPLY == m.msg_kind) {
+            if (m.api_error) {
+                c.handleError(m.api_error);
             }
             else {
-                this.log.dbg(['api_error calling errorHandler', m.api_error, c.api_name, c.call_id]);
-                this.#errorHandler(m.api_error, c);
+                this.log.dbg(['api_result', m.api_result, c.api_name, c.call_id]);
+                c.handleResult(m.api_result);
             }
-            c.destroy();
         }
-        else {
-            this.log.dbg(['api_result', m.api_result, c.api_name, c.call_id]);
-            c.handleResult(m.api_result);
+        else if (MSG_KIND_UNSUBSCRIBE == m.msg_kind) {
+            if (c.isSubscription) {
+                c.handleResult(null);
+            }
+            else {
+                c.handleError('unsubscribe of non-subscription');
+            }
+
         }
     };
 
@@ -220,8 +277,8 @@ export class APIService {
             this.#authResult.bind(this),
             this.#authError.bind(this),
         )
-        const c = this.#unsentCalls.pop()!;
-        this.#sendOne(c);
+        const m = this.#unsentMsgs.pop()!;
+        this.#sendOne(m);
     };
 
     #socketOpen() {
