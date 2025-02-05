@@ -195,7 +195,6 @@ class API(slicops.quest.API):
                 ux.camera_gain.value = None
             ux.pv.value = d.meta.pv_prefix
             self._button_setup(ux, _acquiring(d))
-            pkdp([d.accessor("num_rows").get(), d.accessor("num_cols").get()])
             d.accessor("image").monitor(_Monitor(self.session))
 
         _destroy()
