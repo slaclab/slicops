@@ -108,8 +108,8 @@ def _gaussian(x_size):
 
 def _pv_image(size):
     return {
-        "13SIM1:cam1:ArraySizeX_RBV": size,
-        "13SIM1:cam1:ArraySizeY_RBV": _y_adjust(size),
+        "13SIM1:cam1:SizeX": size,
+        "13SIM1:cam1:SizeY": _y_adjust(size),
         # numpy is row major ("C" style)
         "13SIM1:image1:ArrayData": _gaussian(size).flatten(),
     }

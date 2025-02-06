@@ -39,8 +39,8 @@ _DEVICE_KIND_TO_ACCESSOR = PKDict(
             "N_OF_ROW": PKDict(name="num_rows"),
             # Devlement: AreaDetector SimDetector default definitions
             # TODO(robnagler) simplify the st.cmd for the SimDetector
-            "cam1:ArraySizeX_RBV": PKDict(name="num_cols"),
-            "cam1:ArraySizeY_RBV": PKDict(name="num_rows"),
+            "cam1:SizeX": PKDict(name="num_cols"),
+            "cam1:SizeY": PKDict(name="num_rows"),
             "cam1:N_OF_BITS": PKDict(name="bit_depth"),
             "cam1:Acquire": PKDict(name="acquire", py_type="bool", pv_writable=True),
             "cam1:Gain": PKDict(name="gain", pv_writable=True),
@@ -58,8 +58,8 @@ screens:
         acquire: 13SIM1:cam1:Acquire
         gain: 13SIM1:cam1:Gain
         image: 13SIM1:image1:ArrayData
-        n_col: 13SIM1:cam1:ArraySizeX_RBV
-        n_row: 13SIM1:cam1:ArraySizeY_RBV
+        n_col: 13SIM1:cam1:SizeX
+        n_row: 13SIM1:cam1:SizeY
         n_bits: 13SIM1:cam1:N_OF_BITS
       control_name: 13SIM1
     metadata:

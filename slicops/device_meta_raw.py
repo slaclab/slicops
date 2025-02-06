@@ -3,7 +3,7 @@
 **DO NOT EDIT; automatically generated**
 
 * generator: slicops.pkcli.device_yaml
-* input: /home/vagrant/.pyenv/versions/3.9.15/envs/py3/lib/python3.9/site-packages/lcls_tools/common/devices/yaml/*.yaml
+* input: /home/vagrant/src/slaclab/lcls-tools/lcls_tools/common/devices/yaml/*.yaml
 
 :copyright: Copyright (c) 2024 The Board of Trustees of the Leland Stanford Junior University, through SLAC National Accelerator Laboratory (subject to receipt of any required approvals from the U.S. Dept. of Energy).  All Rights Reserved.
 :license: http://github.com/slaclab/slicops/LICENSE
@@ -638,16 +638,16 @@ DB = PKDict(
                                 "num_cols": PKDict(
                                     {
                                         "name": "num_cols",
-                                        "pv_base": "cam1:ArraySizeX_RBV",
-                                        "pv_name": "13SIM1:cam1:ArraySizeX_RBV",
+                                        "pv_base": "cam1:SizeX",
+                                        "pv_name": "13SIM1:cam1:SizeX",
                                         "py_type": "int",
                                     }
                                 ),
                                 "num_rows": PKDict(
                                     {
                                         "name": "num_rows",
-                                        "pv_base": "cam1:ArraySizeY_RBV",
-                                        "pv_name": "13SIM1:cam1:ArraySizeY_RBV",
+                                        "pv_base": "cam1:SizeY",
+                                        "pv_name": "13SIM1:cam1:SizeY",
                                         "py_type": "int",
                                     }
                                 ),
