@@ -4,9 +4,11 @@ SlicOps is deployed in a Podman container image.
 
 ## Building the image
 
-From the repository root run:
+You'll need to clone the repository and build the image:
 
 ```
+git clone https://github.com/slaclab/slicops
+cd slicops
 curl https://radia.run | bash -s container-build
 ```
 
@@ -35,11 +37,11 @@ curious about that command you can see what is run
 [here](https://github.com/radiasoft/download/blob/master/installers/container-build/radiasoft-download.sh).
 We'll breeze over the exact details and get to what is important, the
 `build.sh` file. `curl https://radia.run | bash -s container-build` ends up calling
-the `build.sh` file in the `container-conf` [directory of the SlicOps
+`build.sh` in the `container-conf` [directory of the SlicOps
 repo](https://github.com/slaclab/slicops/blob/main/container-conf/build.sh).
-That file has three important functions.
+That file has three important functions: `build_vars`, `build_as_root`, and `build_as_run_user`.
 
-First, `build_vars`. This is the first function that is called in the
+- `build_vars`: This is the first function that is called in the
 script. It sets up variables that will be used in the script and by
 other code in `container-build`. The most important is
 `build_image_base`. This is set to `radiasoft/python3`. Podman images
@@ -50,17 +52,19 @@ Fedora image with some of the basic necessities (e.g. gcc) installed.
 Importantly for us, it has `python3` installed (SlicOps is a Python
 application).
 
-Next up is `build_as_root`. This function does all of its steps as the
+- `build_as_root`: This function does all of its steps as the
 root user. For SlicOps that is installing packages like Node.JS and
 some of the EPICS dependencies.
 
-Finally, we have `build_as_run_user`. Similar to `build_as_root` this
-runs install steps. But, it runs them as the `run_user`. That is the
-user that will be running the application inside of the container. For
-SlicOps this step installs EPICS and installs the SlicOps package.
+- `build_as_run_user`: Similar to `build_as_root` this runs install
+steps. But, it runs them as the `$run_user`. The `$run_user` is the
+owner of the files in the container. For SlicOps this step installs
+EPICS and installs the SlicOps package.
 
-Once all of these steps are run then the image has all of the
-dependencies that are required to run SlicOps.
+Once all of these are steps run, the build container has all the
+dependences that are required run SlicOps. Podman then creates an
+image of this container. Podman uses this "compiled" image very
+efficiently with the run command.
 
 Running `container-build` will take many minutes.
 
@@ -84,15 +88,13 @@ Breaking down the parts of that command:
   space on your machine.
 - `--interactive`: Keep STDIN open. This will allow us to enter
   commands inside of the running container.
-- `--tt`: Allocate a "pseudo-teletypewriter". Basically, make working
-  inside of the container in a shell work like how a using a terminal
-  works on your computer.
-- `--network=host`: Use the host machine's network. This means
-  that any http server started in the container will appear as if it
-  was started on your computer. You'll be able to connect to it over
-  localhost.
+- `--tty`: Allocate a "pseudo-tty". Basically, it makes working
+   inside of the container just like a normal interactive shell session.
+- `--network=host`: Use the host machine's network. This allows a web
+  server (or any other process) in the container to appear on the host
+  (your computer). Your computer's browser can connect to the web
+  server with an ordinary URL (https://localhost:<port>).
 - `slaclab/slicops`: This is the name of the image we want to run.
-- `/bin/bash`: Run the bash shell when the container is started
 
 The container starts a bash shell.
 From there you can start the necessary software.
@@ -108,7 +110,7 @@ interfaces between EPICS and the GUI to read from PV's and send the
 outputs to the browser.
 
 ```
-slicops service ui-api --prod &> ui-api.log &
+slicops service ui-api --prod
 ```
 
 Finally, access the application from your web browser. Visit

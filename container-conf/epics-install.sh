@@ -60,42 +60,13 @@ EOF
     cd - >& /dev/null
 }
 
-_err() {
-    _msg "$@"
-    return 1
-}
-
-_log() {
-    _msg $(date +%H%M%S) "$@"
-}
-
 _main() {
-    if [[ -d $EPICS_BASE ]]; then
-        _err "please remove:
-rm -rf '$EPICS_BASE'
-"
-    fi
-    _source_bashrc
     bivio_path_remove "$EPICS_BASE"/bin
     _build_base_and_asyn
-    # Add epics to the path
-    _source_bashrc
     cd "$EPICS_BASE"
     mkdir -p extensions
     cd extensions
     _build_synapps
-}
-
-_msg() {
-    echo "$*" 1>&2
-}
-
-_source_bashrc() {
-    set +eou pipefail
-    shopt -u nullglob
-    source $HOME/.bashrc
-    set -eou pipefail
-    shopt -s nullglob
 }
 
 _main "$@"
