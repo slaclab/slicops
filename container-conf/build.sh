@@ -36,6 +36,7 @@ EOF
     _slicops_pip_install slaclab/slicops "$SLICOPS_BRANCH"
     cd slaclab/slicops/ui
     npm install
+    npx ng build --output-path ../slicops/package_data/ng-build
 }
 
 _slicops_pip_install() {
