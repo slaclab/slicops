@@ -135,7 +135,7 @@ class API(slicops.quest.API):
                     return None
                 self.subscription.result_put(r)
         finally:
-            if 'session' in self:
+            if "session" in self:
                 self.session.pkdel(_UPDATE_Q_KEY)
 
     def _beam_path_change(self, ux, old_name):
