@@ -32,7 +32,7 @@ class Commands(slicops.pkcli.CommandsBase):
             config.uri_map = [
                 (
                     # very specific so we control the name space
-                    r"^/(\w+.\w+\.(?:css|js)|favicon.ico|)$",
+                    r"^(?:/screen/?|/)(\w+.\w+\.(?:css|js)|favicon.ico|)$",
                     web.StaticFileHandler,
                     PKDict(
                         path=str(pkresource.file_path("ng-build")),
