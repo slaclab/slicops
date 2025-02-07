@@ -1,13 +1,12 @@
 #!/bin/bash
 #
-# Install epics, asyn, medm, and synaps
+# Install epics, asyn, and synaps
 #
 set -eou pipefail
 shopt -s nullglob
 
 _asyn_version=R4-45
 _epics_version=7.0.8.1
-_medm_version=MEDM3_1_21
 _synapps_version=R6-3
 
 _curl_untar() {
@@ -35,18 +34,6 @@ _build_base_and_asyn() {
     cd ..
     # parallel make does not work
     make
-}
-
-_build_medm() {
-    _curl_untar https://github.com/epics-extensions/medm/archive/refs/tags/"$_medm_version".tar.gz "medm-$_medm_version" medm
-    perl -pi -e 's/^(?=USR_INCLUDES|SHARED_LIBRARIES|USR_LIBS)/#/' printUtils/Makefile
-    perl -pi -e 's/^(?=SHARED_LIBRARIES|USR_LIBS_DEFAULT)/#/; /USR_LIBS_DEFAULT/ && ($_ .= "USR_LDFLAGS_Linux = -lXm -lXt -lXmu -lXext -lX11\n")' xc/Makefile
-    perl -pi -e 's/^#(?=SCIPLOT)//; s/^(?=USR_LIBS)/#/; /USR_LIBS_DEFAULT/ && ($_ .= "USR_LDFLAGS_Linux = -lXm -lXt -lXp -lXmu -lXext -lX11\n")' medm/Makefile
-    grep USR_LDFLAGS_Linux medm/Makefile
-    grep USR_LDFLAGS_Linux xc/Makefile
-    # Not sure if parallel make works
-    make -j 4
-    cd - >& /dev/null
 }
 
 _build_synapps() {
@@ -96,7 +83,6 @@ rm -rf '$EPICS_BASE'
     cd "$EPICS_BASE"
     mkdir -p extensions
     cd extensions
-    _build_medm
     _build_synapps
 }
 

@@ -1,13 +1,13 @@
 # SlicOps and Podman
 
-SliCops is deployed in a Podman container image.
+SlicOps is deployed in a Podman container image.
 
 ## Building the image
 
 From the repository root run:
 
 ```
-curl radia.run | container-build
+curl https://radia.run | bash -s container-build
 ```
 
 That will start the process of building the image on your machine.
@@ -18,24 +18,24 @@ information and jump to the next section.
 
 The command can be broken into two parts.
 
-First is `curl radia.run`. [Curl](https://curl.se/docs/manpage.html)
+First is `curl https://radia.run`. [Curl](https://curl.se/docs/manpage.html)
 is a tool for making http requests from a shell. `radia.run` is a
 website that RadiaSoft hosts which returns a shell script. You
-can try running `curl radia.run` yourself in your shell. You'll see
+can try running `curl https://radia.run` yourself in your shell. You'll see
 the shell script printed out. The shell script that is downloaded
 allows one to run one of [RadiaSoft's
 "installers"](https://github.com/radiasoft/download). These are other
 shell scripts that do some action. In our case that action is
 `container-build`.
 
-Now we are at the second part of the command `container-build`. You
+Now we are at the second part of the command `bash -s container-build`. You
 can guess from the name of the command that it builds a container. In
 our case, it is going to build the slicops container. If you're
 curious about that command you can see what is run
 [here](https://github.com/radiasoft/download/blob/master/installers/container-build/radiasoft-download.sh).
 We'll breeze over the exact details and get to what is important, the
-`build.sh` file. `curl radia.run | container-build` ends up calling
-the `build.sh` file in the `container-conf` [directory of this
+`build.sh` file. `curl https://radia.run | bash -s container-build` ends up calling
+the `build.sh` file in the `container-conf` [directory of the SlicOps
 repo](https://github.com/slaclab/slicops/blob/main/container-conf/build.sh).
 That file has three important functions.
 
@@ -57,10 +57,10 @@ some of the EPICS dependencies.
 Finally, we have `build_as_run_user`. Similar to `build_as_root` this
 runs install steps. But, it runs them as the `run_user`. That is the
 user that will be running the application inside of the container. For
-SliCops this step installs EPICS and installs the SlicOps package.
+SlicOps this step installs EPICS and installs the SlicOps package.
 
 Once all of these steps are run then the image has all of the
-dependencies that are required to run SliCops.
+dependencies that are required to run SlicOps.
 
 Running `container-build` will take many minutes.
 
@@ -72,7 +72,7 @@ we are ready to run it.
 To run the image
 
 ```
-podman run --rm --interactive --tty --network=host slaclab/slicops /bin/bash
+podman run --rm --interactive --tty --network=host slaclab/slicops
 ```
 
 Breaking down the parts of that command:
@@ -87,20 +87,20 @@ Breaking down the parts of that command:
 - `--tt`: Allocate a "pseudo-teletypewriter". Basically, make working
   inside of the container in a shell work like how a using a terminal
   works on your computer.
-- `--network=host`: Use the host machines network stack. This means
+- `--network=host`: Use the host machine's network. This means
   that any http server started in the container will appear as if it
   was started on your computer. You'll be able to connect to it over
   localhost.
 - `slaclab/slicops`: This is the name of the image we want to run.
 - `/bin/bash`: Run the bash shell when the container is started
 
-Once the container is started you will be dropped into a bash shell.
+The container starts a bash shell.
 From there you can start the necessary software.
 
 First, start the EPICS sim detector which is a simulated detector that the rest of the application
 will use to read images from.
 ```
-slicops epics sim-detector
+slicops epics sim-detector &
 ```
 
 Next, start the "ui-api". This is the Python web server that
@@ -108,16 +108,8 @@ interfaces between EPICS and the GUI to read from PV's and send the
 outputs to the browser.
 
 ```
-slicops service ui-api
-```
-
-Next, start the GUI. This is an Angular application that we access in
-our web browser
-
-```
-cd ~/src/slaclab/slicops/ui/
-npx ng serve --port 8080
+slicops service ui-api --prod &> ui-api.log &
 ```
 
 Finally, access the application from your web browser. Visit
-[http://localhost:8080](http://localhost:8080).
+[http://localhost:9030](http://localhost:9030).
