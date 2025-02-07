@@ -203,6 +203,9 @@ class _Accessor:
                 pkdlog("missing 'value' in kwargs={} {}", kwargs, self)
                 self._run_callback(error="missing value or None")
             else:
+                if self.meta.name == "image" and not len(v):
+                    pkdlog("empty image received {}", self)
+                    return
                 self._run_callback(value=self._fixup_value(v))
         except Exception as e:
             pkdlog("error={} {} stack={}", e, self, pkdexc())
