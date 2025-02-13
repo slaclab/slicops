@@ -28,10 +28,6 @@ def cfg():
     global _cfg
     if _cfg:
         return _cfg
-    if pykern.pkconfig.channel_in("dev"):
-        global _dev_root_d
-
-        _dev_root_d = pykern.util.dev_run_dir(dev_path)
     _cfg = pykern.pkconfig.init(
         ui_api=PKDict(
             api_uri=("/api-v1", str, "URI for API requests"),
@@ -44,12 +40,3 @@ def cfg():
         ),
     )
     return _cfg
-
-
-def dev_path(path, **ensure_kwargs):
-    """Prefixes root of the directory for development to `path`.
-
-    Returns:
-        py.path: absolute path with parent directories created
-    """
-    return _dev_root_d.join(path)
