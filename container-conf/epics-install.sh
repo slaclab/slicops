@@ -18,22 +18,14 @@ _curl_untar() {
     cd "$tgt"
 }
 
-_build_base_and_asyn() {
-    sudo dnf -y install re2c
+_build_base() {
     declare d=$(dirname "$EPICS_BASE")
     mkdir -p "$d"
     cd "$d"
     b=base-"$_epics_version"
     _curl_untar https://epics-controls.org/download/base/"$b".tar.gz "$b" "$EPICS_BASE"
     cd "$EPICS_BASE"
-    cd modules
-    _curl_untar https://github.com/epics-modules/asyn/archive/refs/tags/"$_asyn_version".tar.gz "asyn-$_asyn_version" asyn
-    perl -pi -e 's/^# (?=TIRPC)//' configure/CONFIG_SITE
-    cd ..
-    echo 'SUBMODULES += asyn' > Makefile.local
-    cd ..
-    # parallel make does not work
-    make
+    make -j4
 }
 
 _build_synapps() {
@@ -42,6 +34,7 @@ _build_synapps() {
     declare f=$PWD/$d.modules
     cat <<'EOF' > "$f"
 AREA_DETECTOR=R3-12-1
+ASYN=R4-44-2
 AUTOSAVE=R5-11
 BUSY=R1-7-4
 CALC=R3-7-5
@@ -53,16 +46,14 @@ EOF
         | perl - --base="$EPICS_BASE" --dir="$d" --config="$f"
     rm "$f"
     cd "$d"/support
-    # otherwise gets a version conflict; This is the version that's installed already
-    # synApps does not install ASYN.
-    perl -pi -e 's/asyn-.*/asyn-4-42/' busy-R1-7-4/configure/RELEASE
     make -j 4
     cd - >& /dev/null
 }
 
 _main() {
+    install_source_bashrc
     bivio_path_remove "$EPICS_BASE"/bin
-    _build_base_and_asyn
+    _build_base
     cd "$EPICS_BASE"
     mkdir -p extensions
     cd extensions
