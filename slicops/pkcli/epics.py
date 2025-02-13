@@ -54,8 +54,8 @@ def sim_detector(ioc_sim_detector_dir=None):
     # TODO(robnagler) use https://github.com/ralphlange/procServ
     # Macs don't have /dev/stdin|out so /dev/tty is more portable
 
-    def _chdir():
-        return pykern.pkio.save_chdir(
+    def _dir():
+        return pykern.pkio.py_path(
             ioc_sim_detector_dir
             or "~/.local/epics/extensions/synApps/support/areaDetector-R3-12-1/ADSimDetector/iocs/simDetectorIOC/iocBoot/iocSimDetector"
         )
@@ -65,16 +65,25 @@ def sim_detector(ioc_sim_detector_dir=None):
         pkdlog("log: {}", f)
         return f.open("w+")
 
+    def _st_cmd(dir_path):
+        """POSIT: st.cmd contains `<envPaths <st_base.cmd` so we
+        don't have to write a temporary file.
+        """
+        return dir_path.join("envPaths").read("rb") + dir_path.join("st_base.cmd").read("rb")
+
     # _log has to come first so directory is correct.
-    with _log() as o, _chdir():
+    d = _dir()
+    with _log() as o:
         p = subprocess.Popen(
-            ["../../bin/linux-x86_64/simDetectorApp", "st.cmd"],
-            # input will hang forever (ioc exits at EOF)
+            [str(d.join("../../bin/linux-x86_64/simDetectorApp"))],
             stdin=subprocess.PIPE,
             stdout=o,
             stderr=subprocess.STDOUT,
         )
     try:
+        p.stdin.write(_st_cmd(d))
+        p.stdin.flush()
+        # do not close: input hangs, because ioc exits at EOF
         pkdlog("started pid={}; sleep 2 seconds", p.pid)
         # Wait a little bit for the process to initialize and print
         time.sleep(2)
