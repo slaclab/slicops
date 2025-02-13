@@ -10,7 +10,9 @@ build_vars() {
 build_as_root() {
     # re2c is for synapps; rpcgen and libtirpc-devel is for asyn
     install_yum_install \
+        libXt-devel \
         libtirpc-devel \
+        motif-devel \
         nodejs \
         perl-ExtUtils-Command \
         perl-FindBin \
