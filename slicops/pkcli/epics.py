@@ -8,6 +8,7 @@ from pykern.pkcollections import PKDict
 from pykern.pkdebug import pkdc, pkdlog, pkdp
 import epics
 import os
+import pykern.pkcli
 import pykern.pkio
 import subprocess
 import time
@@ -54,6 +55,15 @@ def sim_detector(ioc_sim_detector_dir=None):
     # TODO(robnagler) use https://github.com/ralphlange/procServ
     # Macs don't have /dev/stdin|out so /dev/tty is more portable
 
+    def _app_path(dir_path):
+        p = dir_path.join("../../bin/*/simDetectorApp")
+        f = pykern.pkio.sorted_glob(p)
+        if len(f) == 0:
+            pykern.pkcli.command_error("no files matching pattern={}", p)
+        if len(f) > 1:
+            pykern.pkcli.command_error("too many simDetectorApps={}", f)
+        return str(f[0])
+
     def _dir():
         return pykern.pkio.py_path(
             ioc_sim_detector_dir
@@ -71,11 +81,10 @@ def sim_detector(ioc_sim_detector_dir=None):
         """
         return dir_path.join("envPaths").read("rb") + dir_path.join("st_base.cmd").read("rb")
 
-    # _log has to come first so directory is correct.
     d = _dir()
     with _log() as o:
         p = subprocess.Popen(
-            [str(d.join("../../bin/linux-x86_64/simDetectorApp"))],
+            [_app_path(d)],
             stdin=subprocess.PIPE,
             stdout=o,
             stderr=subprocess.STDOUT,

@@ -47,6 +47,7 @@ EOF
     rm "$f"
     cd "$d"/support
     make -j 4
+    sim_det_dir=$(find "$PWD" -type d -path '*iocBoot/iocSimDetector')
     cd - >& /dev/null
 }
 

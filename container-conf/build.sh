@@ -4,6 +4,8 @@ build_vars() {
     : ${build_image_base:=radiasoft/python3}
     build_is_public=1
     build_passenv='PYKERN_BRANCH SLICOPS_BRANCH'
+    _slicops_cmd=$build_run_user_home/.radia-run/start
+    build_docker_cmd='["'"$_slicops_cmd"'"]'
     : ${PYKERN_BRANCH:=} ${SLICOPS_BRANCH:=}
 }
 
@@ -21,6 +23,15 @@ build_as_root() {
 }
 
 build_as_run_user() {
+    _slicops_bashrc
+    # sets epics_synapps_dir
+    source epics-install.sh
+    _slicops_pkg_install
+    _slicops_cmd
+}
+
+
+_slicops_bashrc() {
     cat > ~/.post_bivio_bashrc <<'EOF'
 export EPICS_BASE=$HOME/.local/epics
 # $EPICS_BASE/startup/EpicsHostArch outputs linux-x86_64; no need to be dynamic here
@@ -28,16 +39,16 @@ export EPICS_HOST_ARCH=linux-x86_64
 bivio_path_insert "$EPICS_BASE/bin/$EPICS_HOST_ARCH"
 EOF
     install_source_bashrc
-    source epics-install.sh
-    cd ~/src/
-    _slicops_pip_install radiasoft/pykern "$PYKERN_BRANCH"
-    _slicops_pip_install slaclab/slicops "$SLICOPS_BRANCH"
-    cd slaclab/slicops/ui
-    npm install
-    npx ng build --output-path ../slicops/package_data/ng-build
+}
+
+_slicops_cmd() {
+    mkdir -p "$(dirname "$_slicops_cmd")"
+    build_replace_vars radia-run.sh "$_slicops_cmd"
+    chmod +x "$_slicops_cmd"
 }
 
 _slicops_pip_install() {
+
     declare org_and_repo=$1
     declare branch=$2
     mkdir -p "$org_and_repo"
@@ -45,6 +56,17 @@ _slicops_pip_install() {
     cd "$org_and_repo"
     pip install -e .
     cd - &> /dev/null
+}
+
+_slicops_pkg_install() {
+    declare p=$(PWD)
+    cd ~/src
+    _slicops_pip_install radiasoft/pykern "$PYKERN_BRANCH"
+    _slicops_pip_install slaclab/slicops "$SLICOPS_BRANCH"
+    cd slaclab/slicops/ui
+    npm install
+    npx ng build --output-path ../slicops/package_data/ng-build
+    cd "$p"
 }
 
 build_vars
