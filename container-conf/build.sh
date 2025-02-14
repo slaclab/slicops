@@ -4,7 +4,7 @@ build_vars() {
     : ${build_image_base:=radiasoft/python3}
     build_is_public=1
     build_passenv='PYKERN_BRANCH SLICOPS_BRANCH'
-    _slicops_cmd=$build_run_user_home/.radia-run/start
+    _slicops_cmd=$build_run_user_home/bin/slicops-start
     build_docker_cmd='["'"$_slicops_cmd"'"]'
     : ${PYKERN_BRANCH:=} ${SLICOPS_BRANCH:=}
 }
@@ -42,8 +42,9 @@ EOF
 }
 
 _slicops_cmd() {
+    # Directory probably already exists
     mkdir -p "$(dirname "$_slicops_cmd")"
-    build_replace_vars radia-run.sh "$_slicops_cmd"
+    build_replace_vars slicops-demo.sh "$_slicops_cmd"
     chmod +x "$_slicops_cmd"
 }
 

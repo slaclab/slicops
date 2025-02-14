@@ -1,34 +1,37 @@
 #!/bin/bash
 #
+# This file is sourced from build.sh so setup is there.
+#
 # Install epics, asyn, and synaps
 #
-set -eou pipefail
-shopt -s nullglob
-
 _asyn_version=R4-45
 _epics_version=7.0.8.1
 _synapps_version=R6-3
 
-_curl_untar() {
-    declare url=$1
-    declare base=$2
-    declare tgt=$3
-    curl -L -s -S "$url" | tar xzf -
-    mv "$base" "$tgt"
-    cd "$tgt"
-}
-
-_build_base() {
+_epics_base() {
     declare d=$(dirname "$EPICS_BASE")
     mkdir -p "$d"
     cd "$d"
     b=base-"$_epics_version"
-    _curl_untar https://epics-controls.org/download/base/"$b".tar.gz "$b" "$EPICS_BASE"
+    _epics_untar https://epics-controls.org/download/base/"$b".tar.gz "$b" "$EPICS_BASE"
     cd "$EPICS_BASE"
     make -j4
 }
 
-_build_synapps() {
+_epics_main() {
+    declare p=$PWD
+    install_source_bashrc
+    bivio_path_remove "$EPICS_BASE"/bin
+    _epics_base
+    cd "$EPICS_BASE"
+    mkdir -p extensions
+    cd extensions
+    _epics_synapps
+    # Need to return, because this file is sourced
+    cd "$p"
+}
+
+_epics_synapps() {
     declare d=synApps
     # Must be absolute or fails silently
     declare f=$PWD/$d.modules
@@ -51,14 +54,14 @@ EOF
     cd - >& /dev/null
 }
 
-_main() {
-    install_source_bashrc
-    bivio_path_remove "$EPICS_BASE"/bin
-    _build_base
-    cd "$EPICS_BASE"
-    mkdir -p extensions
-    cd extensions
-    _build_synapps
+_epics_untar() {
+    declare url=$1
+    declare base=$2
+    declare tgt=$3
+    curl -L -s -S "$url" | tar xzf -
+    mv "$base" "$tgt"
+    cd "$tgt"
 }
 
-_main "$@"
+# No "$@" since this file is sourced from build.sh (this would pass args from program)
+_epics_main
