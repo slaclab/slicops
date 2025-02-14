@@ -23,10 +23,10 @@ build_as_root() {
 }
 
 build_as_run_user() {
+    set -x
     _slicops_bashrc
     # sets epics_synapps_dir
     source epics-install.sh
-    set -x
     _slicops_pkg_install
     _slicops_cmd
 }
@@ -60,7 +60,7 @@ _slicops_pip_install() {
 }
 
 _slicops_pkg_install() {
-    declare p=$(PWD)
+    declare p=$PWD
     cd ~/src
     _slicops_pip_install radiasoft/pykern "$PYKERN_BRANCH"
     _slicops_pip_install slaclab/slicops "$SLICOPS_BRANCH"
