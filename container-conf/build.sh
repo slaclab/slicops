@@ -26,6 +26,7 @@ build_as_run_user() {
     _slicops_bashrc
     # sets epics_synapps_dir
     source epics-install.sh
+    set -x
     _slicops_pkg_install
     _slicops_cmd
 }
