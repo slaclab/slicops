@@ -44,12 +44,11 @@ EOF
 _slicops_cmd() {
     # Directory probably already exists
     mkdir -p "$(dirname "$_slicops_cmd")"
-    build_replace_vars slicops-demo.sh "$_slicops_cmd"
+    build_replace_vars "$build_guest_conf"/slicops-demo.sh "$_slicops_cmd"
     chmod +x "$_slicops_cmd"
 }
 
 _slicops_pip_install() {
-
     declare org_and_repo=$1
     declare branch=$2
     mkdir -p "$org_and_repo"
