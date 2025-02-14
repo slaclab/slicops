@@ -50,7 +50,8 @@ EOF
     rm "$f"
     cd "$d"/support
     make -j 4
-    sim_det_dir=$(find "$PWD" -type d -path '*iocBoot/iocSimDetector')
+    # POSIT used by slicops-demo.sh
+    export sim_det_dir=$(find "$PWD" -type d -path '*iocBoot/iocSimDetector')
     cd - >& /dev/null
 }
 

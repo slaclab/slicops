@@ -3,6 +3,15 @@
 # Start epics sim-detector and then the ui_api server
 #
 set -euo pipefail
+if [[ ! -w . ]]; then
+    # Must be writable but likely emphemeral (needed for sim_detector.log)
+    # In docker, cwd defaults to "/" so cd home
+    cd
+    if [[ ! -w . ]]; then
+        cd /tmp
+    fi
+    echo "Working directory: $PWD"
+fi
 p=${RADIA_RUN_PORT:-8080}
 slicops epics sim-detector --ioc-sim-detector-dir='{sim_det_dir}' &
 # Wait for detector to start so ui_api startup message comes out after
