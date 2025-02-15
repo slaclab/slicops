@@ -79,7 +79,9 @@ def sim_detector(ioc_sim_detector_dir=None):
         """POSIT: st.cmd contains `<envPaths <st_base.cmd` so we
         don't have to write a temporary file.
         """
-        return dir_path.join("envPaths").read("rb") + dir_path.join("st_base.cmd").read("rb")
+        return dir_path.join("envPaths").read("rb") + dir_path.join("st_base.cmd").read(
+            "rb"
+        )
 
     d = _dir()
     with _log() as o:
