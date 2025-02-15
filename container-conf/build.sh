@@ -46,7 +46,8 @@ _slicops_cmd() {
     # POSIT: epics-install.sh sets sim_det_dir
     build_replace_vars "$build_guest_conf"/slicops-demo.sh "$_slicops_cmd"
     # Sanity check that the file contains somethng
-    if ! grep "$_slicops_cmd" &> /dev/null; then
+    if ! grep sim-detector "$_slicops_cmd" &> /dev/null; then
+        cat "$_slicops_cmd"
         install_err "$_slicops_cmd was not generated properly"
     fi
     chmod a+rx "$_slicops_cmd"
