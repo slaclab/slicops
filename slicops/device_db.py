@@ -50,12 +50,9 @@ def devices_for_beam_path(beam_path, device_kind):
         raise NameError(f"no such beam_path={beam_path}")
     return tuple(
         sorted(
-            [
-                n
-                for n in b
-                if slicops.device_meta_raw.DB.DEVICE_TO_META[n].device_kind
-                == device_kind
-            ]
+            n
+            for n in b
+            if slicops.device_meta_raw.DB.DEVICE_TO_META[n].device_kind == device_kind
         )
     )
 
