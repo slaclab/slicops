@@ -34,7 +34,7 @@ def beam_paths():
     Returns:
         tuple: sorted beams path names
     """
-    return tuple(sorted(slicops.device_meta_raw.DB.BEAM_PATH_TO_DEVICE.keys()))
+    return tuple(slicops.device_meta_raw.DB.BEAM_PATH_TO_DEVICE.keys())
 
 
 def devices_for_beam_path(beam_path, device_kind):
@@ -48,14 +48,10 @@ def devices_for_beam_path(beam_path, device_kind):
     """
     if device_kind not in slicops.device_meta_raw.DB.DEVICE_KIND_TO_DEVICE:
         raise NameError(f"no such device_kind={device_kind}")
-    if (b := slicops.device_meta_raw.DB.BEAM_PATH_TO_DEVICE.get(beam_path)) is None:
-        raise NameError(f"no such beam_path={beam_path}")
     return tuple(
-        sorted(
-            n
-            for n in b
-            if slicops.device_meta_raw.DB.DEVICE_TO_META[n].device_kind == device_kind
-        )
+        n
+        for n in slicops.device_meta_raw.DB.BEAM_PATH_TO_DEVICE[beam_path]
+        if slicops.device_meta_raw.DB.DEVICE_TO_META[n].device_kind == device_kind
     )
 
 
@@ -67,6 +63,4 @@ def meta_for_device(device_name):
     Returns:
         DeviceMeta: information about device
     """
-    if (rv := slicops.device_meta_raw.DB.DEVICE_TO_META.get(device_name)) is None:
-        raise NameError(f"no such device={device_name}")
-    return DeviceMeta(rv)
+    return DeviceMeta(slicops.device_meta_raw.DB.DEVICE_TO_META[device_name])

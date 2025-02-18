@@ -18,9 +18,9 @@ def test_basic():
     pkunit.pkeq("BOD10", a[0])
     pkunit.pkeq("YAGH2", a[-1])
     pkunit.pkeq(11, len(a))
-    with pkunit.pkexcept("no such beam_path=XYZZY"):
+    with pkunit.pkexcept("XYZZY"):
         device_db.devices_for_beam_path("XYZZY", "screen")
-    with pkunit.pkexcept("no such device_kind=xyzzy"):
+    with pkunit.pkexcept("xyzzy"):
         device_db.devices_for_beam_path("SC_SXR", "xyzzy")
 
     a = device_db.meta_for_device("VCCB")
@@ -29,5 +29,5 @@ def test_basic():
     pkunit.pkeq(("SC_DIAG0", "SC_HXR", "SC_SXR"), a.beam_path)
 
     # YAG01B does not have any PVs so not in db
-    with pkunit.pkexcept("no such device=YAG01B"):
+    with pkunit.pkexcept("YAG01B"):
         device_db.meta_for_device("YAG01B")
