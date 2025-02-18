@@ -67,6 +67,6 @@ def meta_for_device(device_name):
     Returns:
         DeviceMeta: information about device
     """
-    if not (rv := slicops.device_meta_raw.DB.DEVICE_TO_META.get(device_name)):
+    if (rv := slicops.device_meta_raw.DB.DEVICE_TO_META.get(device_name)) is None:
         raise NameError(f"no such device={device_name}")
     return DeviceMeta(rv)
