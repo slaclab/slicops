@@ -46,7 +46,9 @@ def devices_for_beam_path(beam_path, device_kind):
     Returns:
         tuple: sorted device names
     """
-    if not (b := slicops.device_meta_raw.DB.BEAM_PATH_TO_DEVICE.get(beam_path)):
+    if device_kind not in slicops.device_meta_raw.DB.DEVICE_KIND_TO_DEVICE:
+        raise NameError(f"no such device_kind={device_kind}")
+    if (b := slicops.device_meta_raw.DB.BEAM_PATH_TO_DEVICE.get(beam_path)) is None:
         raise NameError(f"no such beam_path={beam_path}")
     return tuple(
         sorted(
