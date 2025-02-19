@@ -23,4 +23,7 @@ sleep 2
 Point your browser to http://localhost:$p
 To stop the server, type control-C here.
 EOF
-SLICOPS_CONFIG_UI_API_TCP_IP=0.0.0.0 slicops service ui_api --prod --tcp-port="$p"
+if [[ ! ${APPTAINER_NAME:-} ]]; then
+    export SLICOPS_CONFIG_UI_API_TCP_IP=0.0.0.0
+fi
+slicops service ui_api --prod --tcp-port="$p"
