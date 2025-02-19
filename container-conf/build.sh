@@ -2,6 +2,8 @@
 
 build_vars() {
     : ${build_image_base:=radiasoft/python3}
+    # TODO(robnagler) push to this namespace, since we have write privs
+    build_image_name=radiasoft/slicops
     build_is_public=1
     build_passenv='PYKERN_BRANCH SLICOPS_BRANCH'
     _slicops_cmd=$build_run_user_home/bin/slicops-demo
