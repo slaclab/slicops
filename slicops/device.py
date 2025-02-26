@@ -169,9 +169,15 @@ class _Accessor:
         """
         if not self.meta.pv_writable:
             raise AccessorPutError(f"read-only {self}")
+        if self.meta.py_type == "bool":
+            v = bool(value)
+        elif self.meta.py_type == "int":
+            v = int(value)
+        else:
+            raise AccessorPutError(f"unhandled py_type={self.meta.py_type} {self}")
         # ECA_NORMAL == 0 and None is normal, too, apparently
-        if (e := self._pv.put(value)) != 1:
-            raise DeviceError(f"put error={e} value={value} {self}")
+        if (e := self._pv.put(v)) != 1:
+            raise DeviceError(f"put error={e} value={v} {self}")
         if not self._pv.connected:
             raise DeviceError(f"disconnected {self}")
 

@@ -318,15 +318,14 @@ class _Plot:
         """
 
         def _do(tool, method, initial_params):
-            # TODO(robnagler) why is this done?
             tool.initial_params = PKDict({method: initial_params})
             try:
                 p = tool.get_fit()[method]["params"]
-                # TODO(pjm): FittingTool returns initial params on failure
-                if p == initial_params["params"]:
-                    return _error()
             except RuntimeError:
                 # TODO(robnagler) does this happen?
+                return _error()
+            # TODO(pjm): FittingTool returns initial params on failure
+            if p == initial_params["params"]:
                 return _error()
             ux.curve_fit_method.visible = True
             ux.color_map.visible = True
