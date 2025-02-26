@@ -171,6 +171,8 @@ class _Accessor:
             raise AccessorPutError(f"read-only {self}")
         if self.meta.py_type == "bool":
             v = bool(value)
+        elif self.meta.py_type == "int":
+            v = int(value)
         else:
             raise AccessorPutError(f"unhandled py_type={self.meta.py_type} {self}")
         # ECA_NORMAL == 0 and None is normal, too, apparently
