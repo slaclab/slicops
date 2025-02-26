@@ -48,11 +48,7 @@ export class ScreenComponent {
         this.apiService.subscribe(
             'screen_update',
             {},
-            (result) => {
-                if (result.plot) {
-                    this.image = result.plot;
-                }
-            },
+            (result) => this.updateUIState(result),
             this.handleError.bind(this),
         );
     }
@@ -75,40 +71,33 @@ export class ScreenComponent {
                 field_value: value,
             },
             (result) => {
-                if (result.plot) {
-                    // Plots probably never come back this way because screen_update is
-                    // subscribed
-                    this.image = result.plot;
-                }
                 if (result.ui_ctx && field in result.ui_ctx && 'enabled' in result.ui_ctx[field]) {
                 }
                 else {
                     this.ui_ctx[field].enabled = true;
                 }
-                if (! result.ui_ctx) {
-                    return;
-                }
-                //TODO(pjm): need to only update changed fields
-                // for now, do no updates on "plot" field changes to avoid all fields refreshing
-                // otherwise changing gain or curve_fit_method acts badly when plots are being streaming
-                if (field == 'plot') {
-                    //TODO(robnagler) not sure this happens
-                    this.log.dbg(["field is plot"]);
-                    return;
-                }
-                Object.assign(this.ui_ctx, result.ui_ctx);
-                const values: any = {};
-                for (let f in result.ui_ctx) {
-                    if ('value' in result.ui_ctx[f]) {
-                        values[f] = result.ui_ctx[f].value;
-                    }
-                }
-                this.form.patchValue(values);
+                this.updateUIState(result);
             },
             (err) => {
                 this.handleError(err);
                 this.ui_ctx[field].enabled = true;
             }
         );
+    }
+
+    updateUIState(result: any) {
+        if (result.plot) {
+            this.image = result.plot;
+        }
+        if (result.ui_ctx) {
+            Object.assign(this.ui_ctx, result.ui_ctx);
+            const values: any = {};
+            for (let f in result.ui_ctx) {
+                if ('value' in result.ui_ctx[f]) {
+                    values[f] = result.ui_ctx[f].value;
+                }
+            }
+            this.form.patchValue(values);
+        }
     }
 }

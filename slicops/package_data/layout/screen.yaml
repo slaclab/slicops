@@ -9,7 +9,7 @@ columns:
     - start_button
     - stop_button
     - single_button
-- layout: sm-9 xxl-7
+- layout: sm-9 col-xxl-7
   rows:
   - name: plot
   - columns:
