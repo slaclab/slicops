@@ -304,13 +304,18 @@ class _Plot:
     def api_result(self, ux):
         if self.image is None:
             return PKDict()
-        return PKDict(
+        rv = PKDict(
             plot=PKDict(
                 raw_pixels=self.image,
                 x=self._fit(ux, self.image.sum(axis=0)),
                 y=self._fit(ux, self.image.sum(axis=1)[::-1]),
-            )
+            ),
         )
+        if not (ux.curve_fit_method.visible and ux.color_map.visible):
+            ux.curve_fit_method.visible = True
+            ux.color_map.visible = True
+            rv.ui_ctx = ux
+        return rv
 
     def _fit(self, ux, profile):
         """Use the lcls_tools FittingTool to match the selected method.
@@ -327,8 +332,6 @@ class _Plot:
             # TODO(pjm): FittingTool returns initial params on failure
             if p == initial_params["params"]:
                 return _error()
-            ux.curve_fit_method.visible = True
-            ux.color_map.visible = True
             return PKDict(
                 lineout=profile,
                 fit=PKDict(
