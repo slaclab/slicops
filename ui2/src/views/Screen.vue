@@ -43,8 +43,11 @@
          },
          (result) => {
              updateUIState(result);
-             //TODO(pjm): only enable if enabled not set in result
-             ui_ctx.value[field].enabled = true;
+             if (result.ui_ctx && result.ui_ctx[field] && 'enabled' in result.ui_ctx[field]) {
+             }
+             else {
+                 ui_ctx.value[field].enabled = true;
+             }
          },
          (err) => {
              handleError(err);
@@ -54,7 +57,6 @@
  };
 
  const updateUIState = (result) => {
-     console.log('update:', result);
      if (result.plot) {
          ui_ctx.value.image = result.plot;
      }

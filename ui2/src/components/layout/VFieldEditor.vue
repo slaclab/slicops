@@ -30,8 +30,11 @@
             />
         </div>
         <div v-else-if="ui_ctx[name].widget == 'heatmap_with_lineouts'">
-            FIELD EDITOR:
-            HEATMAP
+            <VHeatmapWithLineouts
+                v-if="ui_ctx.image && ui_ctx.image.raw_pixels.length"
+                :colorMap="ui_ctx.color_map.value"
+                :data="ui_ctx.image"
+            />
         </div>
     </div>
 </template>
@@ -41,6 +44,7 @@
  import VSelect from '@/components/widget/VSelect.vue';
  import VStatic from '@/components/widget/VStatic.vue';
  import VText from '@/components/widget/VText.vue';
+ import VHeatmapWithLineouts from '@/components/plot/VHeatmapWithLineouts.vue';
  const props = defineProps({
      name: String,
      ui_ctx: Object,
