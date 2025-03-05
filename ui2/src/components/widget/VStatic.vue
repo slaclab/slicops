@@ -1,11 +1,13 @@
 <!--
- - A component which shows a label and read-only value.
+   A component which shows a label and read-only value.
  -->
 <template>
     <label class="col-form-label col-form-label-sm">{{ ui_ctx[field].label }}</label>
     <div>
-        <input v-model="ui_ctx[field].value"
-               class="form-control form-control-sm form-control-plaintext" />
+        <input
+            v-model="ui_ctx[field].value"
+            class="form-control form-control-sm form-control-plaintext"
+        />
     </div>
 </template>
 

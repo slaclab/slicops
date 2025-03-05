@@ -1,8 +1,3 @@
-// Logging
-//
-// Copyright (c) 2024 The Board of Trustees of the Leland Stanford Junior University, through SLAC National Accelerator Laboratory (subject to receipt of any required approvals from the U.S. Dept. of Energy).  All Rights Reserved.
-// http://github.com/slaclab/slicops/LICENSE
-
 class LogService {
     dbg(msg) {
         this.#console(new Error(), msg);
@@ -44,4 +39,4 @@ class LogService {
     }
 }
 
-export default new LogService();
+export const logService = new LogService();

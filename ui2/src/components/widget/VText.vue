@@ -1,14 +1,15 @@
 <!--
- - An HTML INPUT field. Submits a value when the enter key is pressed within the input field.
+   An HTML INPUT field. Submits a value when the enter key is pressed within the input field.
  -->
 <template>
     <label class="col-form-label col-form-label-sm">{{ ui_ctx[field].label }}</label>
     <div>
         <input
-            v-model="v" :readonly="! ui_ctx[field].enabled"
+            v-model="v"
             class="form-control form-control-sm"
-            @keydown="onKeydown($event)"
+            :readonly="! ui_ctx[field].enabled"
             @blur="onBlur()"
+            @keydown="onKeydown($event)"
         />
     </div>
 </template>
@@ -22,7 +23,7 @@
  });
 
  const v = ref(props.ui_ctx[props.field].value);
- 
+
  const onBlur = () => {
      // Restore the ui_ctx value when focus is lost
      v.value = props.ui_ctx[props.field].value;

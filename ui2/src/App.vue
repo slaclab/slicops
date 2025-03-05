@@ -7,9 +7,9 @@
 <script>
  // don't expose these properties to Vue
  (() => {
-     function handleColorScheme(event) {
+     const handleColorScheme = (event) => {
          document.documentElement.setAttribute('data-bs-theme', event.matches ? 'dark' : 'light');
-     }
+     };
      const p = window.matchMedia('(prefers-color-scheme: dark)');
      p.addEventListener('change', handleColorScheme);
      handleColorScheme(p);

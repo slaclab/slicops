@@ -1,10 +1,12 @@
 <!--
- - An HTML BUTTON.
+   An HTML BUTTON.
  -->
 <template>
-    <button type="button" :disabled="! ui_ctx[field].enabled"
-            :class="'btn btn-' + ui_ctx[field].html_class" 
-            @click="onClick()"
+    <button
+        type="button"
+        :class="'btn btn-' + ui_ctx[field].html_class"
+        :disabled="! ui_ctx[field].enabled"
+        @click="onClick()"
     >{{ ui_ctx[field].label }}</button>
 </template>
 
