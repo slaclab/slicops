@@ -1,3 +1,32 @@
-a {
-  text-decoration: none;
+body {
+  margin: 1em;
+}
+
+g.tick text {
+  font-size: 13px;
+}
+
+.slicops-x-axis-grid, .slicops-y-axis-grid {
+  stroke-opacity: 0.1;
+}
+
+.slicops-x-axis-grid text, .slicops-y-axis-grid text {
+  display: none;
+}
+
+.slicops-x-axis line, .slicops-y-axis line, .slicops-x-axis-grid line, .slicops-y-axis-grid line {
+  shape-rendering: crispEdges;
+}
+
+.slicops-x-axis-label, .slicops-y-axis-label {
+  font-size: 14px;
+}
+
+.slicops-mouse-rect-xy, .slicops-mouse-rect-x, .slicops-mouse-rect-y {
+  pointer-events: all;
+  fill: none;
+}
+
+input.ng-invalid.ng-dirty:focus {
+  box-shadow: 0 0 0 0.25rem var(--bs-warning);
 }
