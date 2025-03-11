@@ -25,6 +25,7 @@
 
 <script setup>
  import VLayout from '@/components/VLayout.vue';
+
  const props = defineProps({
      columns: Object,
      ui_ctx: Object,

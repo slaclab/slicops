@@ -33,6 +33,7 @@
  import VCell from '@/components/layout/VCell.vue';
  import VColumns from '@/components/layout/VColumns.vue';
  import VFieldEditor from '@/components/layout/VFieldEditor.vue';
+
  const props = defineProps({
      layout: Object,
      ui_ctx: Object,

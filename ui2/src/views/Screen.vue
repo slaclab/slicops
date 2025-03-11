@@ -58,7 +58,7 @@
 
  const updateUIState = (result) => {
      if (result.plot) {
-         ui_ctx.value.image = result.plot;
+         ui_ctx.value.image = () => result.plot;
      }
      if (result.ui_ctx) {
          Object.assign(ui_ctx.value, result.ui_ctx);

@@ -192,7 +192,6 @@ class APIService {
     }
 
     #sendOne(msg) {
-        // the latter test is to pacify typescript
         if (! this.#socket) {
             return;
         }

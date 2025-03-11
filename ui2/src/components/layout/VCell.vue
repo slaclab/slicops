@@ -14,6 +14,7 @@
 
 <script setup>
  import VFieldEditor from '@/components/layout/VFieldEditor.vue';
+
  const props = defineProps({
      fields: Object,
      ui_ctx: Object,

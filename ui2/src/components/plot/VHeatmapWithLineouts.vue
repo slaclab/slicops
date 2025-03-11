@@ -9,7 +9,7 @@
                 v-if="canvasWidth > 1"
                 :width="canvasWidth"
                 :height="canvasHeight"
-                :intensity="data.raw_pixels"
+                :plot="props.plot"
                 :zoomOffsets="zoomOffsets"
                 :colorMap="props.colorMap"
             />
@@ -86,11 +86,11 @@
 
 <script setup>
  import * as d3 from 'd3';
- import { onMounted, ref, watch } from 'vue';
+ import { onMounted, onUnmounted, ref, watch } from 'vue';
  import VHeatmapCanvas from '@/components/plot/VHeatmapCanvas.vue';
 
  const props = defineProps({
-     data: Object,
+     plot: Function,
      colorMap: String,
  });
 
@@ -213,49 +213,16 @@
      refresh();
  };
 
- /*
- ngOnDestroy() {
-     //TODO(pjm): not sure this is required, check for memory leaks
-     //this.xZoom.on('zoom', null);
-     //this.resize.next();
-     //this.resize.complete();
- }
- */
-
- onMounted(() => {
-     //this.resize.asObservable().pipe(debounceTime(350)).subscribe(() => {
-     //    this.refresh();
-     //});
-     window.addEventListener('resize', () => {
-         refresh();
-     });
-
-     xZoom = d3.zoom().on('zoom', (event) => { handleZoomX(event.transform) });
-     select('.slicops-mouse-rect-x').call(xZoom);
-     yZoom = d3.zoom().on('zoom', (event) => { handleZoomY(event.transform) });
-     select('.slicops-mouse-rect-y').call(yZoom);
-     xyZoom = d3.zoom().on('zoom', (event) => { handleZoom(event) });
-     select('.slicops-mouse-rect-xy').call(xyZoom);
-
-     xScale.domain(axisDomain('x'));
-     yScale.domain(axisDomain('y'));
-
-     refresh();
- });
-
- watch(props, () => {
-     refresh();
- });
-
  const refresh = () => {
      const w = parseInt(select().style('width'));
      if (isNaN(w)) {
          return;
      }
+     const d = props.plot();
      const prevSize = [canvasWidth.value, canvasHeight.value];
      lineoutSize.value = Math.floor((w - (margin.left + margin.right)) / 4);
      canvasWidth.value = w - (margin.left + lineoutSize.value + margin.right);
-     canvasHeight.value = Math.floor(canvasWidth.value * (props.data.raw_pixels.length / props.data.raw_pixels[0].length));
+     canvasHeight.value = Math.floor(canvasWidth.value * (d.raw_pixels.length / d.raw_pixels[0].length));
      xScale.range([0, canvasWidth.value]);
      xZoomScale.range([0, canvasWidth.value]);
 
@@ -278,15 +245,15 @@
      select('.slicops-y-axis').call(d3.axisRight(yZoomScale).ticks(5));
      select('.slicops-y-axis-grid').call(d3.axisRight(yZoomScale).ticks(5).tickSize(-(canvasWidth.value + lineoutSize.value)));
 
-     const xLineout = props.data.x.lineout;
-     const yLineout = props.data.y.lineout;
+     const xLineout = d.x.lineout;
+     const yLineout = d.y.lineout;
 
      yxScale
          .domain([
              d3.min(yLineout),
              Math.max(
                  d3.max(yLineout),
-                 d3.max(props.data.y.fit.fit_line),
+                 d3.max(d.y.fit.fit_line),
              ),
          ])
          .range([lineoutSize.value - lineoutPad, 0]);
@@ -297,7 +264,7 @@
              d3.min(xLineout),
              Math.max(
                  d3.max(xLineout),
-                 d3.max(props.data.x.fit.fit_line),
+                 d3.max(d.x.fit.fit_line),
              ),
          ])
          .range([lineoutSize.value - lineoutPad, 0]);
@@ -306,16 +273,16 @@
 
      const xd = axisDomain('x');
      // offset by half pixel width
-     const xoff = (xd[1] - xd[0]) / props.data.raw_pixels[0].length / 2;
+     const xoff = (xd[1] - xd[0]) / d.raw_pixels[0].length / 2;
      const xdata = xLineout.map((v, idx) => {
          return [
-             xd[0] + (idx / props.data.raw_pixels[0].length) * (xd[1] - xd[0]),
+             xd[0] + (idx / d.raw_pixels[0].length) * (xd[1] - xd[0]),
              v,
          ];
      });
-     const xdata2 = (props.data.x.fit.fit_line).map((v, idx) => {
+     const xdata2 = (d.x.fit.fit_line).map((v, idx) => {
          return [
-             xd[0] + (idx / props.data.raw_pixels[0].length) * (xd[1] - xd[0]),
+             xd[0] + (idx / d.raw_pixels[0].length) * (xd[1] - xd[0]),
              v,
          ];
      });
@@ -327,16 +294,16 @@
 
      //TODO(pjm): consolidate with x above
      const yd = axisDomain('y');
-     const yoff = (yd[1] - yd[0]) / props.data.raw_pixels.length / 2;
+     const yoff = (yd[1] - yd[0]) / d.raw_pixels.length / 2;
      const ydata = yLineout.map((v, idx) => {
          return [
-             yd[0] + (idx / props.data.raw_pixels.length) * (yd[1] - yd[0]),
+             yd[0] + (idx / d.raw_pixels.length) * (yd[1] - yd[0]),
              v,
          ];
      });
-     const ydata2 = (props.data.y.fit.fit_line).map((v, idx) => {
+     const ydata2 = (d.y.fit.fit_line).map((v, idx) => {
          return [
-             yd[0] + (idx / props.data.raw_pixels.length) * (yd[1] - yd[0]),
+             yd[0] + (idx / d.raw_pixels.length) * (yd[1] - yd[0]),
              v,
          ];
      });
@@ -365,6 +332,33 @@
      const s = d3.select('figure');
      return selector ? s.select(selector) : s;
  };
+
+ onMounted(() => {
+     //TODO(pjm): debounce refresh call if needed
+     window.addEventListener('resize', refresh);
+     xZoom = d3.zoom().on('zoom', (event) => { handleZoomX(event.transform) });
+     select('.slicops-mouse-rect-x').call(xZoom);
+     yZoom = d3.zoom().on('zoom', (event) => { handleZoomY(event.transform) });
+     select('.slicops-mouse-rect-y').call(yZoom);
+     xyZoom = d3.zoom().on('zoom', (event) => { handleZoom(event) });
+     select('.slicops-mouse-rect-xy').call(xyZoom);
+
+     xScale.domain(axisDomain('x'));
+     yScale.domain(axisDomain('y'));
+
+     refresh();
+ });
+
+ onUnmounted(() => {
+     window.removeEventListener('resize', refresh);
+     for (const z of [xZoom, yZoom, xyZoom]) {
+         z.on('zoom', null);
+     }
+ });
+
+ watch(() => props.plot, refresh, {
+     flush: true,
+ });
 
 </script>
 

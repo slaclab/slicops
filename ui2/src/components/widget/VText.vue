@@ -2,12 +2,16 @@
    An HTML INPUT field. Submits a value when the enter key is pressed within the input field.
  -->
 <template>
-    <label class="col-form-label col-form-label-sm">{{ ui_ctx[field].label }}</label>
+    <VLabel
+        :field="field"
+        :ui_ctx="ui_ctx"
+    />
     <div>
         <input
             v-model="v"
             class="form-control form-control-sm"
             :readonly="! ui_ctx[field].enabled"
+            :id="field"
             @blur="onBlur()"
             @keydown="onKeydown($event)"
         />
@@ -16,6 +20,7 @@
 
 <script setup>
  import { ref } from 'vue';
+ import VLabel from '@/components/widget/VLabel.vue';
 
  const props = defineProps({
      field: String,

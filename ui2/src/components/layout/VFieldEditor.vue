@@ -31,9 +31,9 @@
         </div>
         <div v-else-if="ui_ctx[name].widget == 'heatmap_with_lineouts'">
             <VHeatmapWithLineouts
-                v-if="ui_ctx.image && ui_ctx.image.raw_pixels.length"
+                v-if="ui_ctx.image"
                 :colorMap="ui_ctx.color_map.value"
-                :data="ui_ctx.image"
+                :plot="ui_ctx.image"
             />
         </div>
     </div>
@@ -45,6 +45,7 @@
  import VStatic from '@/components/widget/VStatic.vue';
  import VText from '@/components/widget/VText.vue';
  import VHeatmapWithLineouts from '@/components/plot/VHeatmapWithLineouts.vue';
+
  const props = defineProps({
      name: String,
      ui_ctx: Object,
