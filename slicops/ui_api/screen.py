@@ -73,8 +73,7 @@ class API(slicops.quest.API):
 
     async def api_screen_color_map(self, api_args):
         ux, _, _ = self._save_field("color_map", api_args)
-        # TODO(robnagler) if acquiring just wait for next image?
-        return self._return_with_plot(ux)
+        return self._return(ux)
 
     async def api_screen_curve_fit_method(self, api_args):
         ux, _, _ = self._save_field("curve_fit_method", api_args)
