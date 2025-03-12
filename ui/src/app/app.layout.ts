@@ -40,7 +40,7 @@ export class ColumnsComponent {
             <widget-select [formGroup]="formGroup" [parent]="parent" [field]="name"
               [ui_ctx]="ui_ctx"></widget-select>
           </div>
-          <div *ngSwitchCase="'text'">
+          <div *ngSwitchCase="'integer'">
             <widget-text [formGroup]="formGroup" [parent]="parent" [field]="name"
               [ui_ctx]="ui_ctx"></widget-text>
           </div>

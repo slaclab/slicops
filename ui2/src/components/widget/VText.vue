@@ -8,8 +8,10 @@
     />
     <div>
         <input
-            v-model="v"
+            v-model="rawValue"
+            autocomplete="off"
             class="form-control form-control-sm"
+            :class="{'slicops-invalid': isInvalid}"
             :readonly="! ui_ctx[field].enabled"
             :id="field"
             @blur="onBlur()"
@@ -21,24 +23,31 @@
 <script setup>
  import { ref } from 'vue';
  import VLabel from '@/components/widget/VLabel.vue';
+ import { useValidation } from '@/composables/useValidation.js'
+ import { useNumberValidation } from '@/composables/useNumberValidation.js'
 
  const props = defineProps({
      field: String,
      ui_ctx: Object,
  });
 
- const v = ref(props.ui_ctx[props.field].value);
+ const { isInvalid, parsedValue, rawValue } = ['integer', 'float'].includes(
+     props.ui_ctx[props.field].widget)
+     ? useNumberValidation(props.ui_ctx[props.field])
+     : useValidation(props.ui_ctx[props.field]);
+ rawValue.value = props.ui_ctx[props.field].value;
 
  const onBlur = () => {
      // Restore the ui_ctx value when focus is lost
-     v.value = props.ui_ctx[props.field].value;
+     rawValue.value = props.ui_ctx[props.field].value;
+     parsedValue.value = rawValue.value;
+     isInvalid.value = false;
  };
 
  const onKeydown = ($event) => {
-     if ($event.key == 'Enter') {
-         props.ui_ctx[props.field].value = v.value;
-         //TODO(pjm): validate
-         props.ui_ctx.serverAction(props.field, v.value);
+     if ($event.key == 'Enter' && ! isInvalid.value) {
+         props.ui_ctx[props.field].value = parsedValue.value;
+         props.ui_ctx.serverAction(props.field, parsedValue.value);
      }
  };
 </script>

@@ -27,6 +27,6 @@ g.tick text {
   fill: none;
 }
 
-input.ng-invalid.ng-dirty:focus {
+input.slicops-invalid, input.slicops-invalid:focus {
   box-shadow: 0 0 0 0.25rem var(--bs-warning);
 }
