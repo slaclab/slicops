@@ -11,6 +11,7 @@
 </template>
 
 <script>
+// Import FieldEditorComponent directly as this doesn't create a circular dependency
 import FieldEditorComponent from './FieldEditorComponent.vue';
 
 export default {

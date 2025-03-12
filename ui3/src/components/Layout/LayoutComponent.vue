@@ -25,16 +25,13 @@
 </template>
 
 <script>
-import FieldEditorComponent from './FieldEditorComponent.vue';
-import CellComponent from './CellComponent.vue';
-import ColumnsComponent from './ColumnsComponent.vue';
-
+// Breaking the circular dependency by using component registration instead of imports
 export default {
   name: 'LayoutComponent',
   components: {
-    FieldEditorComponent,
-    CellComponent,
-    ColumnsComponent
+    'field-editor-component': () => import('./FieldEditorComponent.vue'),
+    'cell-component': () => import('./CellComponent.vue'),
+    'columns-component': () => import('./ColumnsComponent.vue')
   },
   props: {
     layout: Object,

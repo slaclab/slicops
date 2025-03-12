@@ -16,12 +16,11 @@
 </template>
 
 <script>
-import LayoutComponent from './LayoutComponent.vue';
-
+// Use async import to break circular dependency
 export default {
   name: 'ColumnsComponent',
   components: {
-    LayoutComponent
+    'layout-component': () => import('./LayoutComponent.vue')
   },
   props: {
     columns: Array,

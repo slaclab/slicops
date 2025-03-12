@@ -253,7 +253,13 @@ class APIService {
 
   _socketOpen() {
     try {
-      const s = new WebSocket('/api-v1')
+      // Construct WebSocket URL relative to current page
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const wsUrl = `${protocol}//${window.location.host}/api-v1`;
+
+      console.log('Connecting to WebSocket at:', wsUrl);
+      const s = new WebSocket(wsUrl);
+
       s.onclose = this._socketOnError.bind(this);
       s.onerror = this._socketOnError.bind(this);
       s.onmessage = (event) => {
