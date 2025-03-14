@@ -10,6 +10,14 @@ shopt -s nullglob
 : ${make_cores:=4}
 _epics_version=7.0.8.1
 _synapps_version=R6-3
+_bashrc='
+export EPICS_BASE=$HOME/.local/epics
+# $EPICS_BASE/startup/EpicsHostArch outputs linux-x86_64; no need to be dynamic here
+export EPICS_HOST_ARCH=linux-x86_64
+export EPICS_CA_ADDR_LIST=127.0.0.1
+export EPICS_CA_AUTO_ADDR_LIST=NO
+bivio_path_insert "$EPICS_BASE/bin/$EPICS_HOST_ARCH"
+'
 
 _curl_untar() {
     declare url=$1
@@ -21,7 +29,7 @@ _curl_untar() {
 }
 
 _build_base() {
-    sudo dnf -y install re2c rpcgen
+    sudo dnf -y install re2c rpcgen libtirpc-devel
     declare d=$(dirname "$EPICS_BASE")
     mkdir -p "$d"
     cd "$d"
@@ -61,18 +69,19 @@ _err() {
 }
 
 _err_epics_base() {
-    _err 'update your ~/.post_bivio_bashrc
-export EPICS_BASE=$HOME/.local/epics
-# $EPICS_BASE/startup/EpicsHostArch outputs linux-x86_64; no need to be dynamic here
-export EPICS_HOST_ARCH=linux-x86_64
-export EPICS_CA_ADDR_LIST=127.0.0.1
-export EPICS_CA_AUTO_ADDR_LIST=NO
-bivio_path_insert "$EPICS_BASE/bin/$EPICS_HOST_ARCH"
+    if grep post_bivio_bashrc ~/.bashrc &> /dev/null; then
+        cat >> ~/.post_bivio_bashrc <<< "$_bashrc"
+        _msg "~/.post_bivio_bashrc was updated"
+    else
+        _msg "update your ~/.bashrc$_bashrc
 
-and then:
-source ~/.post_bivio_bashrc
-EpicsHostArch will not be found
-'
+You'll have to change 'bivio_path_insert' to something that
+works in your shell."
+    fi
+    _err "
+Then:
+source ~/.bashrc
+bash $0"
 }
 
 _log() {
@@ -84,9 +93,8 @@ _main() {
         _err_epics_base
     fi
     if [[ -d $EPICS_BASE ]]; then
-        _err "please remove:
-rm -rf '$EPICS_BASE'
-"
+        _err "Please remove existing epics:
+rm -rf '$EPICS_BASE'"
     fi
     _source_bashrc
     bivio_path_remove "$EPICS_BASE"/bin
