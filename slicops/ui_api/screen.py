@@ -381,7 +381,7 @@ def _gain_validator(field, value):
         rv = int(value)
     except Exception:
         return None
-    #TODO(pjm): use min/max values from schema/screen.yaml
+    # TODO(pjm): use min/max values from schema/screen.yaml
     return rv if 10 <= rv <= 1000 else None
 
 
