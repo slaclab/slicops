@@ -20,7 +20,7 @@
 
 <script setup>
  import { ref, reactive } from 'vue';
- import { apiService } from '@/service/api';
+ import { apiService } from '@/services/api.js';
  import VLayout from '@/components/VLayout.vue';
 
  const props = defineProps({

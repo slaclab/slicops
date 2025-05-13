@@ -23,8 +23,8 @@
 <script setup>
  import { ref } from 'vue';
  import VLabel from '@/components/widget/VLabel.vue';
- import { useValidation } from '@/composables/useValidation.js'
- import { useNumberValidation } from '@/composables/useNumberValidation.js'
+ import { useValidation } from '@/components/widget/validation/useValidation.js'
+ import { useNumberValidation } from '@/components/widget/validation/useNumberValidation.js'
 
  const props = defineProps({
      field: String,

@@ -2,7 +2,7 @@
  * Numeric (integer or float) field validation.
  */
 import { watch } from 'vue'
-import { useValidation } from '@/composables/useValidation.js'
+import { useValidation } from '@/components/widget/validation/useValidation.js'
 
 export function useNumberValidation(field) {
     const NUMBER_REGEXP = /^\s*(\-|\+)?(\d+|(\d*(\.\d*)))([eE][+-]?\d+)?\s*$/;

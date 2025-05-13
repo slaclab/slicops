@@ -1,5 +1,5 @@
 /**
- * Numeric (integer or float) field validation.
+ * Base field validation: required/optional.
  */
 import { ref, watch } from 'vue'
 
