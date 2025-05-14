@@ -14,14 +14,12 @@ from pykern import pkconfig, pkresource, pkyaml
 from pykern.pkcollections import PKDict
 from pykern.pkdebug import pkdc, pkdexc, pkdlog, pkdp
 import asyncio
-import lcls_tools.common.data.fitting_tool
 import numpy
-import random
 import pykern.api.util
+import scipy.optimize
 import slicops.device
 import slicops.device_db
 import slicops.quest
-import time
 
 _KIND = "screen"
 
@@ -317,43 +315,41 @@ class _Plot:
         return rv
 
     def _fit(self, ux, profile):
-        """Use the lcls_tools FittingTool to match the selected method.
+        """Use the scipy curve_fit() to match the selected method.
         Valid methods are (gaussian, super_gaussian).
         """
 
-        def _do(tool, method, initial_params):
-            tool.initial_params = PKDict({method: initial_params})
-            try:
-                p = tool.get_fit()[method]["params"]
-            except RuntimeError:
-                # TODO(robnagler) does this happen?
-                return _error()
-            # TODO(pjm): FittingTool returns initial params on failure
-            if p == initial_params["params"]:
-                return _error()
-            return PKDict(
-                lineout=profile,
-                fit=PKDict(
-                    fit_line=getattr(tool, method)(x=tool.x, **p),
-                    results=p,
-                ),
-            )
+        def gaussian(x, amplitude, mean, sigma, offset):
+            return amplitude * numpy.exp(-(((x - mean) / sigma) ** 2) / 2) + offset
 
-        def _error():
-            # TODO(robnagler) why doesn't display the error somewhere?
-            return PKDict(
-                lineout=profile,
-                fit=PKDict(
-                    fit_line=numpy.zeros(len(profile)),
-                    results=PKDict(
-                        error="Curve fit was unsuccessful",
-                    ),
-                ),
-            )
+        def super_gaussian(x, amplitude, mean, sigma, offset, p):
+            return amplitude * numpy.exp(-numpy.abs((x - mean) / sigma) ** p) + offset
 
-        t = lcls_tools.common.data.fitting_tool.FittingTool(profile)
-        m = ux.curve_fit_method.value
-        return _do(t, m, t.initial_params[m])
+        popt = None
+        dist_keys = ["amp", "mean", "sig", "offset"]
+        # TODO(pjm): should use physical camera dimensions
+        x = numpy.arange(len(profile))
+        try:
+            m = gaussian
+            popt, pcov = scipy.optimize.curve_fit(m, x, profile)
+            if ux.curve_fit_method.value == "super_gaussian":
+                # use gaussian fit to guess other distribution starting values
+                m = super_gaussian
+                dist_keys = ["amp", "mean", "sig", "offset", "p"]
+                popt, pcov = scipy.optimize.curve_fit(
+                    m, x, profile, p0=numpy.append(popt, 1.1)
+                )
+            fit_line = m(x, *popt)
+        except RuntimeError as e:
+            # TODO(pjm): show fitting error message on curve fit method field
+            fit_line = numpy.zeros(len(x))
+        return PKDict(
+            lineout=profile,
+            fit=PKDict(
+                fit_line=fit_line,
+                results=None if popt is None else dict(zip(dist_keys, popt)),
+            ),
+        )
 
 
 class _UIContext(PKDict):
