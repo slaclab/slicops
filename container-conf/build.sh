@@ -72,7 +72,8 @@ _slicops_pkg_install() {
     _slicops_pip_install slaclab/slicops "$SLICOPS_BRANCH"
     cd slaclab/slicops/ui
     npm install
-    npx ng build --output-path ../slicops/package_data/ng-build
+    npm run build
+    mv dist ../slicops/package_data/vue
     cd "$p"
 }
 
