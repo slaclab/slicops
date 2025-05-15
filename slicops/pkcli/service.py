@@ -45,7 +45,6 @@ class Commands(slicops.pkcli.CommandsBase):
                     ),
                 ]
                 return config
-            assert False
             config.uri_map = [
                 (
                     # very specific so we control the name space
