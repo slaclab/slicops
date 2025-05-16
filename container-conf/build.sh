@@ -40,6 +40,11 @@ export EPICS_BASE=$HOME/.local/epics
 # $EPICS_BASE/startup/EpicsHostArch outputs linux-x86_64; no need to be dynamic here
 export EPICS_HOST_ARCH=linux-x86_64
 bivio_path_insert "$EPICS_BASE/bin/$EPICS_HOST_ARCH"
+
+# for newer nvm
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
 EOF
     install_source_bashrc
 }
@@ -71,6 +76,12 @@ _slicops_pkg_install() {
     _slicops_pip_install radiasoft/pykern "$PYKERN_BRANCH"
     _slicops_pip_install slaclab/slicops "$SLICOPS_BRANCH"
     cd slaclab/slicops/ui
+    rm ~/.npmrc
+    # upgrade nvm and node
+    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+    NVM_DIR="$HOME/.nvm"
+    source $NVM_DIR/nvm.sh
+    nvm install node
     npm install
     npm run build
     mv dist ../slicops/package_data/vue
