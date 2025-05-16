@@ -78,9 +78,8 @@ _slicops_pkg_install() {
     cd slaclab/slicops/ui
     rm ~/.npmrc
     # upgrade nvm and node
-    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
-    NVM_DIR="$HOME/.nvm"
-    source $NVM_DIR/nvm.sh
+    curl -s -S -L https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+    source $HOME/.nvm/nvm.sh
     nvm install node
     npm install
     npm run build
