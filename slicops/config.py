@@ -18,7 +18,7 @@ def cfg():
     """`PKDict` of common configuration.
 
     db_api
-       api_uri, auth_secret, tcp_ip, and tcp_port values. `PKDict`
+       api_uri, tcp_ip, tcp_port, and vue_port values. `PKDict`
        is compatible with `pykern.api.server.start`,
 
     Returns:
@@ -36,7 +36,8 @@ def cfg():
                 pykern.pkasyncio.cfg_ip,
                 "IP address for server",
             ),
-            tcp_port=(9030, pykern.pkasyncio.cfg_port, "port of server"),
+            tcp_port=(8000, pykern.pkasyncio.cfg_port, "port of server"),
+            vue_port=(8008, pykern.pkasyncio.cfg_port, "port of Vue dev server"),
         ),
     )
     return _cfg
