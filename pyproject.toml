@@ -19,7 +19,7 @@ dependencies = [
     'lcls-tools @ git+https://github.com/slaclab/lcls-tools',
     'pyepics',
     'pykern @ git+https://github.com/radiasoft/pykern',
-    'scikit-learn==1.3.2' ,
+    'scikit-learn' ,
     'scipy',
 ]
 description = "SlicOps: Library and UI for beam physics control systems"

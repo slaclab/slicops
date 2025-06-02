@@ -13,7 +13,7 @@ _lcls_tools() {
     if python -c 'import lcls_tools' >& /dev/null; then
         return
     fi
-    pip install scipy scikit-learn==1.3.2 git+https://github.com/slaclab/lcls-tools
+    pip install scipy scikit-learn git+https://github.com/slaclab/lcls-tools
 }
 
 _main() {

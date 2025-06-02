@@ -1,8 +1,0 @@
-{
-    "/api-v1": {
-        "logLevel": "debug",
-        "secure": false,
-        "ws": true,
-        "target": "http://127.0.0.1:9030"
-    }
-}
