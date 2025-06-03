@@ -16,8 +16,8 @@ export default defineConfig({
             "/api-v1": {
                 logLevel: "debug",
                 secure: false,
+                target: process.env.SLICOPS_VITE_TARGET || "http://localhost:9030",
                 ws: true,
-                target: "http://127.0.0.1:9030",
             },
         },
     },
