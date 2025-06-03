@@ -26,6 +26,38 @@ _assert_base_port() {
     fi
 }
 
+_assert_conda_env() {
+    if ! type -t conda &> /dev/null; then
+        _err 'conda not installed; please install and rerun'
+    fi
+    _source_bashrc
+    if ! conda activate slicops &> /dev/null; then
+        _msg 'creating conda environment slicops'
+        conda create -y -n slicops
+        if ! conda activate slicops; then
+            _err 'unable to activate slicops after creating'
+        fi
+    fi
+    if type -t slicops &> /dev/null; then
+        return
+    fi
+    _assert_conda_package python "$_python_version"
+    _assert_conda_package nodejs
+    cd "$_root_dir"
+    _msg 'installing slicops'
+    pip install -e .
+}
+
+_assert_conda_package() {
+    declare name=$1
+    declare version=${2:-}
+    if ! conda list | grep -q "^$name "; then
+        declare p=$name${version:+=$version}
+        _msg "installing $p"
+        conda install -y "$p"
+    fi
+}
+
 _assert_image() {
     if [[ -r $_image ]]; then
         return
@@ -47,22 +79,7 @@ _assert_python_env() {
     if type -t pyenv &> /dev/null; then
         _err 'need to pip install slicops in pyenv python environment'
     fi
-    # Conda
-    if ! type -t conda &> /dev/null; then
-        _err 'conda not installed; please install and rerun'
-    fi
-    if ! conda activate slicops &> /dev/null; then
-        _msg 'creating conda environment slicops. Will take a few minutes'
-        conda create -n slicops
-        conda activate slicops
-        conda install python="$_python_version"
-        conda install nodejs
-        cd "$_root_dir"
-        pip install -e .
-    fi
-    if ! type -t slicops &> /dev/null; then
-        _err 'unable to activate slicops conda environment'
-    fi
+    _assert_conda_env
 }
 
 _cd_run_dir() {
@@ -159,6 +176,14 @@ _port() {
         _err "port=$p in use; is service=$name already running? Or, choose a different SLICOPS_BASE_PORT=$SLICOPS_BASE_PORT"
     fi
     echo "$p"
+}
+
+_source_bashrc() {
+    set +eou pipefail
+    shopt -u nullglob
+    source ~/.bashrc
+    set -eou pipefail
+    shopt -s nullglob
 }
 
 _main "$@"
