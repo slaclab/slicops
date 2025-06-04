@@ -1,30 +1,24 @@
 #!/bin/bash
 #
-# usage: SLICOPS_BASE_PORT=5790 bash etc/run.sh (sim|api|ui)
+# usage: bash etc/run.sh (sim|api|vue)
 #
 set -eou pipefail
 shopt -s nullglob
 
 _root_dir=$(cd "$(dirname "$0")/.." && pwd)
+_run_dir=$_root_dir/run
 _docker_image=docker://radiasoft/slicops
 declare -A _port_map=(
-    [api]=1
+    [api]=0
     [repeater]=2
     [server]=3
-    [ui]=0
+    [vue]=1
 )
+_run_env=$_run_dir/bashrc.sh
 _python_version=3.12.10
-_run_dir=$_root_dir/run
-_image=slicops.sif
+_sif=${SLICOPS_APPTAINER_SIF:-$_run_dir/slicops.sif}
 _sim_dir=/home/vagrant/.local/epics/extensions/synApps/support/areaDetector-R3-12-1/ADSimDetector/iocs/simDetectorIOC/iocBoot/iocSimDetector
-_ui_dir=$_root_dir/ui
-
-_assert_base_port() {
-    declare p=${SLICOPS_BASE_PORT:-<not set>}
-    if [[ ! $p =~ ^[0-9]+$ ]] || (( p <= 5000 )); then
-        _err "SLICOPS_BASE_PORT=$p must be an integer above 5000"
-    fi
-}
+_vue_dir=$_root_dir/ui
 
 _assert_conda_env() {
     if ! type -t conda &> /dev/null; then
@@ -58,15 +52,15 @@ _assert_conda_package() {
     fi
 }
 
-_assert_image() {
-    if [[ -r $_image ]]; then
+_assert_sif() {
+    if [[ -r $_sif ]]; then
         return
     fi
-    _msg "Building $_image from $_docker_image. This will take about 45 minutes..."
+    _msg "Building $_sif from $_docker_image. This will take about 45 minutes..."
     declare f=$_run_dir/image.log
-    if ! TMPDIR=$PWD apptainer build "$_image" $_docker_image &> "$f"; then
+    if ! TMPDIR=$PWD apptainer build "$_sif" $_docker_image &> "$f"; then
         tail --lines=50 "$f"
-        _err "build image=$_image failed. Full log: $f"
+        _err "build image=$_sif failed. Full log: $f"
     fi
     rm -f "$f"
 }
@@ -80,6 +74,30 @@ _assert_python_env() {
         _err 'need to pip install slicops in pyenv python environment'
     fi
     _assert_conda_env
+}
+
+_base_port() {
+    declare p=${SLICOPS_BASE_PORT:-}
+    if [[ $p ]]; then
+        _base_port_assert "$p"
+        return
+    fi
+    if [[ ! -r $_run_env ]]; then
+        _run_env_create
+    fi
+    source "$_run_env"
+    _base_port_assert "${SLICOPS_BASE_PORT:-}" "$_run_env"
+}
+
+_base_port_assert() {
+    declare port=$1
+    declare file=${2:-}
+    if [[ ! $port =~ ^[0-9]+$ ]] || (( port <= 5000 )); then
+        _err "SLICOPS_BASE_PORT=$port must be an integer above 5000${file:+
+
+rm $file
+and run this script again}"
+    fi
 }
 
 _cd_run_dir() {
@@ -97,7 +115,13 @@ _dispatch_op() {
         _err "invalid op=$op
 usage: bash ${BASH_SOURCE[0]} <op>
 where <op> is one of:
-$(compgen -A function _op_ | sed -e 's/^_op_//')"
+$(compgen -A function _op_ | sed -e 's/^_op_//')
+
+To develop, start the servers in this order in separate terminals:
+bash etc/run.sh sim # sim-detector for DEV_CAMERA
+bash etc/run.sh vue # vue server for javascript
+bash etc/run.sh api # tornado for business logic and main server
+"
     fi
     "$f" "${args[@]}"
 }
@@ -124,7 +148,8 @@ _log() {
 
 _main() {
     declare op=${1:-<not set>}
-    _assert_base_port
+    _cd_run_dir
+    _base_port
     _assert_python_env
     _dispatch_op "$op" "${@:2}"
 }
@@ -134,34 +159,36 @@ _msg() {
 }
 
 _op_api() {
-    _cd_run_dir
     declare e=$(_epics_env)
     declare p=$(_port api assert)
-    if ! [[ $e && $p ]]; then
+    declare v=$(_port vue)
+    if ! [[ $e && $p && $v ]]; then
         return 1
     fi
+    _msg "
+Connect to: http://localhost:$p
+"
     # not in quotes, because eval
-    eval $e exec slicops service ui-api --tcp-port=$p
+    eval $e SLICOPS_CONFIG_UI_API_VUE_PORT=$v \
+         exec slicops service ui-api --tcp-port="$p"
 }
 
 _op_sim() {
-    _cd_run_dir
-    _assert_image
+    _assert_sif
     declare e=$(_epics_env assert)
     if [[ ! $e ]]; then
         return 1
     fi
-    exec apptainer run --containall "$_image" bash -c "$e slicops epics sim-detector --ioc-sim-detector-dir='$_sim_dir'"
+    exec apptainer run --containall "$_sif" bash -c "$e slicops epics sim-detector --ioc-sim-detector-dir='$_sim_dir'"
 }
 
-_op_ui() {
-    cd "$_ui_dir"
-    declare v=$(_port ui assert)
-    declare a=$(_port api)
-    if ! [[ $a && $v ]]; then
+_op_vue() {
+    cd "$_vue_dir"
+    declare v=$(_port vue assert)
+    if [[ ! $v ]]; then
         return 1
     fi
-    SLICOPS_VITE_TARGET=http://127.0.0.1:$a exec npm run dev -- --port "$v" --host
+    SLICOPS_VUE_PORT=$v exec npm run dev -- --host
 }
 
 _port() {
@@ -172,10 +199,55 @@ _port() {
         _err "assertion error: _port missing port arg=${1:-<missing arg>}"
     fi
     p=$(( SLICOPS_BASE_PORT + p ))
-    if [[ $assert ]] && ss --tcp --udp --listening --numeric | grep -q ":$p "; then
+    if [[ $assert ]] && ! _port_check "$p"; then
         _err "port=$p in use; is service=$name already running? Or, choose a different SLICOPS_BASE_PORT=$SLICOPS_BASE_PORT"
     fi
     echo "$p"
+}
+
+_port_check() {
+    declare num=$1
+    declare count=${2:-1}
+    declare i
+    for i in $(seq 0 $(( count - 1)) ); do
+        if ss --tcp --udp --listening --numeric | grep -q ":$(( num + i ))"; then
+            return 1
+        fi
+    done
+}
+
+_port_find() {
+    declare -i p=$(( $(id -u) % 10000 + 10000 ))
+    declare i
+    for _ in {1..10}; do
+        #TODO(robnagler) 4 should be a constant
+        if _port_check "$p" 4; then
+           echo "$p"
+           return
+        fi
+    done
+    # Should not happen
+    _err 'could not find an open port; Set SLICOPS_BASE_PORT manually in ~/.bashrc'
+}
+
+_run_env_create() {
+    declare p=$(_port_find)
+    if [[ ! $p ]]; then
+        return 1
+    fi
+    cat <<EOF_cat > "$_run_env"
+#!/bin/bash
+# Configuration dynamically generated by etc/run.sh.
+# Copy to ~/.bashrc, source ~/.bashrc, and remove this file.
+export SLICOPS_BASE_PORT=$p
+EOF_cat
+    _msg "Created $_run_env
+which sets:
+
+export SLICOPS_BASE_PORT=$p
+
+You can also put this in your ~/.bashrc, and remove this file.
+"
 }
 
 _source_bashrc() {
