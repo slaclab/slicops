@@ -62,7 +62,7 @@ _assert_image() {
     if [[ -r $_image ]]; then
         return
     fi
-    _msg "Building $_image from $_docker_image. This will take about 30 minutes..."
+    _msg "Building $_image from $_docker_image. This will take about 45 minutes..."
     declare f=$_run_dir/image.log
     if ! TMPDIR=$PWD apptainer build "$_image" $_docker_image &> "$f"; then
         tail --lines=50 "$f"
