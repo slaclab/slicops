@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# usage: SLICOPS_BASE_PORT=5790 bash etc/run.sh (sim|api|vite)
+# usage: SLICOPS_BASE_PORT=5790 bash etc/run.sh (sim|api|ui)
 #
 set -eou pipefail
 shopt -s nullglob
@@ -11,13 +11,13 @@ declare -A _port_map=(
     [api]=1
     [repeater]=2
     [server]=3
-    [vite]=0
+    [ui]=0
 )
 _python_version=3.12.10
 _run_dir=$_root_dir/run
 _image=slicops.sif
 _sim_dir=/home/vagrant/.local/epics/extensions/synApps/support/areaDetector-R3-12-1/ADSimDetector/iocs/simDetectorIOC/iocBoot/iocSimDetector
-_vite_dir=$_root_dir/ui
+_ui_dir=$_root_dir/ui
 
 _assert_base_port() {
     declare p=${SLICOPS_BASE_PORT:-<not set>}
@@ -154,9 +154,9 @@ _op_sim() {
     exec apptainer run --containall "$_image" bash -c "$e slicops epics sim-detector --ioc-sim-detector-dir='$_sim_dir'"
 }
 
-_op_vite() {
-    cd "$_vite_dir"
-    declare v=$(_port vite assert)
+_op_ui() {
+    cd "$_ui_dir"
+    declare v=$(_port ui assert)
     declare a=$(_port api)
     if ! [[ $a && $v ]]; then
         return 1
