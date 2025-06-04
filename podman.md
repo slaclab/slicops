@@ -114,4 +114,4 @@ slicops service ui-api --prod
 ```
 
 Finally, access the application from your web browser. Visit
-[http://localhost:9030](http://localhost:9030).
+[http://localhost:8080](http://localhost:8080).

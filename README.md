@@ -40,7 +40,7 @@ cd ~/src/slaclab/slicops
 slicops epics sim-detector
 slicops service ui-api
 cd ui
-npm start
+npm run dev
 ```
 
 With a tunneled connection, visit http://localhost:8000.
