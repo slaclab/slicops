@@ -28,7 +28,11 @@ class Commands(slicops.pkcli.CommandsBase):
         from tornado import web
 
         def _tcp_port():
-            return PKDict(tcp_port=pkconfig.parse_positive_int(tcp_port)) if tcp_port else PKDict()
+            return (
+                PKDict(tcp_port=pkconfig.parse_positive_int(tcp_port))
+                if tcp_port
+                else PKDict()
+            )
 
         def _uri_map(config):
             if prod:
@@ -58,10 +62,12 @@ class Commands(slicops.pkcli.CommandsBase):
         server.start(
             attr_classes=quest.attr_classes(),
             api_classes=ui_api.api_classes(),
-            http_config=c.pkupdate(PKDict(
-                uri_map=_uri_map(c),
-                **_tcp_port(),
-            ))
+            http_config=c.pkupdate(
+                PKDict(
+                    uri_map=_uri_map(c),
+                    **_tcp_port(),
+                )
+            ),
         )
 
 

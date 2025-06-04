@@ -10,11 +10,16 @@ Repository: https://github.com/slaclab/slicops
 
 Documentation: https://slicops.readthedocs.io
 
-#### Development
 
-This assumes you are running an environment most of the dependencies installed:
 
-First time:
+### Development
+
+#### Prequisites
+
+
+First step is to clone the repo. We use `~/src/slaclab/slicops` in
+these examples, but any directory is fine. All the software operates
+relative to the repo.
 
 
 ```sh
@@ -22,15 +27,9 @@ cd ~/src
 mkdir -p slaclab
 cd slaclab
 git clone https://github.com/slaclab/slicops
-cd slicops
-# Remove existing install of epics
-rm -rf ~/.local/epics
-# Takes half hour or so depending on number of cores
-make_cores=8 bash etc/epics-install.sh
-pip install -e .
-cd ui
-npm install
 ```
+
+
 
 Start the three services in separate terminal windows:
 
