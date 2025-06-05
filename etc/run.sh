@@ -1,7 +1,11 @@
 #!/bin/bash
 #
-# usage: bash etc/run.sh (sim|api|vue)
+# Start development environment, including building conda environment "slicops"
 #
+# Start in this order:
+#   bash etc/run.sh sim
+#   bash etc/run.sh vue
+#   bash etc/run.sh api
 set -eou pipefail
 shopt -s nullglob
 
