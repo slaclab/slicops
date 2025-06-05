@@ -2,8 +2,8 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { fileURLToPath, URL } from "node:url";
 
-// PORT environment variable set in sirepo.pkcli.service
-const port = process.env.PORT || 8008;
+// set in sirepo.pkcli.service via $SLICOPS_CONFIG_UI_API_VUE_PORT
+const port = process.env.SLICOPS_VUE_PORT || 8008;
 
 // https://vite.dev/config/
 export default defineConfig({

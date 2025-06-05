@@ -1,3 +1,7 @@
+run/
+
+# standard stuff
+
 MANIFEST.in
 pytest.ini
 tox.ini

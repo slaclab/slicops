@@ -10,44 +10,143 @@ Repository: https://github.com/slaclab/slicops
 
 Documentation: https://slicops.readthedocs.io
 
-#### Development
 
-This assumes you are running an environment most of the dependencies installed:
+### Setup Development
 
-First time:
+#### Install Conda
 
+Check if conda is installed:
 
 ```sh
-cd ~/src
-mkdir -p slaclab
-cd slaclab
+conda
+```
+
+If command not found, install:
+
+```sh
+wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O x.sh
+bash x.sh
+rm x.sh
+source ~/.bashrc
+```
+
+#### Install Apptainer
+
+Check if apptainer is installed:
+
+```sh
+apptainer
+```
+
+If command not found, install:
+
+```sh
+curl -s https://raw.githubusercontent.com/apptainer/apptainer/main/tools/install-unprivileged.sh | \
+    bash -s - ~/apptainer
+cat >> ~/.bashrc <<'EOF'
+if [[ ! :$PATH: =~ :$HOME/apptainer/bin: ]]; then
+    PATH=$HOME/apptainer/bin/apptainer:$PATH
+fi
+EOF
+source ~/.bashrc
+```
+
+If you are at SLAC, add this to your `~/.bashrc`:
+
+```sh
+export SLICOPS_APPTAINER_SIF=~nagler/slicops.sif
+```
+
+If you are not at SLAC, slicops.sif will get built when you start the servers.
+
+
+#### Clone Repo
+
+First step is to clone the repo. We use `~/src/slaclab/slicops` in
+these examples, but any directory is fine. All the software operates
+relative to the repo:
+
+```sh
+mkdir -p ~/src/slaclab
+cd ~/src/slaclab
 git clone https://github.com/slaclab/slicops
-cd slicops
-# Remove existing install of epics
-rm -rf ~/.local/epics
-# Takes half hour or so depending on number of cores
-make_cores=8 bash etc/epics-install.sh
-pip install -e .
-cd ui
-npm install
 ```
 
-Start the three services in separate terminal windows:
+#### Development Servers
 
+In development, SlicOps uses three servers:
+
+- sim - [ADSimDetector](https://areadetector.github.io/areaDetector/ADSimDetector/simDetector.html) simulates a camera called `DEV_CAMERA`.
+- vue - [vite](https://vite.dev) serves the browser [Vue.js](https://vuejs.org) in development mode.
+- api - [slicops.pkcli.service.ui_api](https://github.com/slaclab/slicops/blob/main/slicops/pkcli/service.py) is the web server to connect to, which serves APIs, communicates with ADSimDetector, and proxies vite.
+
+#### First Time Install
+
+The first time run this command:
 
 ```sh
-cd ~/src/slaclab/slicops
-slicops epics sim-detector
-slicops service ui-api
-cd ui
-npm run dev
+$ bash ~/src/slaclab/slicops/etc/run.sh install
+<installing conda env, node, python, etc.>
+
+Created <your home>/src/slaclab/slicops/run/bashrc.sh
+which sets:
+
+export SLICOPS_BASE_PORT=<your port>
+
+You can also put this value in your ~/.bashrc.
 ```
 
-With a tunneled connection, visit http://localhost:8000.
+You can add this to your `~/.bashrc`, and then remove the file
+`run/bashrc.sh`. Source your bashrc before starting other servers.
 
-When you edit TypeScript files, npm will automatically update. The
-ui-api service doesn't always update automatically so you may need to
-restart manually. Just control-C and rerun the command.
+You will need to tunnel this port if you are using ssh. Logout of ssh,
+and login again with:
+
+```sh
+ssh -L localhost:<your port>:localhost <your host>
+```
+
+#### Start sim
+
+Once installed, start `sim`:
+
+```sh
+$ bash ~/src/slaclab/slicops/etc/run.sh sim
+/home/vagrant/src/slaclab/slicops/slicops/pkcli/epics.py:75:_log log: /sdf/home/n/nagler/sim_detector.log
+/home/vagrant/src/slaclab/slicops/slicops/pkcli/epics.py:98:sim_detector started pid=200; sleep 2 seconds
+/home/vagrant/src/slaclab/slicops/slicops/pkcli/epics.py:101:sim_detector initializing sim detector
+/home/vagrant/src/slaclab/slicops/slicops/pkcli/epics.py:103:sim_detector waiting for pid=200 to exit
+```
+
+#### Start vue
+
+```sh
+$ bash ~/src/slaclab/slicops/etc/run.sh vue
+<some output and then>
+  VITE v6.3.5  ready in 701 ms
+
+  ➜  Local:   http://localhost:<your port + 1>/
+  ➜  Network: use --host to expose
+  ➜  press h + enter to show help
+  ```
+```
+
+#### Start api
+
+```sh
+$ bash ~/src/slaclab/slicops/etc/run.sh api
+Ignore error about caRepeater couldn't be located.
+
+Connect to: http://localhost:<your port>
+
+<noise about import pkg_resources>
+../../../../miniconda3/envs/slicops/lib/python3.12/site-packages/pykern/pkasyncio.py:61:_do name=None ip=127.0.0.1 port=<your port>
+```
+
+#### Visit in Browser
+
+If everything is set up and tunneling is working, you can visit
+`http://localhost:<your port>` in the browser.
 
 #### License
 

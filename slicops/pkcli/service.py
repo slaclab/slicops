@@ -27,41 +27,47 @@ class Commands(slicops.pkcli.CommandsBase):
         from slicops import config, ui_api, quest
         from tornado import web
 
-        def _port(config):
-            if tcp_port is not None:
-                config.tcp_port = pkconfig.parse_positive_int(tcp_port)
-            return config
+        def _tcp_port():
+            return (
+                PKDict(tcp_port=pkconfig.parse_positive_int(tcp_port))
+                if tcp_port
+                else PKDict()
+            )
 
-        def _vue_serve(config):
-            if not prod:
-                config.uri_map = [
+        def _uri_map(config):
+            if prod:
+                return [
                     (
-                        # send any non-api call to the proxy
-                        rf"^(?!{config.api_uri}).*",
-                        ProxyHandler,
+                        # very specific so we control the name space
+                        r"^(?:/screen/?|/)(assets/\w+.\w+\.(?:css|js)|favicon.png|)$",
+                        web.StaticFileHandler,
                         PKDict(
-                            proxy_url=f"http://localhost:{config.vue_port}",
+                            path=str(pkresource.file_path("vue")),
+                            default_filename="index.html",
                         ),
                     ),
                 ]
-                return config
-            config.uri_map = [
+            return [
                 (
-                    # very specific so we control the name space
-                    r"^(?:/screen/?|/)(assets/\w+.\w+\.(?:css|js)|favicon.png|)$",
-                    web.StaticFileHandler,
+                    # send any non-api call to the proxy
+                    rf"^(?!{config.api_uri}).*",
+                    ProxyHandler,
                     PKDict(
-                        path=str(pkresource.file_path("vue")),
-                        default_filename="index.html",
+                        proxy_url=f"http://localhost:{config.vue_port}",
                     ),
                 ),
             ]
-            return config
 
+        c = config.cfg().ui_api.copy()
         server.start(
             attr_classes=quest.attr_classes(),
             api_classes=ui_api.api_classes(),
-            http_config=_port(_vue_serve(config.cfg().ui_api.copy())),
+            http_config=c.pkupdate(
+                PKDict(
+                    uri_map=_uri_map(c),
+                    **_tcp_port(),
+                )
+            ),
         )
 
 
