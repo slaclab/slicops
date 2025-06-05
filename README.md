@@ -128,7 +128,6 @@ $ bash ~/src/slaclab/slicops/etc/run.sh vue
   ➜  Local:   http://localhost:<your port + 1>/
   ➜  Network: use --host to expose
   ➜  press h + enter to show help
-  ```
 ```
 
 #### Start api
