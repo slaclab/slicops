@@ -26,8 +26,8 @@ _assert_conda_env() {
     fi
     _source_bashrc
     if ! conda activate slicops &> /dev/null; then
-        _msg 'creating conda environment slicops'
-        conda create -y -n slicops
+        _msg 'Creating conda environment slicops'
+        conda create --quiet --yes --name slicops
         if ! conda activate slicops; then
             _err 'unable to activate slicops after creating'
         fi
@@ -37,9 +37,9 @@ _assert_conda_env() {
     fi
     _assert_conda_package python "$_python_version"
     _assert_conda_package nodejs
+    _msg 'Installing slicops'
     cd "$_root_dir"
-    _msg 'installing slicops'
-    pip install -e .
+    pip install -q -e .
 }
 
 _assert_conda_package() {
@@ -47,8 +47,8 @@ _assert_conda_package() {
     declare version=${2:-}
     if ! conda list | grep -q "^$name "; then
         declare p=$name${version:+=$version}
-        _msg "installing $p"
-        conda install -y "$p"
+        _msg "Installing $p"
+        conda install --quiet --yes "$p"
     fi
 }
 
@@ -166,6 +166,8 @@ _op_api() {
         return 1
     fi
     _msg "
+Ignore error about caRepeater couldn't be located.
+
 Connect to: http://localhost:$p
 "
     # not in quotes, because eval
@@ -246,7 +248,7 @@ which sets:
 
 export SLICOPS_BASE_PORT=$p
 
-You can also put this in your ~/.bashrc, and remove this file.
+You can also put this value in your ~/.bashrc.
 "
 }
 
@@ -259,11 +261,3 @@ _source_bashrc() {
 }
 
 _main "$@"
-
-
-: <<'IGNORE_this_error'
-**** The executable "caRepeater" couldn't be located
-**** because of errno = "No such file or directory".
-**** You may need to modify your PATH environment variable.
-**** Unable to start "CA Repeater" process.
-IGNORE_this_error
