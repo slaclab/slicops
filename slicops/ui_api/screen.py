@@ -16,6 +16,7 @@ from pykern.pkdebug import pkdc, pkdexc, pkdlog, pkdp
 import asyncio
 import numpy
 import pykern.api.util
+import pykern.util
 import scipy.optimize
 import slicops.device
 import slicops.device_db
@@ -66,7 +67,11 @@ class API(slicops.quest.API):
 
     async def api_screen_camera_gain(self, api_args):
         ux, _, _ = self._save_field("camera_gain", api_args)
-        self.session[_DEVICE_KEY].put("gain", ux.camera_gain.value)
+        try:
+            self.session[_DEVICE_KEY].put("gain", ux.camera_gain.value)
+        except slicops.device.DeviceError as e:
+            pkdlog("error={} on {}; stack={}", e, d, pkdexc())
+            raise pykern.util.APIError(e)
         return self._return(ux)
 
     async def api_screen_color_map(self, api_args):
@@ -89,15 +94,19 @@ class API(slicops.quest.API):
         q = self.session[_SINGLE_BUTTON_Q_KEY] = asyncio.Queue()
         # TODO(robnagler) buttons should always change and be sent back,
         # because image acquisition could take time.
-        self._set_acquire(1)
         try:
+            self._set_acquire(1)
             rv = await q.get()
             q.task_done()
             return rv
         finally:
             self.session.pkdel(_SINGLE_BUTTON_Q_KEY)
-            # TODO(robnagler) if raised, then ignore errors here. First error is returned
-            self._set_acquire(0)
+            try:
+                # TODO(robnagler) if raised, then ignore errors here. First error is returned
+                self._set_acquire(0)
+            except Exception as e:
+                pkdlog("ignoring error={} on {}; stack={}", e, self.session.get(_DEVICE_KEY), pkdexc())
+
 
     async def api_screen_start_button(self, api_args):
         ux = self._session_ui_ctx()
@@ -167,6 +176,7 @@ class API(slicops.quest.API):
                 return False
 
         def _clear():
+            # must be robust, used in "except:"
             ux.camera_gain.value = None
             ux.pv.value = None
             self._button_setup(ux, False)
@@ -185,15 +195,23 @@ class API(slicops.quest.API):
             d.destroy()
 
         def _setup():
-            d = self.session[_DEVICE_KEY] = slicops.device.Device(ux.camera.value)
-            if d.has_accessor("gain"):
-                ux.camera_gain.value = d.get("gain")
-            else:
-                # TODO(robnagler) enabled?
-                ux.camera_gain.value = None
-            ux.pv.value = d.meta.pv_prefix
-            self._button_setup(ux, _acquiring(d))
-            d.accessor("image").monitor(_Monitor(self.session))
+            d = None
+            try:
+                d = self.session[_DEVICE_KEY] = slicops.device.Device(ux.camera.value)
+                if d.has_accessor("gain"):
+                    ux.camera_gain.value = d.get("gain")
+                else:
+                    # TODO(robnagler) enabled?
+                    ux.camera_gain.value = None
+                ux.pv.value = d.meta.pv_prefix
+                self._button_setup(ux, _acquiring(d))
+                a = d.accessor("image")
+                a.monitor(_Monitor(self.session, a))
+            except slicops.device.DeviceError as e:
+                pkdlog("error={} on {}, clearing camera; stack={}", e, d, pkdexc())
+                ux.camera.value = None
+                _clear()
+                raise pykern.util.APIError(e)
 
         _destroy()
         if ux.camera.value is None:
@@ -232,13 +250,26 @@ class API(slicops.quest.API):
         self.session.ui_ctx = ux = _ui_ctx_default()
         ux.beam_path.value = _cfg.dev.beam_path
         self._beam_path_change(ux, None)
-        ux.camera.value = _cfg.dev.camera_name
-        self._device_change(ux, None)
+        ux.camera.value = _cfg.dev.camera
+        # This will reset the camera if it is not working, but no error
+        try:
+            self._device_change(ux, None)
+        except pykern.util.APIError:
+            # TODO(robnagler): UI has to boot display the error
+            # but it doesn't have a context to render.
+            # Perhaps it should start without an initial camera
+            # and then set the camera on the next call. Hard to program
+            pass
         return ux
 
     def _set_acquire(self, is_on):
         if d := self.session.get(_DEVICE_KEY):
-            d.put("acquire", is_on)
+            try:
+                d.put("acquire", is_on)
+            except slicops.device.DeviceError as e:
+                pkdlog("error={} on {}, clearing camera; stack={}", e, d, pkdexc())
+                raise pykern.util.APIError(e)
+
 
 
 class _Field(PKDict):
@@ -269,7 +300,7 @@ class _Monitor:
         if self._destroyed:
             return
         if e := change.get("error"):
-            pkdlog("error={} on {}", e, update.get("accessor"))
+            pkdlog("error={} on {}", e, change.get("accessor"))
             return
         if (v := change.get("value")) is not None:
             self.loop.call_soon_threadsafe(self._update, v)
@@ -387,7 +418,7 @@ def _init():
     _cfg = pkconfig.init(
         dev=PKDict(
             beam_path=("DEV_BEAM_PATH", str, "dev beam path name"),
-            camera_name=("DEV_CAMERA", str, "dev camera name"),
+            camera=("DEV_CAMERA", str, "dev camera name"),
         ),
     )
     _FIELD_VALIDATOR = PKDict(
