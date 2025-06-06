@@ -105,8 +105,12 @@ class API(slicops.quest.API):
                 # TODO(robnagler) if raised, then ignore errors here. First error is returned
                 self._set_acquire(0)
             except Exception as e:
-                pkdlog("ignoring error={} on {}; stack={}", e, self.session.get(_DEVICE_KEY), pkdexc())
-
+                pkdlog(
+                    "ignoring error={} on {}; stack={}",
+                    e,
+                    self.session.get(_DEVICE_KEY),
+                    pkdexc(),
+                )
 
     async def api_screen_start_button(self, api_args):
         ux = self._session_ui_ctx()
@@ -269,7 +273,6 @@ class API(slicops.quest.API):
             except slicops.device.DeviceError as e:
                 pkdlog("error={} on {}, clearing camera; stack={}", e, d, pkdexc())
                 raise pykern.util.APIError(e)
-
 
 
 class _Field(PKDict):
