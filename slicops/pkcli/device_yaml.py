@@ -167,6 +167,7 @@ class _Parser:
                     .copy()
                     .pksetdefault(pv_base=k, pv_name=v, py_type="int")
                     for k, v in meta.pv_base.items()
+                    if k in a
                 }
             )
             if "image" in rv:
@@ -204,7 +205,7 @@ class _Parser:
                     )
                 rv.pv_base[m.group(1)] = v
             return rv.pkupdate(
-                array_is_row_major=md.get("array_is_row_major", False),
+                array_is_row_major=md.get("array_is_row_major", True),
                 # TODO(robnagler) meta.type is not always set (see vcc.yaml), so ignoring for now
                 area=md.area,
                 beam_path=tuple(sorted(md.beam_path)),
