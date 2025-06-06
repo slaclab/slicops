@@ -166,7 +166,8 @@ class _Parser:
                     .name: a[k]
                     .copy()
                     .pksetdefault(pv_base=k, pv_name=v, py_type="int")
-                    for k, v in meta.pv_base.items() if k in a
+                    for k, v in meta.pv_base.items()
+                    if k in a
                 }
             )
             if "image" in rv:
