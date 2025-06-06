@@ -209,8 +209,7 @@ class API(slicops.quest.API):
                     ux.camera_gain.value = None
                 ux.pv.value = d.meta.pv_prefix
                 self._button_setup(ux, _acquiring(d))
-                a = d.accessor("image")
-                a.monitor(_Monitor(self.session, a))
+                d.accessor("image").monitor(_Monitor(self.session))
             except slicops.device.DeviceError as e:
                 pkdlog("error={} on {}, clearing camera; stack={}", e, d, pkdexc())
                 ux.camera.value = None
