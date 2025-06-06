@@ -1,12 +1,15 @@
 #!/bin/bash
 #
-# Start development environment, including building conda environment "slicops"
-#
+# Runs server for development.
 #
 # First time, call:
 #   bash etc/run.sh install
 #
-# Start in this order:
+# This installs conda environment "slicops", where it installs nodejs,
+# python, and slicops. Also builds apptainer image (slicops.sif) if it
+# can't $SLICOPS_APPTAINER_SIF.
+#
+# When developing, start three servers:
 #   bash etc/run.sh sim
 #   bash etc/run.sh vue
 #   bash etc/run.sh api
@@ -150,7 +153,7 @@ _env_sif() {
     fi
     _msg "Building $_sif from $_docker_image. This will take about 45 minutes..."
     declare f=$_run_dir/image.log
-    if ! TMPDIR=$_run_dir apptainer build "$_sif" $_docker_image &> "$f"; then
+    if ! TMPDIR=$_run_dir apptainer build --quiet "$_sif" $_docker_image &> "$f"; then
         tail --lines=50 "$f"
         _err "build image=$_sif failed. Full log: $f"
     fi
@@ -210,7 +213,7 @@ Connect to: http://localhost:$p
 "
     # not in quotes, because eval
     eval $e SLICOPS_CONFIG_UI_API_VUE_PORT=$v \
-         exec slicops service ui-api --tcp-port="$p"
+         exec slicops service ui_api --tcp-port="$p"
 }
 
 _op_install() {
