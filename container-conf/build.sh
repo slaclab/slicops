@@ -6,8 +6,9 @@ build_vars() {
     build_image_name=radiasoft/slicops
     build_is_public=1
     build_passenv='PYKERN_BRANCH SLICOPS_BRANCH'
-    _slicops_cmd=$build_run_user_home/bin/slicops-demo
-    build_docker_cmd='["'"$_slicops_cmd"'"]'
+    _slicops_demo=$build_run_user_home/bin/slicops-demo
+    _slicops_entry=$build_run_user_home/bin/slicops-entry
+    build_docker_cmd='["'"$_slicops_entry"'"]'
     : ${PYKERN_BRANCH:=} ${SLICOPS_BRANCH:=}
 }
 
@@ -30,7 +31,7 @@ build_as_run_user() {
     # sets epics_synapps_dir
     source epics-install.sh
     _slicops_pkg_install
-    _slicops_cmd
+    _slicops_bin
 }
 
 
@@ -49,15 +50,16 @@ EOF
     install_source_bashrc
 }
 
-_slicops_cmd() {
+_slicops_bin() {
+    build_replace_vars "$build_guest_conf"/slicops-entry.sh "$_slicops_entry"
     # POSIT: epics-install.sh sets sim_det_dir
-    build_replace_vars "$build_guest_conf"/slicops-demo.sh "$_slicops_cmd"
+    build_replace_vars "$build_guest_conf"/slicops-demo.sh "$_slicops_demo"
     # Sanity check that the file contains somethng
-    if ! grep sim-detector "$_slicops_cmd" &> /dev/null; then
-        cat "$_slicops_cmd"
-        install_err "$_slicops_cmd was not generated properly"
+    if ! grep sim-detector "$_slicops_demo" &> /dev/null; then
+        cat "$_slicops_demo"
+        install_err "$_slicops_demo was not generated properly"
     fi
-    chmod a+rx "$_slicops_cmd"
+    chmod a+rx "$_slicops_demo" "$_slicops_entry"
 }
 
 _slicops_pip_install() {
