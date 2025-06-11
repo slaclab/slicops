@@ -1,13 +1,12 @@
 """Accessing meta data about devices
 
-:copyright: Copyright (c) 2025 RadiaSoft LLC.  All Rights Reserved.
-:license: http://www.apache.org/licenses/LICENSE-2.0.html
+:copyright: Copyright (c) 2024 The Board of Trustees of the Leland Stanford Junior University, through SLAC National Accelerator Laboratory (subject to receipt of any required approvals from the U.S. Dept. of Energy).  All Rights Reserved.
+:license: http://github.com/slaclab/slicops/LICENSE
 """
 
 from pykern.pkcollections import PKDict
 from pykern.pkdebug import pkdc, pkdlog, pkdp
-import slicops.device_meta_raw
-import copy
+import slicops.device_db_sql
 
 
 class DeviceMeta(PKDict):
@@ -24,10 +23,9 @@ class DeviceMeta(PKDict):
     """
 
     def __init__(self, values):
-        super().__init__(copy.deepcopy(values))
+        super().__init__(values)
 
 
-# TODO(robnagler) are we selecting a machine?
 def beam_paths():
     """Get all beam path names
 
