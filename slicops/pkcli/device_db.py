@@ -5,8 +5,10 @@ TODO(robnagler): document, correct types, add machine and area_to_machine, beam_
 :copyright: Copyright (c) 2024 The Board of Trustees of the Leland Stanford Junior University, through SLAC National Accelerator Laboratory (subject to receipt of any required approvals from the U.S. Dept. of Energy).  All Rights Reserved.
 :license: http://github.com/slaclab/slicops/LICENSE
 """
+
 from pykern.pkcollections import PKDict
 from pykern.pkdebug import pkdc, pkdlog, pkdp
+import copy
 import importlib
 import pykern.pkio
 import pykern.pkyaml
@@ -41,6 +43,43 @@ screens:
 """
 
 
+_KNOWN_KEYS = PKDict(
+    controls_information=set(("PVs", "control_name")),
+    kinds=PKDict(
+        bpms=set(("BPM",)),
+        lblms=set(("LBLM",)),
+        magnets=set(("XCOR", "QUAD", "SOLE", "YCOR", "BEND")),
+        screens=set(("PROF",)),
+        tcavs=set(("LCAV",)),
+        wires=set(("WIRE",)),
+    ),
+    metadata=set(
+        (
+            "area",
+            "beam_path",
+            "bpms_after_wire",
+            "bpms_before_wire",
+            "l_eff",
+            "lblms",
+            "rf_freq",
+            "sum_l_meters",
+            "type",
+        )
+    ),
+)
+
+_AREAS_MISSING_BEAM_PATH = frozenset(
+    (
+        "COL",
+        "GTL",
+        "LI27",
+        "LI28",
+    ),
+)
+
+_area_to_beam_path = PKDict()
+
+
 def create_from_yaml():
     """Convert device yaml file to db"""
     return slicops.device_db_sql.recreate(tuple(_Parser().devices.values()))
@@ -50,19 +89,24 @@ def parse():
     from pykern import pkjson
 
     r = pykern.pkio.mkdir_parent("raw")
-    x = set()
-    for d in _Parser().devices.values():
-        x.update(d.attrs.keys())
-        pykern.pkjson.dump_pretty(
+    p = _Parser()
+    for d in p.devices.values():
+        pkjson.dump_pretty(
             d,
-            filename=pykern.pkio.mkdir_parent(r.join(d.device_kind, d.area)).join(
-                d.device_name + ".json"
+            filename=pykern.pkio.mkdir_parent(r.join(d.kind, d.metadata.area)).join(
+                d.name + ".json"
             ),
         )
-    return x
+    return PKDict({k: sorted(p[k]) for k in ("ctl_keys", "meta_keys")}).pkupdate(
+        kinds=p.kinds
+    )
 
 
-class _Parser:
+class _Ignore(Exception):
+    pass
+
+
+class _Parser(PKDict):
     def __init__(self):
         self._init()
         self._parse()
@@ -76,6 +120,11 @@ class _Parser:
             .join("*.yaml")
         )
         self.devices = PKDict()
+        self.ctl_keys = set()
+        self.meta_keys = set()
+        self.kinds = PKDict()
+        self.accessors = PKDict()
+        self.pvs = set()
 
     def _parse(self):
         for p in pykern.pkio.sorted_glob(self._yaml_glob):
@@ -92,76 +141,89 @@ class _Parser:
             )
 
     def _parse_file(self, src, path):
-        def _accessor(meta):
-            a = _DEVICE_KIND_TO_ACCESSOR.screen  # [meta.device_kind]
-            for k, v in meta.pv_suffix.items():
-                rv = a[k].copy() if k in a else PKDict()
-                yield k, rv.pksetdefault(pv_suffix=k, pv_name=v)
-
-        def _assign(device, meta):
+        def _assign(name, rec):
             """Corrections to input data"""
-            if d := self.devices.get(n):
-                raise ValueError(f"duplicate device={n} record={r} first meta={d}")
-            self.devices[n] = meta
+            if name in self.devices:
+                raise ValueError(f"duplicate device={name}")
+            self.devices[name] = rec
 
-        def _input_fixups(device, rec):
-            if device == "VCCB":
+        def _input_fixups(name, rec):
+            if not rec.controls_information.PVs:
+                # Also many don't have beam_path
+                raise _Ignore()
+            if rec.metadata.area not in _area_to_beam_path:
+                _area_to_beam_path[rec.metadata.area] = tuple(rec.metadata.beam_path)
+            if not rec.metadata.beam_path:
+                if rec.metadata.area in _AREAS_MISSING_BEAM_PATH:
+                    raise _Ignore()
+                rec.metadata.beam_path = _area_to_beam_path[rec.metadata.area]
+            if "VCCB" == name:
                 # Typo in MEME?
                 rec.controls_information.PVs.resolution = "CAMR:LGUN:950:RESOLUTION"
-            return
+                rec.metadata.type = "PROF"
+            elif "VCC" == name:
+                rec.metadata.type = "PROF"
+            elif "YC14820" == name:
+                rec.metadata.beam_path = (["F2_ELEC", "F2_SCAV"],)
+            if "?" in name:
+                pkdp("{} {}", name, rec.metadata.area)
+            return rec
 
-        def _meta(device, ctl, md, kind, raw):
-            validate type and kind and map between
-
-            rv = PKDict(pv_prefix=ctl.control_name, device_kind=kind, device_type= pv_suffix=PKDict())
-            p = re.compile(rf"^{re.escape(rv.pv_prefix)}:{_PV_POSTFIX_RE}$")
-            # TODO(robnagler) type and kind are different, or kind
-            for v in ctl.PVs.values():
-                if not (m := p.search(v)):
-                    raise ValueError(
-                        f"invalid pv name={v} for device={device} regex={p}"
-                    )
-                rv.pv_suffix[m.group(1)] = v
-            rv.pkupdate(
-                area=md.area,
-                beam_path=tuple(sorted(md.beam_path)),
-                device_name=device,
-                # Not always a type(?)
-                device_type=md.get("type"),
+        def _meta(name, kind, raw):
+            # TODO validation
+            c = raw.controls_information
+            m = raw.metadata
+            self.meta_keys.update(m.keys())
+            self.ctl_keys.update(c.keys())
+            self.kinds.setdefault(kind, set()).add(m.type)
+            rv = PKDict(
+                kind=kind,
+                name=name,
+                pv_prefix=c.control_name,
             )
-            md.pkdel("beam_path")
-            md.pkdel("area")
-            md.pkdel("type")
-            # TODO robnagler list of attrs {'bpms_before_wire', 'bpms_after_wire', 'l_eff', 'lblms', 'rf_freq', 'sum_l_meters'}
-            rv.attrs = md
+            for k in "area", "beam_path":
+                if not m.get(k):
+                    raise AssertionError(f"missing metadata.{k}")
+            rv.metadata = PKDict({k: v for k, v in m.items() if v is not None})
+            rv.pvs = PKDict(_pvs(c.PVs, rv))
             return rv
 
-        def _meta_fixups(meta):
-            # TODO(robnagler): DEV_CAMERA is special, need to configure it right
-            # if meta.device_name != "DEV_CAMERA":
-            #    meta.pv_base.pksetdefault(
-            #        Acquire=f"{meta.pv_prefix}:Acquire",
-            #    )
-            meta.accessor = PKDict(_accessor(meta))
-            # No longer needed
-            meta.pkdel("pv_base")
-            return meta
+        def _pvs(pvs, rv):
+            p = re.compile(rf"^{re.escape(rv.pv_prefix)}:{_PV_POSTFIX_RE}$")
+            # TODO(robnagler) type and kind are different, or kind
+            for k, v in pvs.items():
+                if not (x := p.search(v)):
+                    raise ValueError(f"pv={v} does not match regex={p}")
+                yield k, x.group(1)
+
+        def _validate(name, plural_kind, raw):
+            if not (t := _KNOWN_KEYS.kinds.get(plural_kind)):
+                raise AssertionError(f"unknown kind={plural_kind}")
+            if raw.metadata.type not in t:
+                raise AssertionError(f"unknown type={raw.metadata.type} {t}")
+            for x in ("controls_information", "metadata"):
+                if y := set(raw[x].keys()) - _KNOWN_KEYS[x]:
+                    raise AssertionError(f"unknown {x} keys={y}")
+            if not raw.controls_information.PVs:
+                raise AssertionError(f"no PVs")
+            return name, plural_kind[:-1], raw
 
         for k, x in src.items():
             for n, r in x.items():
                 try:
-                    _input_fixups(n, r)
-                    # if not _input_fixups(n, r):
-                    #    continue
+
                     _assign(
                         n,
-                        _meta_fixups(
-                            # remove the s as all the kinds are plural
-                            # TODO(robnagler) look up these in table
-                            #   reconcile with type
-                            _meta(n, r.controls_information, r.metadata, k[:-1], r)
+                        _meta(
+                            *_validate(
+                                n,
+                                k,
+                                _input_fixups(n, copy.deepcopy(r)),
+                            )
                         ),
                     )
+                except _Ignore:
+                    pass
                 except Exception:
                     pkdlog("ERROR device={} record={}", n, r)
                     raise
