@@ -9,7 +9,7 @@ from pykern.pkdebug import pkdc, pkdlog, pkdp
 import pykern.sql_db
 import pykern.pkresource
 
-_BASE_PATH = "devices.sqlite3"
+_BASE_PATH = "device_sql_db.sqlite3"
 
 _meta = None
 
@@ -19,32 +19,63 @@ def insert(device_decl, session):
     pass
 
 
-def recreate(devices):
+def recreate(parser):
     assert not _meta
-    pykern.pkio.unchecked_remove(_path)
+    pykern.pkio.unchecked_remove(_path())
+    pkdlog(_path())
     _init()
-    return _Inserter(devices, _meta).counts
+    return _Inserter(parser, _meta).counts
+
+
+_METADATA_SKIP = frozenset(
+    (
+        "area",
+        "beam_path",
+        "bpms_after_wire",
+        "bpms_before_wire",
+        "lblms",
+        "type",
+    ),
+)
 
 
 class _Inserter:
-    def __init__(self, devices, meta):
+    def __init__(self, parser, meta):
         self.counts = PKDict()
+        self.parser = parser
         with meta.session() as s:
-            self.session = s
-            self.tables = meta.tables(as_dict=True)
-            self.beam_areas = PKDict(self._beam_areas(devices, tables.beam_area))
+            self._beam_paths(s)
+            self._devices(s)
 
-    def _beam_areas(self, devices, table):
-        # m.pkdel(bpms_after_wire",
-        #  "bpms_before_wire",
+    def _beam_paths(self, session):
+        for a, paths in self.parser.beam_paths.items():
+            session.insert("beam_area", beam_area=a)
+            for p in paths:
+                session.insert("beam_path", beam_area=a, beam_path=p)
 
-
-        for n in sorted(set(d.area for d in devices)):
-            yield n, s.insert(table, beam_area_name=n).beam_area_id
+    def _devices(self, session):
+        for n, d in self.parser.devices.items():
+            session.insert(
+                "device",
+                device_name=d.name,
+                beam_area=d.metadata.area,
+                device_type=d.metadata.type,
+                pv_prefix=d.pv_prefix,
+            )
+            for k, v in d.pvs.items():
+                session.insert("device_pv", device_name=n, accessor_name=k, pv_suffix=v)
+            for k, v in d.metadata.items():
+                if k not in _METADATA_SKIP:
+                    session.insert(
+                        "device_meta_float",
+                        device_name=n,
+                        device_meta_name=k,
+                        device_meta_value=float(v),
+                    )
 
 
 def _path():
-    return pykern.pkresource.file_path(_BASE_PATH)
+    return pykern.pkresource.file_path(".").join(_BASE_PATH)
 
 
 def _init():
@@ -55,17 +86,19 @@ def _init():
     p = s + " primary_key"
     n = s + " index"
     # Since created once, no need for created/modified entries
-    _meta = sql_db.Meta(
+    _meta = pykern.sql_db.Meta(
         uri=pykern.sql_db.sqlite_uri(_path()),
         schema=PKDict(
-            beam_path=PKDict(
+            beam_area=PKDict(
                 beam_area=p,
-                beam_path_name=p,
+            ),
+            beam_path=PKDict(
+                beam_area=p + " foreign",
+                beam_path=p,
             ),
             device=PKDict(
                 device_name=p,
-                beam_area=n,
-                device_kind=n,
+                beam_area=n + " foreign",
                 device_type=n,
                 pv_prefix=s,
             ),
@@ -75,9 +108,9 @@ def _init():
                 pv_suffix=s,
             ),
             device_meta_float=PKDict(
-                device_name=p + "foreign",
+                device_name=p + " foreign",
                 device_meta_name=p,
-                device_meta_value="float",
+                device_meta_value="float 64",
             ),
         ),
     )

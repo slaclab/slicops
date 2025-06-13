@@ -14,6 +14,7 @@ import pykern.pkio
 import pykern.pkyaml
 import re
 import slicops.device_sql_db
+import slicops.const
 
 
 # We assume the names are valid (could check, but no realy point)
@@ -44,16 +45,8 @@ screens:
 
 
 _KNOWN_KEYS = PKDict(
-    controls_information=set(("PVs", "control_name")),
-    kinds=PKDict(
-        bpms=set(("BPM",)),
-        lblms=set(("LBLM",)),
-        magnets=set(("XCOR", "QUAD", "SOLE", "YCOR", "BEND")),
-        screens=set(("PROF",)),
-        tcavs=set(("LCAV",)),
-        wires=set(("WIRE",)),
-    ),
-    metadata=set(
+    controls_information=frozenset(("PVs", "control_name")),
+    metadata=frozenset(
         (
             "area",
             "beam_path",
@@ -68,6 +61,8 @@ _KNOWN_KEYS = PKDict(
     ),
 )
 
+_TOP_LEVEL_KEYS = frozenset(_KNOWN_KEYS.keys())
+
 _AREAS_MISSING_BEAM_PATH = frozenset(
     (
         "COL",
@@ -77,29 +72,25 @@ _AREAS_MISSING_BEAM_PATH = frozenset(
     ),
 )
 
-_area_to_beam_path = PKDict()
 
-
-def create_from_yaml():
+def yaml_to_sql():
     """Convert device yaml file to db"""
-    return slicops.device_db_sql.recreate(tuple(_Parser().devices.values()))
+    return slicops.device_sql_db.recreate(_Parser())
 
 
 def parse():
     from pykern import pkjson
 
-    r = pykern.pkio.mkdir_parent("raw")
     p = _Parser()
+    return len(p.devices)
+    r = pykern.pkio.mkdir_parent("raw")
     for d in p.devices.values():
         pkjson.dump_pretty(
             d,
-            filename=pykern.pkio.mkdir_parent(r.join(d.kind, d.metadata.area)).join(
-                d.name + ".json"
-            ),
+            filename=pykern.pkio.mkdir_parent(
+                r.join(d.metadata.type, d.metadata.area)
+            ).join(d.name + ".json"),
         )
-    return PKDict({k: sorted(p[k]) for k in ("ctl_keys", "meta_keys")}).pkupdate(
-        kinds=p.kinds
-    )
 
 
 class _Ignore(Exception):
@@ -114,7 +105,7 @@ class _Parser(PKDict):
     def _init(self):
         self._yaml_glob = (
             pykern.pkio.py_path(
-                pkdp(importlib.import_module("lcls_tools.common.devices.yaml").__file__)
+                importlib.import_module("lcls_tools.common.devices.yaml").__file__,
             )
             .dirpath()
             .join("*.yaml")
@@ -122,9 +113,9 @@ class _Parser(PKDict):
         self.devices = PKDict()
         self.ctl_keys = set()
         self.meta_keys = set()
-        self.kinds = PKDict()
         self.accessors = PKDict()
         self.pvs = set()
+        self.beam_paths = PKDict()
 
     def _parse(self):
         for p in pykern.pkio.sorted_glob(self._yaml_glob):
@@ -151,31 +142,33 @@ class _Parser(PKDict):
             if not rec.controls_information.PVs:
                 # Also many don't have beam_path
                 raise _Ignore()
-            if rec.metadata.area not in _area_to_beam_path:
-                _area_to_beam_path[rec.metadata.area] = tuple(rec.metadata.beam_path)
+            # Save beam_paths for fixups and to return
+            if rec.metadata.area not in self.beam_paths:
+                self.beam_paths[rec.metadata.area] = tuple(rec.metadata.beam_path)
             if not rec.metadata.beam_path:
                 if rec.metadata.area in _AREAS_MISSING_BEAM_PATH:
                     raise _Ignore()
-                rec.metadata.beam_path = _area_to_beam_path[rec.metadata.area]
+                rec.metadata.beam_path = self.beam_paths[rec.metadata.area]
             if "VCCB" == name:
                 # Typo in MEME?
                 rec.controls_information.PVs.resolution = "CAMR:LGUN:950:RESOLUTION"
                 rec.metadata.type = "PROF"
             elif "VCC" == name:
                 rec.metadata.type = "PROF"
-            if "?" in name:
-                pkdp("{} {}", name, rec.metadata.area)
+            if rec.metadata.type == "PROF":
+                # No cameras have Acquire for some reason
+                rec.controls_information.PVs.pksetdefault(
+                    "acquire", f"{rec.controls_information.control_name}:Acquire"
+                )
             return rec
 
-        def _meta(name, kind, raw):
+        def _meta(name, raw):
             # TODO validation
             c = raw.controls_information
             m = raw.metadata
             self.meta_keys.update(m.keys())
             self.ctl_keys.update(c.keys())
-            self.kinds.setdefault(kind, set()).add(m.type)
             rv = PKDict(
-                kind=kind,
                 name=name,
                 pv_prefix=c.control_name,
             )
@@ -188,23 +181,24 @@ class _Parser(PKDict):
 
         def _pvs(pvs, rv):
             p = re.compile(rf"^{re.escape(rv.pv_prefix)}:{_PV_POSTFIX_RE}$")
-            # TODO(robnagler) type and kind are different, or kind
             for k, v in pvs.items():
                 if not (x := p.search(v)):
                     raise ValueError(f"pv={v} does not match regex={p}")
                 yield k, x.group(1)
 
-        def _validate(name, plural_kind, raw):
-            if not (t := _KNOWN_KEYS.kinds.get(plural_kind)):
-                raise AssertionError(f"unknown kind={plural_kind}")
+        def _validate(name, kind, raw):
+            if not (t := slicops.const.DEVICE_KINDS_TO_TYPES.get(kind)):
+                raise AssertionError(f"unknown kind={kind}")
             if raw.metadata.type not in t:
-                raise AssertionError(f"unknown type={raw.metadata.type} {t}")
+                raise AssertionError(f"unknown type={raw.metadata.type} expect={t}")
+            if x := set(raw.keys()) - _TOP_LEVEL_KEYS:
+                raise AssertionError(f"unknown top level keys={s}")
             for x in ("controls_information", "metadata"):
                 if y := set(raw[x].keys()) - _KNOWN_KEYS[x]:
                     raise AssertionError(f"unknown {x} keys={y}")
             if not raw.controls_information.PVs:
                 raise AssertionError(f"no PVs")
-            return name, plural_kind[:-1], raw
+            return name, raw
 
         for k, x in src.items():
             for n, r in x.items():

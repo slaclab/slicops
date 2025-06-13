@@ -6,14 +6,15 @@
 
 from pykern.pkcollections import PKDict
 from pykern.pkdebug import pkdc, pkdlog, pkdp
+import numpy
 import slicops.device_sql_db
 
 _ACCESSOR_META = PKDict(
-    acquire=PKDict(py_type="bool", pv_writable=True),
-    image=PKDict(py_type="ndarray", pv_writable=False),
-    n_bits=PKDict(py_type="int", pv_writable=False),
-    n_col=PKDict(py_type="int", pv_writable=False),
-    n_row=PKDict(py_type="int", pv_writable=False),
+    acquire=PKDict(py_type=bool, pv_writable=True),
+    image=PKDict(py_type=numpy.ndarray, pv_writable=False),
+    n_bits=PKDict(py_type=int, pv_writable=False),
+    n_col=PKDict(py_type=int, pv_writable=False),
+    n_row=PKDict(py_type=int, pv_writable=False),
 )
 
 
