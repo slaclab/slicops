@@ -163,8 +163,6 @@ class _Parser(PKDict):
                 rec.metadata.type = "PROF"
             elif "VCC" == name:
                 rec.metadata.type = "PROF"
-            elif "YC14820" == name:
-                rec.metadata.beam_path = (["F2_ELEC", "F2_SCAV"],)
             if "?" in name:
                 pkdp("{} {}", name, rec.metadata.area)
             return rec
