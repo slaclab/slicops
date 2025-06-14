@@ -178,7 +178,7 @@ def beam_paths():
     Returns:
         tuple: sorted beams path names
     """
-    return tuple(slicops.device_meta_raw.DB.BEAM_PATH_TO_DEVICE.keys())
+    return slicops.device_sql_db.beam_paths()
 
 
 def devices_for_beam_path(beam_path, device_kind):

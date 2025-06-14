@@ -1,4 +1,6 @@
-"""SQL db of `lcls_tools.common.devices.yaml`
+"""SQL db of `lcls_tools.common.devices.yaml`.
+
+Use slicops.device_db for a stable interface.
 
 :copyright: Copyright (c) 2025 The Board of Trustees of the Leland Stanford Junior University, through SLAC National Accelerator Laboratory (subject to receipt of any required approvals from the U.S. Dept. of Energy).  All Rights Reserved.
 :license: http://github.com/slaclab/slicops/LICENSE
@@ -8,38 +10,49 @@ from pykern.pkcollections import PKDict
 from pykern.pkdebug import pkdc, pkdlog, pkdp
 import pykern.sql_db
 import pykern.pkresource
+import sqlalchemy
 
 _BASE_PATH = "device_sql_db.sqlite3"
 
 _meta = None
 
 
-def insert(device_decl, session):
-    tables = insert.tables(as_dict=True)
-    pass
+def session():
+    _init()
+    return _meta.session()
+
+
+def beam_paths():
+    with session() as s:
+        c = s.t.beam_path.c.beam_path
+        return tuple(
+            p.beam_path for p in s.select(sqlalchemy.select(c).distinct().order_by(c))
+        )
 
 
 def recreate(parser):
+    """Recreates db"""
     assert not _meta
+    # Don't remove unless we have valid data
+    assert parser.devices
     pykern.pkio.unchecked_remove(_path())
     pkdlog(_path())
     _init()
     return _Inserter(parser, _meta).counts
 
 
-_METADATA_SKIP = frozenset(
-    (
-        "area",
-        "beam_path",
-        "bpms_after_wire",
-        "bpms_before_wire",
-        "lblms",
-        "type",
-    ),
-)
-
-
 class _Inserter:
+    _METADATA_SKIP = frozenset(
+        (
+            "area",
+            "beam_path",
+            "bpms_after_wire",
+            "bpms_before_wire",
+            "lblms",
+            "type",
+        ),
+    )
+
     def __init__(self, parser, meta):
         self.counts = PKDict()
         self.parser = parser
@@ -65,7 +78,7 @@ class _Inserter:
             for k, v in d.pvs.items():
                 session.insert("device_pv", device_name=n, accessor_name=k, pv_suffix=v)
             for k, v in d.metadata.items():
-                if k not in _METADATA_SKIP:
+                if k not in self._METADATA_SKIP:
                     session.insert(
                         "device_meta_float",
                         device_name=n,
