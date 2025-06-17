@@ -22,7 +22,7 @@ import slicops.device
 import slicops.device_db
 import slicops.quest
 
-_KIND = "screen"
+_DEVICE_TYPE = "PROF"
 
 _cfg = None
 
@@ -151,7 +151,7 @@ class API(slicops.quest.API):
     def _beam_path_change(self, ux, old_name):
         # TODO(robnagler) get from device db
         ux.camera.choices = _choice_map(
-            slicops.device_db.devices_for_beam_path(ux.beam_path.value, _KIND),
+            slicops.device_db.device_names(ux.beam_path.value, _DEVICE_TYPE),
         )
         if (
             _validate_field(ux.camera, ux.camera.value) is not None
@@ -192,7 +192,10 @@ class API(slicops.quest.API):
                 self._set_acquire(0)
             except Exception as e:
                 pkdlog(
-                    "set acquire=0 PV error={} device={} stack={}", e, d.name, pkdexc()
+                    "set acquire=0 PV error={} device={} stack={}",
+                    e,
+                    d.device_name,
+                    pkdexc(),
                 )
             self.session[_DEVICE_KEY] = None
             _Monitor.destroy(self.session)
@@ -352,10 +355,15 @@ class _Plot:
         Valid methods are (gaussian, super_gaussian).
         """
 
-        def gaussian(x, amplitude, mean, sigma, offset):
+        def _fix(results):
+            # sigma may be negative from the fit
+            results.sig = abs(results.sig)
+            return results
+
+        def _gaussian(x, amplitude, mean, sigma, offset):
             return amplitude * numpy.exp(-(((x - mean) / sigma) ** 2) / 2) + offset
 
-        def super_gaussian(x, amplitude, mean, sigma, offset, p):
+        def _super_gaussian(x, amplitude, mean, sigma, offset, p):
             return amplitude * numpy.exp(-numpy.abs((x - mean) / sigma) ** p) + offset
 
         popt = None
@@ -363,15 +371,17 @@ class _Plot:
         # TODO(pjm): should use physical camera dimensions
         x = numpy.arange(len(profile))
         try:
-            m = gaussian
+            m = _gaussian
             popt, pcov = scipy.optimize.curve_fit(m, x, profile)
             if ux.curve_fit_method.value == "super_gaussian":
                 # use gaussian fit to guess other distribution starting values
-                m = super_gaussian
-                dist_keys = ["amp", "mean", "sig", "offset", "p"]
+                m = _super_gaussian
+                dist_keys.append("p")
                 popt, pcov = scipy.optimize.curve_fit(
                     m, x, profile, p0=numpy.append(popt, 1.1)
                 )
+            elif ux.curve_fit_method.value != "gaussian":
+                raise AssertionError(f"invalid fit method={ux.curve_fit_method.value}")
             fit_line = m(x, *popt)
         except RuntimeError as e:
             # TODO(pjm): show fitting error message on curve fit method field
@@ -380,7 +390,7 @@ class _Plot:
             lineout=profile,
             fit=PKDict(
                 fit_line=fit_line,
-                results=None if popt is None else dict(zip(dist_keys, popt)),
+                results=None if popt is None else _fix(PKDict(zip(dist_keys, popt))),
             ),
         )
 

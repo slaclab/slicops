@@ -31,9 +31,9 @@ class Device:
         meta (slicops.device_db.DeviceMeta): information about device
     """
 
-    def __init__(self, name):
-        self.name = name
-        self.meta = slicops.device_db.meta_for_device(name)
+    def __init__(self, device_name):
+        self.device_name = device_name
+        self.meta = slicops.device_db.meta_for_device(device_name)
         self._accessor = PKDict()
         self.connected = False
 
@@ -94,18 +94,16 @@ class _Accessor:
         meta (PKDict): meta data about the accessor, e.g. pv_name, pv_writable
     """
 
-    def __init__(self, device, name):
+    def __init__(self, device, accessor_name):
         self.device = device
-        self.meta = device.meta.accessor[name]
+        self.meta = device.meta.accessor[accessor_name]
         self._callback = None
         self._mutex = threading.Lock()
         self._pv = epics.PV(self.meta.pv_name, connection_callback=self._on_connection)
-        if name == "image":
+        if accessor_name == "image":
             # TODO(robnagler) this has to be done here, because you can't get pvs
             # from within a monitor callback
-            r = self.device.get("num_rows")
-            c = self.device.get("num_cols")
-            self._image_shape = (r, c) if self.meta.array_is_row_major else (c, r)
+            self._image_shape = (self.device.get("n_row"), self.device.get("n_col"))
 
     def disconnect(self):
         """Stop all monitoring and disconnect from PV"""
@@ -169,9 +167,9 @@ class _Accessor:
         """
         if not self.meta.pv_writable:
             raise AccessorPutError(f"read-only {self}")
-        if self.meta.py_type == "bool":
+        if self.meta.py_type == bool:
             v = bool(value)
-        elif self.meta.py_type == "int":
+        elif self.meta.py_type == int:
             v = int(value)
         else:
             raise AccessorPutError(f"unhandled py_type={self.meta.py_type} {self}")
@@ -185,9 +183,9 @@ class _Accessor:
         def _reshape(image):
             return image.reshape(self._image_shape)
 
-        if self.meta.py_type == "bool":
+        if self.meta.py_type == bool:
             return bool(raw)
-        if self.meta.name == "image":
+        if self.meta.accessor_name == "image":
             return _reshape(raw)
         return raw
 
@@ -209,7 +207,7 @@ class _Accessor:
                 pkdlog("missing 'value' in kwargs={} {}", kwargs, self)
                 self._run_callback(error="missing value or None")
             else:
-                if self.meta.name == "image" and not len(v):
+                if self.meta.accessor_name == "image" and not len(v):
                     pkdlog("empty image received {}", self)
                     return
                 self._run_callback(value=self._fixup_value(v))
@@ -218,7 +216,7 @@ class _Accessor:
             raise
 
     def __repr__(self):
-        return f"<_Accessor {self.device.name}.{self.meta.name} {self.meta.pv_name}>"
+        return f"<_Accessor {self.device.device_name}.{self.meta.accessor_name} {self.meta.pv_name}>"
 
     def _run_callback(self, **kwargs):
         k = PKDict(accessor=self, **kwargs)
