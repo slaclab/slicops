@@ -14,12 +14,12 @@ def test_basic():
     pkunit.pkeq("SC_SXR", a[-1])
     pkunit.pkeq(18, len(a))
 
-    a = device_db.devices_for_beam_path("SC_SXR", "screen")
+    a = device_db.devices_for_beam_path("SC_SXR", "PROF")
     pkunit.pkeq("BOD10", a[0])
     pkunit.pkeq("YAGH2", a[-1])
     pkunit.pkeq(11, len(a))
     with pkunit.pkexcept("XYZZY"):
-        device_db.devices_for_beam_path("XYZZY", "screen")
+        device_db.devices_for_beam_path("XYZZY", "PROF")
     with pkunit.pkexcept("xyzzy"):
         device_db.devices_for_beam_path("SC_SXR", "xyzzy")
 

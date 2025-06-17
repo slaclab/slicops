@@ -12,7 +12,7 @@ import pykern.sql_db
 import pykern.pkresource
 import sqlalchemy
 
-_BASE_PATH = "device_sql_db.sqlite3"
+_BASE_PATH = "device_db.sqlite3"
 
 _meta = None
 
@@ -26,7 +26,27 @@ def beam_paths():
     with session() as s:
         c = s.t.beam_path.c.beam_path
         return tuple(
-            p.beam_path for p in s.select(sqlalchemy.select(c).distinct().order_by(c))
+            r.beam_path for r in s.select(sqlalchemy.select(c).distinct().order_by(c))
+        )
+
+
+def devices_for_beam_path(beam_path, device_type):
+    with session() as s:
+        c = s.t.device.c.device_name
+        return tuple(
+            r.device_name
+            for r in s.select(
+                sqlalchemy.select(c)
+                .join(
+                    s.t.beam_path,
+                    s.t.beam_path.c.beam_area == s.t.device.c.beam_area,
+                )
+                .where(
+                    s.t.beam_path.c.beam_path == beam_path,
+                    s.t.device.c.device_type == device_type,
+                )
+                .order_by(c)
+            )
         )
 
 
@@ -54,7 +74,7 @@ class _Inserter:
     )
 
     def __init__(self, parser, meta):
-        self.counts = PKDict()
+        self.counts = PKDict(beam_areas=0, beam_paths=0, devices=0)
         self.parser = parser
         with meta.session() as s:
             self._beam_paths(s)
@@ -62,12 +82,15 @@ class _Inserter:
 
     def _beam_paths(self, session):
         for a, paths in self.parser.beam_paths.items():
+            self.counts.beam_areas += 1
             session.insert("beam_area", beam_area=a)
             for p in paths:
+                self.counts.beam_paths += 1
                 session.insert("beam_path", beam_area=a, beam_path=p)
 
     def _devices(self, session):
         for n, d in self.parser.devices.items():
+            self.counts.devices += 1
             session.insert(
                 "device",
                 device_name=d.name,

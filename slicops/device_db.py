@@ -7,7 +7,13 @@
 from pykern.pkcollections import PKDict
 from pykern.pkdebug import pkdc, pkdlog, pkdp
 import numpy
+import slicops.const
 import slicops.device_sql_db
+
+
+class DeviceDbError(Exception):
+    pass
+
 
 _ACCESSOR_META = PKDict(
     acquire=PKDict(py_type=bool, pv_writable=True),
@@ -181,22 +187,21 @@ def beam_paths():
     return slicops.device_sql_db.beam_paths()
 
 
-def devices_for_beam_path(beam_path, device_kind):
-    """Look up all device_kind in beam_path
+def devices_for_beam_path(beam_path, device_type):
+    """Look up all device_type in beam_path
 
     Args:
         beam_path (str): which beam path
-        device_kind (str): kind of device to filter by
+        device_type (str): type of device to filter by
     Returns:
         tuple: sorted device names
     """
-    if device_kind not in slicops.device_meta_raw.DB.DEVICE_KIND_TO_DEVICE:
-        raise NameError(f"no such device_kind={device_kind}")
-    return tuple(
-        n
-        for n in slicops.device_meta_raw.DB.BEAM_PATH_TO_DEVICE[beam_path]
-        if slicops.device_meta_raw.DB.DEVICE_TO_META[n].device_kind == device_kind
-    )
+    if device_type not in slicops.const.DEVICE_TYPES:
+        raise DeviceDbError(f"no such device_type={device_type}")
+    if rv := slicops.device_sql_db.devices_for_beam_path(beam_path, device_type):
+        return rv
+    # TODO(robnagler) refine because beam_path could exist, just not for device
+    raise DeviceDbError(f"no devices for beam_path={beam_path}")
 
 
 def meta_for_device(device_name):
@@ -207,4 +212,6 @@ def meta_for_device(device_name):
     Returns:
         DeviceMeta: information about device
     """
-    return DeviceMeta(slicops.device_meta_raw.DB.DEVICE_TO_META[device_name])
+    from slicops import device_meta_raw
+
+    return DeviceMeta(device_meta_raw.DB.DEVICE_TO_META[device_name])

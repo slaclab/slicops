@@ -5,19 +5,7 @@
 """
 from pykern.pkcollections import PKDict
 from pykern.pkdebug import pkdc, pkdlog, pkdp
-
-DEVICE_TYPES_TO_KIND = PKDict(
-    BEND="magnets",
-    BPM="bpms",
-    LBLM="lblms",
-    QUAD="magnets",
-    SCREEN="screens",
-    SOLE="magnets",
-    TCAV="tcavs",
-    WIRE="wires",
-    XCOR="magnets",
-    YCOR="magnets",
-)
+import itertools
 
 DEVICE_KINDS_TO_TYPES = PKDict(
     bpms=frozenset(("BPM",)),
@@ -27,3 +15,5 @@ DEVICE_KINDS_TO_TYPES = PKDict(
     tcavs=frozenset(("LCAV",)),
     wires=frozenset(("WIRE",)),
 )
+
+DEVICE_TYPES = frozenset(itertools.chain.from_iterable(DEVICE_KINDS_TO_TYPES.values()))

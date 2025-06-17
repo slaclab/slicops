@@ -22,7 +22,7 @@ import slicops.device
 import slicops.device_db
 import slicops.quest
 
-_KIND = "screen"
+_DEVICE_TYPE = "PROF"
 
 _cfg = None
 
@@ -151,7 +151,7 @@ class API(slicops.quest.API):
     def _beam_path_change(self, ux, old_name):
         # TODO(robnagler) get from device db
         ux.camera.choices = _choice_map(
-            slicops.device_db.devices_for_beam_path(ux.beam_path.value, _KIND),
+            slicops.device_db.devices_for_beam_path(ux.beam_path.value, _DEVICE_TYPE),
         )
         if (
             _validate_field(ux.camera, ux.camera.value) is not None
