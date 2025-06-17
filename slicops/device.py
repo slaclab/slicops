@@ -103,9 +103,7 @@ class _Accessor:
         if accessor_name == "image":
             # TODO(robnagler) this has to be done here, because you can't get pvs
             # from within a monitor callback
-            r = self.device.get("num_rows")
-            c = self.device.get("num_cols")
-            self._image_shape = (r, c) if self.meta.array_is_row_major else (c, r)
+            self._image_shape = (self.device.get("n_row"), self.device.get("n_col"))
 
     def disconnect(self):
         """Stop all monitoring and disconnect from PV"""
@@ -169,9 +167,9 @@ class _Accessor:
         """
         if not self.meta.pv_writable:
             raise AccessorPutError(f"read-only {self}")
-        if self.meta.py_type == "bool":
+        if self.meta.py_type == bool:
             v = bool(value)
-        elif self.meta.py_type == "int":
+        elif self.meta.py_type == int:
             v = int(value)
         else:
             raise AccessorPutError(f"unhandled py_type={self.meta.py_type} {self}")
@@ -185,7 +183,7 @@ class _Accessor:
         def _reshape(image):
             return image.reshape(self._image_shape)
 
-        if self.meta.py_type == "bool":
+        if self.meta.py_type == bool:
             return bool(raw)
         if self.meta.accessor_name == "image":
             return _reshape(raw)
