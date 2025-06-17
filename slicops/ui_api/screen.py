@@ -151,7 +151,7 @@ class API(slicops.quest.API):
     def _beam_path_change(self, ux, old_name):
         # TODO(robnagler) get from device db
         ux.camera.choices = _choice_map(
-            slicops.device_db.devices_for_beam_path(ux.beam_path.value, _DEVICE_TYPE),
+            slicops.device_db.device_names(ux.beam_path.value, _DEVICE_TYPE),
         )
         if (
             _validate_field(ux.camera, ux.camera.value) is not None
@@ -192,7 +192,7 @@ class API(slicops.quest.API):
                 self._set_acquire(0)
             except Exception as e:
                 pkdlog(
-                    "set acquire=0 PV error={} device={} stack={}", e, d.name, pkdexc()
+                    "set acquire=0 PV error={} device={} stack={}", e, d.device_name, pkdexc()
                 )
             self.session[_DEVICE_KEY] = None
             _Monitor.destroy(self.session)

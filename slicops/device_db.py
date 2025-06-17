@@ -15,6 +15,11 @@ class DeviceDbError(Exception):
     pass
 
 
+_ACCESSOR_META_DEFAULT = PKDict(
+    py_type=float,
+    pv_writable=False,
+)
+
 _ACCESSOR_META = PKDict(
     acquire=PKDict(py_type=bool, pv_writable=True),
     image=PKDict(py_type=numpy.ndarray, pv_writable=False),
@@ -165,10 +170,9 @@ class DeviceMeta(PKDict):
     """Information about a device
 
     Attributes:
-        accessor (PKDict): name to PKDict(name, pv_base, pv_name, pv_writable, py_type)
-        area (str): area where device is located
+        accessor (PKDict): name to PKDict(name, pv_name, pv_writable, py_type, ...)
+        beam_area (str): area where device is located
         beam_path (tuple): which beam paths does it go through
-        device_kind (str): kind of device, e.g. "screen"
         device_type (str): type device, e.g. "PROF"
         device_name (str): name of device
         pv_prefix (str): prefix to all accessor PVs for device
@@ -184,11 +188,15 @@ def beam_paths():
     Returns:
         tuple: sorted beams path names
     """
-    return slicops.device_sql_db.beam_paths()
+    rv = slicops.device_sql_db.beam_paths()
+    # TODO(robnagler) probably don't need this check
+    if not rv:
+        raise DeviceDbError("no beam_paths")
+    return rv
 
 
-def devices_for_beam_path(beam_path, device_type):
-    """Look up all device_type in beam_path
+def device_names(beam_path, device_type):
+    """Query devices for device_type and beam_path
 
     Args:
         beam_path (str): which beam path
@@ -198,7 +206,7 @@ def devices_for_beam_path(beam_path, device_type):
     """
     if device_type not in slicops.const.DEVICE_TYPES:
         raise DeviceDbError(f"no such device_type={device_type}")
-    if rv := slicops.device_sql_db.devices_for_beam_path(beam_path, device_type):
+    if rv := slicops.device_sql_db.device_names(beam_path, device_type):
         return rv
     # TODO(robnagler) refine because beam_path could exist, just not for device
     raise DeviceDbError(f"no devices for beam_path={beam_path}")
@@ -212,6 +220,20 @@ def meta_for_device(device_name):
     Returns:
         DeviceMeta: information about device
     """
-    from slicops import device_meta_raw
 
-    return DeviceMeta(device_meta_raw.DB.DEVICE_TO_META[device_name])
+    def _static(device, accessor):
+        accessor.pkupdate(
+            _ACCESSOR_META.get(accessor.accessor_name, _ACCESSOR_META_DEFAULT),
+        )
+        if device.device_type in slicops.const.DEVICE_KINDS_TO_TYPES.wires:
+            accessor.pkupdate(_WIRE_META[device.beam_area])
+
+    rv = DeviceMeta(slicops.device_sql_db.device(device_name))
+    # TODO(robnagler) probably don't need this check
+    if not rv.accessor:
+        raise DeviceDbError(
+            f"no accessors for device_name={device_name} device_meta={rv}"
+        )
+    for r in rv.accessor.values():
+        _static(rv, r)
+    return pkdp(rv)

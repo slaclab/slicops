@@ -184,7 +184,7 @@ class _Parser(PKDict):
             for k, v in pvs.items():
                 if not (x := p.search(v)):
                     raise ValueError(f"pv={v} does not match regex={p}")
-                yield k, x.group(1)
+                yield k, v
 
         def _validate(name, kind, raw):
             if not (t := slicops.const.DEVICE_KINDS_TO_TYPES.get(kind)):

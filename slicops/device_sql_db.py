@@ -17,21 +17,16 @@ _BASE_PATH = "device_db.sqlite3"
 _meta = None
 
 
-def session():
-    _init()
-    return _meta.session()
-
-
 def beam_paths():
-    with session() as s:
+    with _session() as s:
         c = s.t.beam_path.c.beam_path
         return tuple(
             r.beam_path for r in s.select(sqlalchemy.select(c).distinct().order_by(c))
         )
 
 
-def devices_for_beam_path(beam_path, device_type):
-    with session() as s:
+def device_names(beam_path, device_type):
+    with _session() as s:
         c = s.t.device.c.device_name
         return tuple(
             r.device_name
@@ -50,6 +45,24 @@ def devices_for_beam_path(beam_path, device_type):
         )
 
 
+def device(device_name):
+    with _session() as s:
+        return PKDict(s.select_one("device", PKDict(device_name=device_name))).pkupdate(
+            accessor=PKDict(
+                {
+                    r.accessor_name: PKDict(r)
+                    for r in s.select("device_pv", PKDict(device_name=device_name))
+                }
+            ),
+        )
+
+
+def _session():
+    if _meta is None:
+        _init()
+    return _meta.session()
+
+
 def recreate(parser):
     """Recreates db"""
     assert not _meta
@@ -57,8 +70,7 @@ def recreate(parser):
     assert parser.devices
     pykern.pkio.unchecked_remove(_path())
     pkdlog(_path())
-    _init()
-    return _Inserter(parser, _meta).counts
+    return _Inserter(parser).counts
 
 
 class _Inserter:
@@ -73,10 +85,10 @@ class _Inserter:
         ),
     )
 
-    def __init__(self, parser, meta):
+    def __init__(self, parser):
         self.counts = PKDict(beam_areas=0, beam_paths=0, devices=0)
         self.parser = parser
-        with meta.session() as s:
+        with _session() as s:
             self._beam_paths(s)
             self._devices(s)
 
@@ -99,7 +111,7 @@ class _Inserter:
                 pv_prefix=d.pv_prefix,
             )
             for k, v in d.pvs.items():
-                session.insert("device_pv", device_name=n, accessor_name=k, pv_suffix=v)
+                session.insert("device_pv", device_name=n, accessor_name=k, pv_name=v)
             for k, v in d.metadata.items():
                 if k not in self._METADATA_SKIP:
                     session.insert(
@@ -116,8 +128,6 @@ def _path():
 
 def _init():
     global _meta
-    if _meta is not None:
-        return
     s = "str 64"
     p = s + " primary_key"
     n = s + " index"
@@ -141,7 +151,7 @@ def _init():
             device_pv=PKDict(
                 device_name=p + " foreign",
                 accessor_name=p,
-                pv_suffix=s,
+                pv_name=s,
             ),
             device_meta_float=PKDict(
                 device_name=p + " foreign",
