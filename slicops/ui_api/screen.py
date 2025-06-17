@@ -352,10 +352,15 @@ class _Plot:
         Valid methods are (gaussian, super_gaussian).
         """
 
-        def gaussian(x, amplitude, mean, sigma, offset):
+        def _fix(results):
+            # sigma may be negative from the fit
+            results.sig = abs(results.sig)
+            return results
+
+        def _gaussian(x, amplitude, mean, sigma, offset):
             return amplitude * numpy.exp(-(((x - mean) / sigma) ** 2) / 2) + offset
 
-        def super_gaussian(x, amplitude, mean, sigma, offset, p):
+        def _super_gaussian(x, amplitude, mean, sigma, offset, p):
             return amplitude * numpy.exp(-numpy.abs((x - mean) / sigma) ** p) + offset
 
         popt = None
@@ -363,15 +368,17 @@ class _Plot:
         # TODO(pjm): should use physical camera dimensions
         x = numpy.arange(len(profile))
         try:
-            m = gaussian
+            m = _gaussian
             popt, pcov = scipy.optimize.curve_fit(m, x, profile)
             if ux.curve_fit_method.value == "super_gaussian":
                 # use gaussian fit to guess other distribution starting values
-                m = super_gaussian
-                dist_keys = ["amp", "mean", "sig", "offset", "p"]
+                m = _super_gaussian
+                dist_keys.append("p")
                 popt, pcov = scipy.optimize.curve_fit(
                     m, x, profile, p0=numpy.append(popt, 1.1)
                 )
+            elif ux.curve_fit_method.value != "gaussian":
+                raise AssertionError(f"invalid fit method={ux.curve_fit_method.value}")
             fit_line = m(x, *popt)
         except RuntimeError as e:
             # TODO(pjm): show fitting error message on curve fit method field
@@ -380,7 +387,7 @@ class _Plot:
             lineout=profile,
             fit=PKDict(
                 fit_line=fit_line,
-                results=None if popt is None else dict(zip(dist_keys, popt)),
+                results=None if popt is None else _fix(PKDict(zip(dist_keys, popt))),
             ),
         )
 
