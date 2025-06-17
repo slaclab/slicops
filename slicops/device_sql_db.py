@@ -25,6 +25,18 @@ def beam_paths():
         )
 
 
+def device(device_name):
+    with _session() as s:
+        return PKDict(s.select_one("device", PKDict(device_name=device_name))).pkupdate(
+            accessor=PKDict(
+                {
+                    r.accessor_name: PKDict(r)
+                    for r in s.select("device_pv", PKDict(device_name=device_name))
+                }
+            ),
+        )
+
+
 def device_names(beam_path, device_type):
     with _session() as s:
         c = s.t.device.c.device_name
@@ -43,24 +55,6 @@ def device_names(beam_path, device_type):
                 .order_by(c)
             )
         )
-
-
-def device(device_name):
-    with _session() as s:
-        return PKDict(s.select_one("device", PKDict(device_name=device_name))).pkupdate(
-            accessor=PKDict(
-                {
-                    r.accessor_name: PKDict(r)
-                    for r in s.select("device_pv", PKDict(device_name=device_name))
-                }
-            ),
-        )
-
-
-def _session():
-    if _meta is None:
-        _init()
-    return _meta.session()
 
 
 def recreate(parser):
@@ -122,10 +116,6 @@ class _Inserter:
                     )
 
 
-def _path():
-    return pykern.pkresource.file_path(".").join(_BASE_PATH)
-
-
 def _init():
     global _meta
     s = "str 64"
@@ -160,3 +150,13 @@ def _init():
             ),
         ),
     )
+
+
+def _path():
+    return pykern.pkresource.file_path(".").join(_BASE_PATH)
+
+
+def _session():
+    if _meta is None:
+        _init()
+    return _meta.session()
