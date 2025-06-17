@@ -192,7 +192,10 @@ class API(slicops.quest.API):
                 self._set_acquire(0)
             except Exception as e:
                 pkdlog(
-                    "set acquire=0 PV error={} device={} stack={}", e, d.device_name, pkdexc()
+                    "set acquire=0 PV error={} device={} stack={}",
+                    e,
+                    d.device_name,
+                    pkdexc(),
                 )
             self.session[_DEVICE_KEY] = None
             _Monitor.destroy(self.session)
