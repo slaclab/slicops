@@ -236,4 +236,4 @@ def meta_for_device(device_name):
         )
     for r in rv.accessor.values():
         _static(rv, r)
-    return pkdp(rv)
+    return rv
