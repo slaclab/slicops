@@ -179,8 +179,7 @@ class DeviceMeta(PKDict):
         pv_prefix (str): prefix to all accessor PVs for device
     """
 
-    def __init__(self, values):
-        super().__init__(values)
+    pass
 
 
 def beam_paths():
