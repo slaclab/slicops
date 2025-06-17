@@ -22,6 +22,7 @@ _ACCESSOR_META_DEFAULT = PKDict(
 
 _ACCESSOR_META = PKDict(
     acquire=PKDict(py_type=bool, pv_writable=True),
+    gain=PKDict(py_type=int, pv_writable=True),
     image=PKDict(py_type=numpy.ndarray, pv_writable=False),
     n_bits=PKDict(py_type=int, pv_writable=False),
     n_col=PKDict(py_type=int, pv_writable=False),
