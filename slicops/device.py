@@ -99,7 +99,12 @@ class _Accessor:
         self.meta = device.meta.accessor[accessor_name]
         self._callback = None
         self._mutex = threading.Lock()
-        self._pv = epics.PV(self.meta.pv_name, connection_callback=self._on_connection)
+        # TODO(pjm): connection and PV timeouts need to be configurable?
+        self._pv = epics.PV(
+            self.meta.pv_name,
+            connection_callback=self._on_connection,
+            connection_timeout=4.0,
+        )
         if accessor_name == "image":
             # TODO(robnagler) this has to be done here, because you can't get pvs
             # from within a monitor callback
@@ -121,7 +126,8 @@ class _Accessor:
             object: the value from the PV converted to a Python type
         """
 
-        if (rv := self._pv.get()) is None:
+        # TODO(pjm): connection and PV timeouts need to be configurable?
+        if (rv := self._pv.get(timeout=5.0)) is None:
             raise DeviceError(f"unable to get {self}")
         if not self._pv.connected:
             raise DeviceError(f"disconnected {self}")
