@@ -360,7 +360,15 @@ class _Plot:
         try:
             m = _gaussian
             popt, pcov = scipy.optimize.curve_fit(
-                m, x, profile, p0=[numpy.mean(profile), len(profile) / 2, len(profile) / 5, numpy.min(profile)],
+                m,
+                x,
+                profile,
+                p0=[
+                    numpy.mean(profile),
+                    len(profile) / 2,
+                    len(profile) / 5,
+                    numpy.min(profile),
+                ],
             )
             if ux.curve_fit_method.value == "super_gaussian":
                 # use gaussian fit to guess other distribution starting values
