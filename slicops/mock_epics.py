@@ -25,7 +25,7 @@ _PV = None
 class PV:
     _CB_INDEX = 1
 
-    def __init__(self, name, connection_callback=None):
+    def __init__(self, name, connection_timeout=0, connection_callback=None):
         self.pvname = name
         self.connected = True
         self.connection_callback = connection_callback
@@ -60,7 +60,7 @@ class PV:
             t = threading.Thread(target=_update)
             t.start()
 
-    def get(self):
+    def get(self, timeout=0):
         # TOOD(robnagler) need to be more sophisticated
 
         return _PV.get(self.pvname, None)
