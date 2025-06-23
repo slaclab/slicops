@@ -152,12 +152,8 @@ class _Parser(PKDict):
             if "VCCB" == name:
                 # Typo in MEME?
                 rec.controls_information.PVs.resolution = "CAMR:LGUN:950:RESOLUTION"
-                rec.controls_information.PVs.n_col = (
-                    "CAMR:LGUN:950:MaxSizeX_RBV"
-                )
-                rec.controls_information.PVs.n_row = (
-                    "CAMR:LGUN:950:MaxSizeY_RBV"
-                )
+                rec.controls_information.PVs.n_col = "CAMR:LGUN:950:MaxSizeX_RBV"
+                rec.controls_information.PVs.n_row = "CAMR:LGUN:950:MaxSizeY_RBV"
                 rec.metadata.type = "PROF"
             elif "VCC" == name:
                 rec.metadata.type = "PROF"
