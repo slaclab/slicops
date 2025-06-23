@@ -29,7 +29,6 @@ screens:
     controls_information:
       PVs:
         acquire: 13SIM1:cam1:Acquire
-        gain: 13SIM1:cam1:Gain
         image: 13SIM1:image1:ArrayData
         n_col: 13SIM1:cam1:SizeX
         n_row: 13SIM1:cam1:SizeY

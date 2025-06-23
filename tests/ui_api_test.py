@@ -30,7 +30,6 @@ async def test_basic():
         ux = (await c.call_api("screen_ui_ctx", PKDict())).ui_ctx
         pkunit.pkeq("DEV_BEAM_PATH", ux.beam_path.value)
         pkunit.pkeq("DEV_CAMERA", ux.camera.value)
-        pkunit.pkeq(93, ux.camera_gain.value)
         r = await c.call_api("screen_start_button", PKDict(field_value=False))
         ux = r.ui_ctx
         r = await _plot(c)
@@ -41,10 +40,7 @@ async def test_basic():
         pkunit.pkeq(13.00, round(r.plot.y.fit.results.sig, 2))
         r = await c.call_api("screen_stop_button", PKDict(field_value=False))
         ux = r.ui_ctx
-        ux = await _put(ux, "camera_gain", "33", 33)
         ux = await _put(ux, "curve_fit_method", "super_gaussian", "super_gaussian")
-        await _put(ux, "camera_gain", 999999, Exception)
-        ux = await _put(ux, "camera_gain", 99, 99)
         ux = await _put(ux, "beam_path", "CU_SPEC", "CU_SPEC")
         pkunit.pkeq(None, ux.camera.value)
         await _put(ux, "camera", "DEV_CAMERA", Exception)

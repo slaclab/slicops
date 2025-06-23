@@ -65,15 +65,6 @@ class API(slicops.quest.API):
             self._device_change(ux, o)
         return self._return(ux)
 
-    async def api_screen_camera_gain(self, api_args):
-        ux, _, _ = self._save_field("camera_gain", api_args)
-        try:
-            self.session[_DEVICE_KEY].put("gain", ux.camera_gain.value)
-        except slicops.device.DeviceError as e:
-            pkdlog("error={} on {}; stack={}", e, d, pkdexc())
-            raise pykern.util.APIError(e)
-        return self._return(ux)
-
     async def api_screen_color_map(self, api_args):
         ux, _, _ = self._save_field("color_map", api_args)
         return self._return(ux)
@@ -181,7 +172,6 @@ class API(slicops.quest.API):
 
         def _clear():
             # must be robust, used in "except:"
-            ux.camera_gain.value = None
             ux.pv.value = None
             self._button_setup(ux, False)
 
@@ -205,11 +195,6 @@ class API(slicops.quest.API):
             d = None
             try:
                 d = self.session[_DEVICE_KEY] = slicops.device.Device(ux.camera.value)
-                if d.has_accessor("gain"):
-                    ux.camera_gain.value = d.get("gain")
-                else:
-                    # TODO(robnagler) enabled?
-                    ux.camera_gain.value = None
                 ux.pv.value = d.meta.pv_prefix
                 self._button_setup(ux, _acquiring(d))
                 d.accessor("image").monitor(_Monitor(self.session))
@@ -316,6 +301,8 @@ class _Monitor:
             self.session_end()
 
     def _update(self, image):
+        if not self.session:
+            return
         try:
             self.session[_PLOT_KEY].image = image
             if q := self.session.get(_UPDATE_Q_KEY):
@@ -350,7 +337,7 @@ class _Plot:
             rv.ui_ctx = ux
         return rv
 
-    def _fit(self, ux, profile):
+    def _fit(self, ux, profile, count=0):
         """Use the scipy curve_fit() to match the selected method.
         Valid methods are (gaussian, super_gaussian).
         """
@@ -372,7 +359,9 @@ class _Plot:
         x = numpy.arange(len(profile))
         try:
             m = _gaussian
-            popt, pcov = scipy.optimize.curve_fit(m, x, profile)
+            popt, pcov = scipy.optimize.curve_fit(
+                m, x, profile, p0=[numpy.mean(profile), len(profile) / 2, len(profile) / 5, numpy.min(profile)],
+            )
             if ux.curve_fit_method.value == "super_gaussian":
                 # use gaussian fit to guess other distribution starting values
                 m = _super_gaussian
@@ -415,15 +404,6 @@ def _choice_validator(field, value):
     return None
 
 
-def _gain_validator(field, value):
-    try:
-        rv = int(value)
-    except Exception:
-        return None
-    # TODO(pjm): use min/max values from schema/screen.yaml
-    return rv if 10 <= rv <= 1000 else None
-
-
 def _init():
     global _cfg, _FIELD_VALIDATOR, _FIELD_DEFAULT
 
@@ -437,7 +417,6 @@ def _init():
         # TODO(pjm): validators could be based on field widget
         beam_path=_choice_validator,
         camera=_choice_validator,
-        camera_gain=_gain_validator,
         color_map=_choice_validator,
         curve_fit_method=_choice_validator,
     )

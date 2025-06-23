@@ -6,11 +6,6 @@ camera:
   choices: []
   label: Camera
   widget: select
-camera_gain:
-  label: Gain
-  widget: integer
-  min: 10
-  max: 1000
 color_map:
   choices:
   - code: Cividis
