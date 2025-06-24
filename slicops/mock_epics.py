@@ -80,7 +80,6 @@ def reset_state():
 
     _PV = PKDict(
         {
-            "13SIM1:cam1:Gain": 93,
             "13SIM1:cam1:Acquire": 0,
             "13SIM1:cam1:N_OF_BITS": 8,
             "YAGS:IN20:211:N_OF_COL": 100,
