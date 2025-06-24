@@ -21,7 +21,7 @@
 </template>
 
 <script setup>
- import { ref } from 'vue';
+ import { ref, watch } from 'vue';
  import VLabel from '@/components/widget/VLabel.vue';
  import { useValidation } from '@/components/widget/validation/useValidation.js'
  import { useNumberValidation } from '@/components/widget/validation/useNumberValidation.js'
@@ -50,4 +50,11 @@
          props.ui_ctx.serverAction(props.field, parsedValue.value);
      }
  };
+
+ watch(() => props.ui_ctx[props.field].value, () => {
+     if (props.ui_ctx[props.field].value !== parsedValue.value) {
+         rawValue.value = props.ui_ctx[props.field].value;
+     }
+ });
+
 </script>
