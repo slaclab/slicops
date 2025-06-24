@@ -30,3 +30,9 @@ increment:
   widget: integer
   min: 1
   value: 5
+divisor:
+  label: Divisor
+  widget: float
+  min: 1.1
+  max: 5.1
+  value: 3.1415926535

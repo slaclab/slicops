@@ -61,8 +61,24 @@ def _validate(values):
     def _button(name, decl, value):
         raise ValueError(f"button={name} may not be written")
 
+    def _float(name, decl, value):
+        return _number(name, decl, float(value))
+
     def _integer(name, decl, value):
-        return int(value)
+        return _number(name, decl, int(value))
+
+    def _number(name, decl, value):
+        if (m := decl.get("min")) is not None:
+            if value < m:
+                raise ValueError(
+                    f"value={value} is less than min={m} for {decl.widget}={name}"
+                )
+        if (m := decl.get("max")) is not None:
+            if value > m:
+                raise ValueError(
+                    f"value={value} is greater than max={m} for {decl.widget}={name}"
+                )
+        return value
 
     def _select(name, decl, value):
         for c in decl.choices:
@@ -81,12 +97,14 @@ def _validate(values):
             raise KeyError(f"name={k} not valid field")
         if "integer" == f.widget:
             v = _integer(k, f, v)
+        elif "float" == f.widget:
+            v = _float(k, f, v)
         elif "select" == f.widget:
             v = _select(k, f, v)
-        elif "button" == f.widget:
-            v = _button(k, f, v)
         elif "static" == f.widget:
             v = _static(k, f, v)
+        elif "button" == f.widget:
+            v = _button(k, f, v)
         else:
             raise AssertionError(f"widget={f.widget} not supported")
         yield k, v

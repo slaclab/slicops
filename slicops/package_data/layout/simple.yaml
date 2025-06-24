@@ -3,6 +3,7 @@ columns:
   rows:
   - name: run_mode
   - name: increment
+  - name: divisor
 - layout: col-sm-3 offset-sm-3
   rows:
   - cell:
