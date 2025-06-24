@@ -12,22 +12,29 @@ import pykern.api.util
 import slicops.device
 import slicops.device_db
 import slicops.quest
+import slicops.pkcli.simple
 
 _UI_CTX_KEY = "ui_ctx"
 _UPDATE_Q_KEY = "update_q"
 _FIELD_DEFAULT = None
 
-#TODO(pjm): too much boilerplate for an app, copy/pasted from screen.py for now
+# TODO(pjm): too much boilerplate for an app, copy/pasted from screen.py for now
+
 
 class API(slicops.quest.API):
     """Implementation for the Simple application"""
 
     async def api_simple_save_button(self, api_args):
+        def _values(ux):
+            return ((f.name, f.value) for f in ux.values() if f.widget != "button")
+
         ux = self._session_ui_ctx()
+        slicops.pkcli.simple.write(PKDict(_values(ux)))
         return self._return(ux)
 
     async def api_simple_revert_button(self, api_args):
         ux = self._session_ui_ctx()
+        self._read_db(ux)
         return self._return(ux)
 
     async def api_simple_run_mode(self, api_args):
@@ -60,6 +67,11 @@ class API(slicops.quest.API):
             if "session" in self:
                 self.session.pkdel(_UPDATE_Q_KEY)
 
+    def _read_db(self, ux):
+        for k, v in slicops.pkcli.simple.read().items():
+            if k in ux:
+                ux[k].value = v
+
     def _return(self, ux):
         return PKDict(ui_ctx=ux)
 
@@ -73,17 +85,22 @@ class API(slicops.quest.API):
         if ux := self.session.get(_UI_CTX_KEY):
             return ux
         self.session.ui_ctx = ux = _ui_ctx_default()
+        self._read_db(ux)
         return ux
+
 
 class _Field(PKDict):
     pass
 
+
 class _UIContext(PKDict):
     pass
+
 
 def _init():
     global _FIELD_DEFAULT
     _FIELD_DEFAULT = pkyaml.load_file(pkresource.file_path("schema/simple.yaml"))
+
 
 def _ui_ctx_default():
     def _value(name):
@@ -93,6 +110,8 @@ def _ui_ctx_default():
             value=None,
             visible=True,
         )
+
     return _UIContext({n: _value(n) for n in _FIELD_DEFAULT.keys()})
+
 
 _init()
