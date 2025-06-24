@@ -7,7 +7,8 @@
 from pykern.pkcollections import PKDict
 from pykern.pkdebug import pkdc, pkdlog, pkdp
 import slicops.ui_api.screen
+import slicops.ui_api.simple
 
 
 def api_classes():
-    return (slicops.ui_api.screen.API,)
+    return (slicops.ui_api.screen.API, slicops.ui_api.simple.API)

@@ -1,0 +1,14 @@
+columns:
+- layout: col-sm-6 offset-sm-3
+  rows:
+  - name: run_mode
+  - name: increment
+- layout: col-sm-3 offset-sm-3
+  rows:
+  - cell:
+    - save_button
+    - revert_button
+- layout: col-sm-6 offset-sm-3
+  rows:
+  - name: output1
+  - name: output2

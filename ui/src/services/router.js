@@ -11,6 +11,11 @@ const routes = [
         name: 'Screen',
         component: () => import('@/views/Screen.vue'),
     },
+    {
+        path: '/simple',
+        name: 'Simple',
+        component: () => import('@/views/Simple.vue'),
+    },
 ]
 
 const router = createRouter({
