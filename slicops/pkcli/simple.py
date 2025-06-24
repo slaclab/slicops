@@ -9,6 +9,13 @@ from pykern.pkdebug import pkdc, pkdlog, pkdp
 import pykern.util
 import pykern.pkyaml
 import pykern.pkcli
+import pykern.pkresource
+
+_SCHEMA = None
+
+
+def path():
+    return pykern.util.dev_run_dir(path).join("simple.yaml")
 
 
 def read():
@@ -17,7 +24,17 @@ def read():
     Returns:
         PKDict: values in the db
     """
-    return pykern.pkyaml.load_file(_path())
+    return pykern.pkyaml.load_file(path())
+
+
+def schema():
+    global _SCHEMA
+
+    if not _SCHEMA:
+        _SCHEMA = pykern.pkyaml.load_file(
+            pykern.pkresource.file_path("schema/simple.yaml")
+        )
+    return _SCHEMA
 
 
 def write(*key_value_pairs):
@@ -26,17 +43,50 @@ def write(*key_value_pairs):
     Args:
         key_value_pairs (str): list of key_value_pairs or single dict
     """
+
     def _values():
         if not key_value_pairs:
             pykern.command_error("pass at least one key=value pair")
         if isinstance(key_value_pairs[0], str):
             return (a.split("=", 1) for a in key_value_pairs)
-        # can be a generator or a dict or anything that can turn into a dict
+        if isinstance(key_value_pairs, dict):
+            return key_value_pairs.items()
         return key_value_pairs[0]
 
-    pykern.pkyaml.dump_pretty(PKDict(_values()), _path())
+    pykern.pkyaml.dump_pretty(read().pkupdate(_validate(_values())), path())
     return read()
 
 
-def _path():
-    return pykern.util.dev_run_dir(_path).join("simple.yaml")
+def _validate(values):
+    def _button(name, decl, value):
+        raise ValueError(f"button={name} may not be written")
+
+    def _integer(name, decl, value):
+        return int(value)
+
+    def _select(name, decl, value):
+        for c in decl.choices:
+            if c.code == value:
+                return value
+        raise ValueError(f"value={value} invalid for select={name}")
+
+    def _static(name, decl, value):
+        if value is None:
+            return ""
+        return value
+
+    s = schema()
+    for k, v in values:
+        if not (f := s.get(k)):
+            raise KeyError(f"name={k} not valid field")
+        if "integer" == f.widget:
+            v = _integer(k, f, v)
+        elif "select" == f.widget:
+            v = _select(k, f, v)
+        elif "button" == f.widget:
+            v = _button(k, f, v)
+        elif "static" == f.widget:
+            v = _static(k, f, v)
+        else:
+            raise AssertionError(f"widget={f.widget} not supported")
+        yield k, v
