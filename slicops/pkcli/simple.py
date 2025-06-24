@@ -49,8 +49,8 @@ def write(*key_value_pairs):
             pykern.command_error("pass at least one key=value pair")
         if isinstance(key_value_pairs[0], str):
             return (a.split("=", 1) for a in key_value_pairs)
-        if isinstance(key_value_pairs, dict):
-            return key_value_pairs.items()
+        if isinstance(key_value_pairs[0], dict):
+            return key_value_pairs[0].items()
         return key_value_pairs[0]
 
     pykern.pkyaml.dump_pretty(read().pkupdate(_validate(_values())), path())
