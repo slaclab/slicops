@@ -21,6 +21,7 @@ dependencies = [
     'pykern',
     'scikit-learn' ,
     'scipy',
+    'watchdog',
 ]
 description = "SlicOps: Library and UI for beam physics control systems"
 dynamic = ["version"]
