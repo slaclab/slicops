@@ -1,0 +1,38 @@
+save_button:
+  html_class: primary
+  label: Save
+  widget: button
+revert_button:
+  html_class: danger
+  label: Revert
+  widget: button
+output1:
+  label: 'Output #1'
+  widget: static
+  value: 0
+output2:
+  label: 'Output #2'
+  widget: static
+  value: 0
+run_mode:
+  choices:
+  - code: method_1
+    display: Method One
+  - code: method_2
+    display: Method Two
+  - code: method_3
+    display: Method Three
+  label: Run Mode
+  widget: select
+  value: method_1
+increment:
+  label: Increment Amount
+  widget: integer
+  min: 1
+  value: 5
+divisor:
+  label: Divisor
+  widget: float
+  min: 1.1
+  max: 5.1
+  value: 3.1415926535

@@ -10,7 +10,7 @@
         <div
             v-for="(col, index) of columns"
             :key="index"
-            :class="'col-' + col.layout">
+            :class="col.layout">
             <div
                 v-for="(row, index2) of col.rows"
                 :key="index2">
