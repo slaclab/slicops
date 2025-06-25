@@ -20,6 +20,15 @@ _UPDATE_Q_KEY = "update_q"
 _DB_WATCHER_KEY = "db_watcher"
 _FIELD_DEFAULT = None
 
+_EVENT_TYPES = frozenset(
+    (
+        watchdog.events.EVENT_TYPE_MOVED,
+        watchdog.events.EVENT_TYPE_CREATED,
+        watchdog.events.EVENT_TYPE_MODIFIED,
+    ),
+)
+
+
 # TODO(pjm): too much boilerplate for an app, copy/pasted from screen.py for now
 
 
@@ -111,21 +120,25 @@ class _DBWatcher(watchdog.events.FileSystemEventHandler):
         # Must be called from the main thread
         self.__loop = asyncio.get_running_loop()
         self.__queue = queue
-        self.__path = slicops.pkcli.simple.path()
+        p = slicops.pkcli.simple.path()
+        self.__path = str(p)
         self.__observer = watchdog.observers.Observer()
-        self.__observer.schedule(self, self.__path.dirname, recursive=False)
+        self.__observer.schedule(self, p.dirname, recursive=False)
         self.__observer.start()
+
+    def on_any_event(self, event):
+        # Different thread so must share same loop as __process.
+        # Only watch types that make sense.
+        if event.event_type in _EVENT_TYPES and (
+            self.__path == event.src_path or self.__path == event.dest_path
+        ):
+            self.__loop.call_soon_threadsafe(self.__queue.put_nowait, True)
 
     def session_end(self):
         if self.__observer:
             o = self.__observer
             self.__observer = None
             o.stop()
-
-    def on_modified(self, event):
-        # Different thread so must share same loop as __process
-        if self.__path == event.src_path:
-            self.__loop.call_soon_threadsafe(self.__queue.put_nowait, True)
 
 
 class _UIContext(PKDict):

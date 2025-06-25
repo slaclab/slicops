@@ -6,10 +6,11 @@
 
 from pykern.pkcollections import PKDict
 from pykern.pkdebug import pkdc, pkdlog, pkdp
-import pykern.util
-import pykern.pkyaml
 import pykern.pkcli
+import pykern.pkio
 import pykern.pkresource
+import pykern.pkyaml
+import pykern.util
 
 _SCHEMA = None
 
@@ -53,7 +54,10 @@ def write(*key_value_pairs):
             return key_value_pairs[0].items()
         return key_value_pairs[0]
 
-    pykern.pkyaml.dump_pretty(read().pkupdate(_validate(_values())), path())
+    # TODO(robnagler) pkyaml needs to return dumped value
+    t = path().new(ext="tmp" + pykern.util.random_base62())
+    pykern.pkyaml.dump_pretty(read().pkupdate(_validate(_values())), t)
+    t.rename(path())
     return read()
 
 
