@@ -19,8 +19,8 @@
 </template>
 
 <script setup>
- import { ref, reactive } from 'vue';
- import { apiService } from '@/services/api.js';
+ import { onUnmounted, ref, reactive, watch } from 'vue';
+ import { apiService, websocketConnectedRef } from '@/services/api.js';
  import VLayout from '@/components/VLayout.vue';
 
  const props = defineProps({
@@ -30,6 +30,7 @@
  const errorMessage = ref('');
  const layout = reactive({});
  const ui_ctx = reactive({});
+ let apiConnection = null
 
  const handleError = (error) => {
      errorMessage.value = error;
@@ -77,6 +78,18 @@
      },
      handleError,
  );
- apiService.subscribe(`${props.prefix}_update`, {}, updateUIState, handleError);
+
+ onUnmounted(() => {
+     if (apiConnection) {
+         apiConnection.unsubscribe();
+         apiConnection = null;
+     }
+ });
+
+ watch(websocketConnectedRef, () => {
+     if (websocketConnectedRef.value) {
+         apiConnection = apiService.subscribe(`${props.prefix}_update`, {}, updateUIState, handleError);
+     }
+ });
 
 </script>

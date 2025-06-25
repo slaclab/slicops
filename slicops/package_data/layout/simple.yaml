@@ -1,15 +1,14 @@
 columns:
-- layout: col-sm-3 offset-sm-4
+- layout: col-lg-6 offset-lg-3 col-xl-4 offset-xl-4
   rows:
   - name: run_mode
   - name: increment
   - name: divisor
-- layout: col-sm-3 offset-sm-4
-  rows:
-  - cell:
-    - save_button
-    - revert_button
-- layout: col-sm-3 offset-sm-4
-  rows:
+  - columns:
+    - layout: col-sm-6
+      rows:
+      - cell:
+          - save_button
+          - revert_button
   - name: output1
   - name: output2
