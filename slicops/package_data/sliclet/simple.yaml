@@ -1,0 +1,50 @@
+fields:
+  save_button:
+    class: Button
+    ui:
+      html_class: primary
+      label: Save
+  revert_button:
+    class: Button
+    ui:
+      html_class: danger
+      label: Revert
+  output1:
+    class: simple.Output
+    ui:
+      label: 'Output #1'
+      widget: static
+  output2:
+    class: simple.Output
+    ui:
+      label: 'Output #2'
+      widget: static
+  run_mode:
+    class: simple.RunMode
+    ui:
+      widget: select
+    value: method_1
+  increment:
+    class: Integer
+    constraints:
+      min: 1
+      nullable: False
+    ui:
+      label: Increment Amount
+    value: 5
+
+layout:
+  columns:
+  - layout: col-lg-6 offset-lg-3 col-xl-4 offset-xl-4
+    rows:
+    - name: run_mode
+    - name: increment
+    - name: divisor
+    - columns:
+      - layout: col-sm-6
+        rows:
+        - cell:
+            - save_button
+            - revert_button
+    - name: output1
+    - name: output2

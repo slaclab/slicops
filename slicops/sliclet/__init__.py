@@ -6,46 +6,66 @@
 
 from pykern.pkcollections import PKDict
 from pykern.pkdebug import pkdc, pkdexc, pkdlog, pkdp
+import slicops.field
+import slicops.ctx
 import queue
 import threading
 
-_Work(enum.IntEnum):
+
+class _Work(enum.IntEnum):
     # sort in value order
     error=1,
     session_end=2,
     update=3,
     ui_action=4,
 
-class Sliclet:
+
+class Base:
     def __init__(self, name, session, update_queue):
         super().__init__(daemon=True)
-        self._name = name
-        self._session = session
-        self._update_queue = update_queue
-        self._work_queue = queue.PriorityQueue()
-        self._thread = threading.Thread(target=self._run)
-        self._thread.start()
+        self.__name = name
+        self.__session = session
+        self.__update_queue = update_queue
+        self.__work_queue = queue.PriorityQueue()
+        self.__ctx = slicops.ctx.Ctx(name)
+        self.__thread = threading.Thread(target=self._run)
+        self.__thread.start()
+
+    def field_names(self):
+        return tuple(self.__ctx.keys())
+
+    def field_class(self, name):
+        return slicops.field.get_class(name)
 
     def session_end(self):
-        self._put_work(_Work.session_end, None)
+        self.__put_work(_Work.session_end, None)
+
+    def thread_exception(self, desc, exc):
+        pkdlog("{} error={} stack={}", self._name, exc)
+        self.__put_work(_Work.error, PKDict(desc=desc, exc=exc))
 
     def ui_action(self, api_args):
-        self._put_work(_Work.error, api_args)
+        self.__put_work(_Work.ui_action, api_args)
 
-    def _put_work(self, work, arg):
-        self._work_queue.put_nowait(work, arg)))
+    def thread_run_start(self):
+        pass
+
+    def __put_work(self, work, arg):
+        self.__work_queue.put_nowait(work, arg)))
 
     def _run(self):
         def _destroy():
-            self._session = None
-            self._update_queue = None
-            self._work_queue = None
-            self._thread = None
+            self.__session = None
+            self.__update_queue = None
+            self.__work_queue = None
+            self.__thread = None
 
         try:
+            self.thread_run_start()
             while True:
                 w, a = self.__work_queue.get()
                 if w == _Work.session_end:
+                    self.destroy()
                     return
                 try:
                     getattr(self, f"_work_{w._name_}")(a)
@@ -54,7 +74,7 @@ class Sliclet:
                     if w == _Work.error:
                         # raise SystemExit?
                         raise
-                    self._put_work(_Work.error, a)
+                    self.__put_work(_Work.error, PKDict(work=w, args=a))
         finally:
             _destroy()
 
