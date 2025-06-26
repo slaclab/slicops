@@ -28,14 +28,13 @@ class Simple(slicops.sliclet.Base):
 
     def destroy(self):
         if self.__db_watcher:
-            x = self.__db_watcher
-            self.__db_watcher = x
-            x.destroy()
+            self.__db_watcher.destroy()
+            self.__db_watcher = None
 
     def thread_run_start(self):
         self.__db_watcher = _DBWatcher(self)
 
-    def ui_action_save_button(self, value):
+    def ui_action_save_button(self, txn):
         def _values():
             c = self.ctx
             t = c.get_class("Button")
@@ -47,10 +46,8 @@ class Simple(slicops.sliclet.Base):
         self._read_db()
 
     def _db_watcher_update(self):
-        try:
-            self._read_db()
-        except Exception as e:
-            self.thread_exception("reading database", e)
+        with self.protect_txn() as txn:
+            self._read_db(txn)
 
     def _read_db(self):
         try:

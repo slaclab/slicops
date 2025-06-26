@@ -28,10 +28,12 @@ class Screen(slicops.sliclet.Base):
         self.__monitor = None
 
     def destroy(self):
+        if self.__monitor:
+            self.__monitor.destroy()
+            self.__monitor = None
         if self.__device:
-            x = self.__device
-            self.__device = x
-            x.destroy()
+            self.__device.destroy()
+            self.__device = None
 
     def ui_action_beam_path(self, new_value, old_value):
         if new_value != old_value:
@@ -93,12 +95,8 @@ class Screen(slicops.sliclet.Base):
                     self.__device.device_name,
                     pkdexc(),
                 )
-            d = self.__monitor
+            self.__monitor.destroy()
             self.__monitor = None
-            d.destroy()
-            d = self.__device
-            self.__device = None
-            d.destroy()
 
         def _setup():
             d = None

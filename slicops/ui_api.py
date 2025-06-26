@@ -28,12 +28,7 @@ class API(slicops.quest.API):
         return s.ui_boot()
 
     async def api_ui_action(self, api_args):
-        api_args
-        # TODO(robnagler) if accepting ui_ctx, then need to update valid_values here
-        return self._return(ux).pkupdate(
-            # TODO(pjm): need a better way to load a resource for a sliclet
-            layout=pkyaml.load_file(pkresource.file_path("layout/screen.yaml")),
-        )
+        return self.session[_SLICLET_KEY].ui_api_boot()
 
     @pykern.api.util.subscription
     async def api_ui_update(self, api_args):
