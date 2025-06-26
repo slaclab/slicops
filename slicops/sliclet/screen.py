@@ -35,9 +35,9 @@ class Screen(slicops.sliclet.Base):
             self.__device.destroy()
             self.__device = None
 
-    def ui_action_beam_path(self, new_value, old_value):
-        if new_value != old_value:
-            self._beam_path_change(value)
+    def ui_action_beam_path(self, txn):
+        if txn.has_field_changed("beam_path"):
+            self._beam_path_change(txn.field("beam_path"))
 
     def ui_action_start_button(self, value):
         self._set_acquire(1)
@@ -47,11 +47,13 @@ class Screen(slicops.sliclet.Base):
         self._set_acquire(0)
         self._button_setup(True)
 
-    def _beam_path_change(self, ux, old_name):
+    def _beam_path_change(self, value):
         # TODO(robnagler) get from device db
-        ux.camera.choices = _choice_map(
-            slicops.device_db.device_names(ux.beam_path.value, _DEVICE_TYPE),
-        )
+        self.update_field_meta({
+            #TODO(robnagler) updates context and if constraint doesn't
+            #  match sets back to default or to None if nullable
+            "camera.constraints.choices": slicops.device_db.device_names(value, _DEVICE_TYPE),
+        })
         if (
             _validate_field(ux.camera, ux.camera.value) is not None
             or (o := ux.camera.value) is None
@@ -153,24 +155,26 @@ class _Plot:
         self.sliclet = sliclet
 
     def new_image(self, image):
-        self.image = image
-        if self.image is None:
-            self.sliclet.update_fields(plot=None)
-            return
-        self.sliclet.update_fields(plot=PKDict(
-                raw_pixels=self.image,
-                x=self._fit(ux, self.image.sum(axis=0)),
-                y=self._fit(ux, self.image.sum(axis=1)[::-1]),
-            ),
-        )
-        if not (ux.curve_fit_method.visible and ux.color_map.visible):
-            update_fields
-            ux.curve_fit_method.visible = True
-            ux.color_map.visible = True
-            rv.ui_ctx = ux
-        return rv
+        with self.sliclet.protected_ctx() as txn:
+            self.image = image
+            if self.image is None:
+                txn.update_fields(plot=None)
+                return
+            m = txn.field("curve_fit_method")
+            txn.update_fields(plot=PKDict(
+                    raw_pixels=self.image,
+                    x=self._fit(m, self.image.sum(axis=0)),
+                    y=self._fit(m, self.image.sum(axis=1)[::-1]),
+                ),
+            )
+            if not (ux.curve_fit_method.visible and ux.color_map.visible):
+                update_fields
+                ux.curve_fit_method.visible = True
+                ux.color_map.visible = True
+                rv.ui_ctx = ux
+            return rv
 
-    def _fit(self, ux, profile, count=0):
+    def _fit(self, method, profile, count=0):
         """Use the scipy curve_fit() to match the selected method.
         Valid methods are (gaussian, super_gaussian).
         """
@@ -203,14 +207,14 @@ class _Plot:
                     numpy.min(profile),
                 ],
             )
-            if ux.curve_fit_method.value == "super_gaussian":
+            if method == "super_gaussian":
                 # use gaussian fit to guess other distribution starting values
                 m = _super_gaussian
                 dist_keys.append("p")
                 popt, pcov = scipy.optimize.curve_fit(
                     m, x, profile, p0=numpy.append(popt, 1.1)
                 )
-            elif ux.curve_fit_method.value != "gaussian":
+            elif method != "gaussian":
                 raise AssertionError(f"invalid fit method={ux.curve_fit_method.value}")
             fit_line = m(x, *popt)
         except RuntimeError as e:

@@ -42,7 +42,7 @@ class Base:
         self.__thread.start()
         self.__loop = asyncio.get_event_loop()
 
-    def protect_txn(self, op=None):
+    def protect_ctx(self, op=None):
         # TODO(robnagler) check against re-entrancy by same thread
         try:
             with self.__lock:

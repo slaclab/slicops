@@ -45,7 +45,8 @@
              value: value,
          },
          (result) => {
-             //TODO(robnagler): sliclet will enable button when?
+//TODO(robnagler): need "voting" between two values, one from the ui and one
+//    from the ctx. ctx should not be updated locally, only remotely by server
              ui_ctx.value[field].enabled = true;
          },
          (err) => {
