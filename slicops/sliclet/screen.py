@@ -49,7 +49,7 @@ class Screen(slicops.sliclet.Base):
 
     def _beam_path_change(self, value):
         # TODO(robnagler) get from device db
-        self.update_field_meta({
+        self.put_fields_meta({
             #TODO(robnagler) updates context and if constraint doesn't
             #  match sets back to default or to None if nullable
             "camera.constraints.choices": slicops.device_db.device_names(value, _DEVICE_TYPE),
@@ -82,7 +82,7 @@ class Screen(slicops.sliclet.Base):
 
         def _clear():
             # must be robust, used in "except:"
-            self.update_fields({pv: None})
+            self.put_field_values({pv: None})
             self._button_setup(False)
 
         def _destroy():
@@ -141,12 +141,8 @@ class _Monitor:
             self._update(v))
 
     def _update(self, image):
-        try:
-            self.__plot.new_image(image)
-        except Exception as e:
-            pkdlog("error={} stack={}", e, pkdexc())
-            #TODO(robnagler) alert?
-            raise
+        with self.sliclet.protected_ctx() as txn:
+            self.plot.new_image(image, txn)
 
 
 class _Plot:
@@ -154,25 +150,24 @@ class _Plot:
         self.image = None
         self.sliclet = sliclet
 
-    def new_image(self, image):
-        with self.sliclet.protected_ctx() as txn:
-            self.image = image
-            if self.image is None:
-                txn.update_fields(plot=None)
-                return
-            m = txn.field("curve_fit_method")
-            txn.update_fields(plot=PKDict(
-                    raw_pixels=self.image,
-                    x=self._fit(m, self.image.sum(axis=0)),
-                    y=self._fit(m, self.image.sum(axis=1)[::-1]),
-                ),
+    def new_image(self, image, txn):
+        self.image = image
+        p = None
+        if v := bool(image):
+            m = txn.field_value("curve_fit_method")
+            #TODO(robnagler) This needs to be a type or is PKDict good enough
+            # for a field value
+            p = PKDict(
+                raw_pixels=self.image,
+                x=self._fit(m, self.image.sum(axis=0)),
+                y=self._fit(m, self.image.sum(axis=1)[::-1]),
             )
-            if not (ux.curve_fit_method.visible and ux.color_map.visible):
-                update_fields
-                ux.curve_fit_method.visible = True
-                ux.color_map.visible = True
-                rv.ui_ctx = ux
-            return rv
+        )
+        txn.put_fields({
+            "plot.value": p,
+            "curve_fit_method.ui.visible": v,
+            "color_map.ui.visible": v,
+        })
 
     def _fit(self, method, profile, count=0):
         """Use the scipy curve_fit() to match the selected method.

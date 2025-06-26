@@ -36,20 +36,20 @@ class Simple(slicops.sliclet.Base):
 
     def ui_action_save_button(self, txn):
         def _values():
-            c = self.ctx
+            c = txn.values()
             t = c.get_class("Button")
             return ((f.name, f.value) for f in c.values() if not isinstance(f, t))
 
         slicops.pkcli.simple.write(PKDict(_values()))
 
-    def ui_action_revert_button(self, value):
-        self._read_db()
+    def ui_action_revert_button(self, txn):
+        return self._read_db(txn)
 
     def _db_watcher_update(self):
         with self.protect_txn() as txn:
             self._read_db(txn)
 
-    def _read_db(self):
+    def _read_db(self, txn):
         try:
             d = slicops.pkcli.simple.read()
         except Exception as e:
@@ -57,7 +57,7 @@ class Simple(slicops.sliclet.Base):
             if pykern.pkio.exception_is_not_found(e):
                 return
             raise
-        self.update_fields(PKDict((k, db[k]) for k in self.field_names()))
+        txn.update_fields(PKDict((k, db[k]) for k in self.field_names()))
 
 
 CLASS = Simple
