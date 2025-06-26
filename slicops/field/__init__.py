@@ -11,10 +11,10 @@ import pykern.pkinspect
 
 _registry = PKDict()
 
-_THIS_MODULE =
 
 def get_class(name):
     return _registry[name]
+
 
 class Base:
     def __init_subclass(cls, py_type, constraints=None, ui=None):

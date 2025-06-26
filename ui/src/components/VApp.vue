@@ -40,16 +40,13 @@
      errorMessage.value = '';
      ui_ctx.value[field].enabled = false;
      apiService.call(
-         `${props.prefix}_${field}`, {
-             field_value: value,
+         `ui_action`, {
+             field: field,
+             value: value,
          },
          (result) => {
-             updateUIState(result);
-             if (result.ui_ctx && result.ui_ctx[field] && 'enabled' in result.ui_ctx[field]) {
-             }
-             else {
-                 ui_ctx.value[field].enabled = true;
-             }
+             //TODO(robnagler): sliclet will enable button when?
+             ui_ctx.value[field].enabled = true;
          },
          (err) => {
              handleError(err);
@@ -69,8 +66,8 @@
  }
 
  apiService.call(
-     `${props.prefix}_ui_ctx`,
-     {},
+     `ui_boot`,
+     {sliclet: props.prefix},
      (result) => {
          ui_ctx.value = result.ui_ctx;
          layout.value = result.layout;
@@ -88,7 +85,7 @@
 
  watch(websocketConnectedRef, () => {
      if (websocketConnectedRef.value) {
-         apiConnection = apiService.subscribe(`${props.prefix}_update`, {}, updateUIState, handleError);
+         apiConnection = apiService.subscribe(`ui_update`, {}, updateUIState, handleError);
      }
  });
 

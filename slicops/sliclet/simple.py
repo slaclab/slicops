@@ -27,17 +27,6 @@ class Simple(slicops.sliclet.Base):
         super().__init__(*args, **kwargs)
         self.__db_watcher = None
 
-    def field_save_button(self, value):
-        def _values():
-            c = self.ctx
-            t = c.get_class("Button")
-            return ((f.name, f.value) for f in c.values() if not isinstance(f, t))
-
-        slicops.pkcli.simple.write(PKDict(_values()))
-
-    def field_revert_button(self, value):
-        self._read_db()
-
     def destroy(self):
         if self.__db_watcher:
             x = self.__db_watcher
@@ -46,6 +35,17 @@ class Simple(slicops.sliclet.Base):
 
     def thread_run_start(self):
         self.__db_watcher = _DBWatcher(self)
+
+    def ui_action_save_button(self, value):
+        def _values():
+            c = self.ctx
+            t = c.get_class("Button")
+            return ((f.name, f.value) for f in c.values() if not isinstance(f, t))
+
+        slicops.pkcli.simple.write(PKDict(_values()))
+
+    def ui_action_revert_button(self, value):
+        self._read_db()
 
     def _db_watcher_update(self):
         try:
@@ -61,7 +61,10 @@ class Simple(slicops.sliclet.Base):
             if pykern.pkio.exception_is_not_found(e):
                 return
             raise
-        self.update_fields(PKDict((k, db[k]) for k in self.field_names())
+        self.update_fields(PKDict((k, db[k]) for k in self.field_names()))
+
+
+CLASS = Simple
 
 
 class _DBWatcher(watchdog.events.FileSystemEventHandler):

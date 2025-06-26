@@ -15,3 +15,11 @@ class Ctx:
         self._raw = pykern.fconf.parse_all(
             pykern.pkresource.file_path("sliclet/{name}")
         )
+        self.fields = PKDict()
+
+    def put_field(self, name, value):
+        assert name in self.fields
+        self.fields[name] = value
+
+    def ui_boot(self):
+        return PKDict(ui_ctx=PKDict(), layout=self._raw.layout)
