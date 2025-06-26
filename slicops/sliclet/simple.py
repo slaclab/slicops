@@ -1,4 +1,4 @@
-"""Simple file based UI API
+"""Simple file based Sliclet
 
 :copyright: Copyright (c) 2025 The Board of Trustees of the Leland Stanford Junior University, through SLAC National Accelerator Laboratory (subject to receipt of any required approvals from the U.S. Dept. of Energy).  All Rights Reserved.
 :license: http://github.com/slaclab/slicops/LICENSE
@@ -9,7 +9,6 @@ from pykern.pkdebug import pkdc, pkdexc, pkdlog, pkdp
 import slicops.sliclet
 import pykern.pkio
 import slicops.pkcli.simple
-import slicops.quest
 import watchdog.events
 import watchdog.observers
 
