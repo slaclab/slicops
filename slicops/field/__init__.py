@@ -44,6 +44,8 @@ class Base:
         return self.py_type(value)
 
 
+how will py_type be used?
+
 class Button(Base, py_type=str, ui=PKDict(widget="button")):
     pass
 
@@ -56,7 +58,7 @@ class Integer(Base, py_type=int, ui=PKDict(widget="integer")):
     pass
 
 
-class Select(Base, py_type=str, ui=PKDict(widget="select")):
+class Enum(Base, py_type=enum.Enum, ui=PKDict(widget="select")):
     pass
 
 
