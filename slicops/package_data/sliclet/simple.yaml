@@ -2,12 +2,37 @@ field_classes:
   RunMode:
     constraints:
       choices:
+which is better?
+do we need name value and label?
+could convert Method_One into "Method One"
+why would we need method_1
+
         - name: method_1
           label: Method One
         - name: method_2
           label: Method Two
         - name: method_3
           label: Method Three
+
+        "Method One": method_1
+        "Method Two": method 2
+        "Method Three": method_3
+
+This is too verbose. It could be choices is just a list of strings or a dict
+color_map:
+  choices:
+  - code: Cividis
+    display: Cividis
+  - code: Blues
+    display: Blues
+  - code: Inferno
+    display: Inferno
+  - code: Turbo
+    display: Turbo
+  - code: Viridis
+    display: Viridis
+
+
     ui:
       label: Run Mode
       widget: select

@@ -42,7 +42,8 @@ class Base:
         self.__thread.start()
         self.__loop = asyncio.get_event_loop()
 
-    def protect_ctx(self, op=None):
+# with lock_for_update as txn is good
+    def lock_for_update(self, op=None):
         # TODO(robnagler) check against re-entrancy by same thread
         try:
             with self.__lock:
@@ -76,6 +77,12 @@ class Base:
 
     def thread_run_start(self):
         pass
+
+    def _txn(self):
+        already locked so check if destroyed?
+        check no other txn
+        all entry points assert not destroyed?
+
 
     def _txn_commit(self, changes):
         protected so update the ctx
@@ -153,4 +160,5 @@ def _Txn:
         if exc_type is None:
             self.sliclet._txn_commit(changes)
         else:
+            # TODO(robangler) rollback
             pass
