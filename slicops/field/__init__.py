@@ -9,14 +9,9 @@ from pykern.pkcollections import PKDict
 from pykern.pkdebug import pkdc, pkdexc, pkdlog, pkdp
 import pykern.pkinspect
 
-_registry = PKDict()
-
-
-def get_class(name):
-    return _registry[name]
-
 
 class Base:
+
     def __init_subclass(cls, py_type, constraints=None, ui=None):
         cls.py_type = py_type
         cls.default_constraints = constraints

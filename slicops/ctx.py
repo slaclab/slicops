@@ -12,10 +12,14 @@ import pykern.pkresource
 
 class Ctx:
     def __init__(self, name):
+        # a field becomes a field_class which can be used
+        # it would be something field.increment to reference the type
+        # field cannot be a module but that would be checked
+        self._field_classes = PKDict()
+        self.fields = PKDict()
         self._raw = pykern.fconf.parse_all(
             pykern.pkresource.file_path("sliclet/{name}")
         )
-        self.fields = PKDict()
 
     def put_field(self, name, value):
         assert name in self.fields
@@ -23,3 +27,6 @@ class Ctx:
 
     def ui_boot(self):
         return PKDict(ui_ctx=PKDict(), layout=self._raw.layout)
+
+
+_registry = PKDict()
