@@ -32,24 +32,26 @@ class Simple(slicops.sliclet.Base):
             self.__db_watcher = None
 
     def thread_run_start(self):
-        self.__db_watcher = _DBWatcher(self)
+        self.__db_watcher = _DBWatcher(self._db_watcher_update)
 
-    def ui_action_save_button(self, txn):
+    def ui_action_save_button(self, ctx):
         def _values():
-            c = txn.values()
-            t = c.get_class("Button")
-            return ((f.name, f.value) for f in c.values() if not isinstance(f, t))
+            for k in self.__writable_keys(ctx):
+                yield k, ctx.ctx_get(k)
 
+        # TODO(robnagler) work item maybe should happen outside ui_action()
+        #    work_queue is a separate thing that could be queued
         slicops.pkcli.simple.write(PKDict(_values()))
 
-    def ui_action_revert_button(self, txn):
-        return self._read_db(txn)
+    def ui_action_revert_button(self, ctx):
+        # TODO(robnagler) the read and the ctx_put could happen outside the context
+        return self.__read_db(ctx)
 
-    def _db_watcher_update(self):
-        with self.protect_txn() as txn:
-            self._read_db(txn)
+    def __db_watcher_update(self):
+        with self.lock_for_update() as ctx:
+            self.__read_db(ctx)
 
-    def _read_db(self, txn):
+    def __read_db(self, ctx):
         try:
             d = slicops.pkcli.simple.read()
         except Exception as e:
@@ -57,16 +59,23 @@ class Simple(slicops.sliclet.Base):
             if pykern.pkio.exception_is_not_found(e):
                 return
             raise
-        txn.update_fields(PKDict((k, db[k]) for k in self.field_names()))
+        for k in self.__writable_keys(ctx):
+            if k in d:
+                ctx.ctx_put(k, d[k])
+
+    def __writable_keys(self, ctx):
+        for k in ctx.ctx_keys():
+            if ctx.ctx_get(f"{k}.ui.writable"):
+                yield k
 
 
 CLASS = Simple
 
 
 class _DBWatcher(watchdog.events.FileSystemEventHandler):
-    def __init__(self, sliclet):
+    def __init__(self, update_op):
         super().__init__()
-        self.__sliclet = sliclet
+        self.__update_op = update_op
         p = slicops.pkcli.simple.path()
         self.__path = str(p)
         self.__observer = watchdog.observers.Observer()
@@ -77,7 +86,7 @@ class _DBWatcher(watchdog.events.FileSystemEventHandler):
         if event.event_type in _EVENT_TYPES and (
             self.__path == event.src_path or self.__path == event.dest_path
         ):
-            self.sliclet._db_watcher_update()
+            self.__update_op()
 
     def destroy(self):
         if self.__observer:

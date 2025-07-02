@@ -15,18 +15,18 @@ class Ctx:
         # a field becomes a field_class which can be used
         # it would be something field.increment to reference the type
         # field cannot be a module but that would be checked
-        self._field_classes = PKDict()
-        self.fields = PKDict()
-        self._raw = pykern.fconf.parse_all(
-            pykern.pkresource.file_path("sliclet/{name}")
+        self.__fields = self.__init(
+            pykern.fconf.parse_all(
+                pykern.pkresource.file_path("sliclet/{name}")
+            ),
         )
 
-    def put_field(self, name, value):
+    def ctx_put(self, name, value):
         assert name in self.fields
         self.fields[name] = value
 
     def ui_boot(self):
         return PKDict(ui_ctx=PKDict(), layout=self._raw.layout)
 
-
-_registry = PKDict()
+    def __init(self, raw):
+        # need to deal with relationships, must be DAG

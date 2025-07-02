@@ -1,50 +1,43 @@
-field_classes:
-  RunMode:
-    constraints:
-      choices:
-        "Method One": method_1
-        "Method Two": method 2
-        "Method Three": method_3
-    ui:
-      label: Run Mode
-      widget: select
-    default: method_1
-  Output:
-    ui:
-      writable: False
-      # TODO(robnagler) better name, seems like it's just a parameter on the widget
-      widget: static
-
 fields:
-  save_button:
-    class: Button
-    ui:
-      html_class: primary
-      label: Save
-  revert_button:
-    class: Button
-    ui:
-      html_class: danger
-      label: Revert
-  output1:
-    class: simple.Output
-    ui:
-      label: 'Output #1'
-  output2:
-    class: simple.Output
-    ui:
-      label: 'Output #2'
-  run_mode:
-    class: simple.RunMode
   increment:
-    # Inline type
-    class: Integer
+    base: Integer
     constraints:
       min: 1
       nullable: False
     ui:
       label: Increment Amount
     value: 5
+  output1:
+    base: String
+    ui:
+      label: 'Output #1'
+      writable: False
+      widget: static
+  output2:
+    base: simple.output1
+    ui:
+      label: 'Output #2'
+  revert_button:
+    base: Button
+    ui:
+      html_class: danger
+      label: Revert
+  run_mode:
+    base: Enum
+    constraints:
+      choices:
+        "Method One": method_1
+        "Method Two": method 2
+        "Method Three": method_3
+    value: method_1
+    ui:
+      label: Run Mode
+      widget: select
+  save_button:
+    base: Button
+    ui:
+      html_class: primary
+      label: Save
 
 layout:
   columns:

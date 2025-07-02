@@ -36,25 +36,40 @@ class Base:
         self.__ctx = slicops.ctx.Ctx(name)
         # TODO(robnagler) validate for typos (match known fields)
         self.__ui_actions = PKDict(self.__inspect_ui_actions())
-        self.__lock = threading.Lock()
+        self.__lock = threading.RLock()
+        self.__locked = False
         self.__txn = None
         self.__thread = threading.Thread(target=self._run)
         self.__thread.start()
         self.__loop = asyncio.get_event_loop()
 
-# with lock_for_update as txn is good
-    def lock_for_update(self, op=None):
+    def lock_for_update(self, log_op=None):
         # TODO(robnagler) check against re-entrancy by same thread
+        l = True
         try:
             with self.__lock:
-                yield self.__txn()
+                self.__assert_not_destroyed()
+                if self.__locked:
+                    l = False
+                    raise AssertionError("may only lock once")
+                self.__locked = True
+                try:
+                    yield self.__txn_start()
+                except Exception:
+                    self.__txn_end(commit=False)
+                else:
+                    self.__txn_end(commit=True)
+                finally:
+                    self.__locked = False
         except Exception as e:
+            if not l:
+                raise
             try:
-                if not op:
-                    op = pykern.pkinspect.caller()
-                d = f"op={op} error={e}"
+                if not log_op:
+                    log_op = pykern.pkinspect.caller()
+                d = f"op={log_op} error={e}"
             except Exception as e2:
-                pkdlog("error during exceptionstack={}", pkdexc())
+                pkdlog("error={} during exception stack={}", e2, pkdexc())
             pkdlog("ERROR {d} stack={}", d, pkexcept())
             self.__put_work(_Work.error, PKDict(desc=d, exc=e))
 
@@ -67,28 +82,28 @@ class Base:
     def session_end(self):
         self.__put_work(_Work.session_end, None)
 
+    def thread_run_start(self):
+        pass
+
     def ui_action(self, api_args):
         self.__put_work(_Work.ui_action, api_args)
 
     def ui_api_boot(self):
         """Only called from ui_api"""
-        with self.protect_txn():
-            return self.__ctx.ui_boot()
+        with self.lock_for_update() as txn:
+            return self.__ctx.ui_boot(txn)
 
-    def thread_run_start(self):
-        pass
-
-    def _txn(self):
-        already locked so check if destroyed?
-        check no other txn
-        all entry points assert not destroyed?
-
-
-    def _txn_commit(self, changes):
-        protected so update the ctx
-        create result
+    def __txn_end(self, commit):
         self.__loop.call_soon_threadsafe(self.__update, result)
+        copy back, still locked
+        self.__txn = None
 
+    def __txn_start(self):
+        copy
+        self.__txn = _Txn()
+
+    def __assert_not_destroyed(self):
+        if self.__destroyed:
     def __inspect_ui_actions(self):
         for n, o in inspect.members(self):
             if (m := _UI_ACTION_RE.search(n)) and inspect.isfunction(o):
