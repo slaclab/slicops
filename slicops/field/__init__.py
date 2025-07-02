@@ -30,6 +30,8 @@ class InvalidFieldValue:
 
 
 class Base:
+    __TOP_ATTRS = frozenset(("constraints", "name", "ui", "value"))
+
     def _defaults(self, *overrides):
         rv = PKDict(
             constraints=PKDict(max=None, min=None, nullable=True),
@@ -39,24 +41,21 @@ class Base:
         )
         for o in overrides:
             rv.pkmerge(o, make_copy=False)
-        return rv
+        return self._assert_attrs(rv)
 
     def __init__(self, overrides):
-        if a := getattr(self, "_attrs"):
+        if a := getattr(self, "_attrs", None):
             a = copy.deepcopy(a)
         else:
             a = self._defaults()
         a.pkmerge(overrides, make_copy=False)
-        if a.name is None:
-            raise ValueError("no field name")
-        # check uses _attrs
-        self._attrs = a
-        v = self.check(self._attrs.value)
+        self._attrs = self._assert_attrs(a)
+        v = self.value_check(self._attrs.value)
         if isinstance(v, InvalidFieldValue):
             raise ValueError(v)
         self._attrs.value = v
 
-    def check(self, value):
+    def value_check(self, value):
         if value is None:
             if self._attrs.constraints.nullable:
                 return None
@@ -69,6 +68,24 @@ class Base:
         rv.kwargs.field_name = self._attrs.name
         return v
 
+    def value_get(self):
+        return self._attrs.value
+
+    def value_put(self, value):
+        v = self.value_check(value)
+        if isinstance(v, InvalidFieldValue):
+            return v
+        self._attrs.value = v
+        return v
+
+    def _assert_attrs(self, values):
+        if frozenset(values.keys()) != self.__TOP_ATTRS:
+            raise ValueError(f"incorrect top level attrs={sorted(values.keys())}")
+        #TODO(robnagler) verify other fields are valid (nullable, etc.)
+        if values.name is None:
+            raise ValueError("no field name")
+        return values
+
 
 class Button(Base):
     def _defaults(self, *overrides):
@@ -76,11 +93,12 @@ class Button(Base):
             PKDict(
                 name="Button",
                 ui=PKDict(widget="button"),
+                # value is always None
+                value=None,
             ),
             *overrides,
         )
 
-    # , py_type=type(None), ui=PKDict(widget="button")
     def _from_literal(self, value):
         if value is None:
             return None
@@ -97,6 +115,48 @@ class Enum(Base):
             ),
             *overrides,
         )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.__choice_values = xx
+
+    def _assert_attrs(self, values):
+        def _convert(pairs):
+            t = None
+            for k, v in pairs:
+                if k is None:
+                    raise ValueError("choice label may not be None value={v}")
+                k = str(k)
+                if v is None:
+                    raise ValueError("choice value may not be None label={k}")
+                if not isinstance(v, (int, str)):
+                    raise ValueError("invalid choice value type={type(v)} label={k}")
+                if t is None:
+                    t = type(v)
+                elif t != type(v):
+                    t = False
+                if isinstance(t, int):
+
+
+
+
+
+
+
+        def _iter(choices):
+            if isinstance(rv.constraints.choices, dict):
+                return choices.items()
+            if isinstance(rv.constraints.choices, (list, tuple, set)):
+                return (k, k) for k in choices
+            raise ValueError(f"invalid choices type={type(choices)}")
+
+        rv = super()._assert_attrs(values)
+        rv.constraints.choices = PKDict(
+            _convert(_iter(rv.constraints.choices)),
+        )
+
+
+
 
     def _from_literal(self, value):
         try:
