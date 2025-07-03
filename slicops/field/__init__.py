@@ -23,6 +23,7 @@ class InvalidFieldValue:
                 except:
                     # TODO(robnagler) may be not the best
                     pass
+
         try:
             return str(self.msg) + " " + " ".join(_values())
         except:
@@ -41,19 +42,23 @@ class Base:
         )
         for o in overrides:
             rv.pkmerge(o, make_copy=False)
-        return self._assert_attrs(rv)
+        return rv
 
-    def __init__(self, overrides):
-        if a := getattr(self, "_attrs", None):
-            a = copy.deepcopy(a)
-        else:
-            a = self._defaults()
-        a.pkmerge(overrides, make_copy=False)
-        self._attrs = self._assert_attrs(a)
+    def __init__(self, base, overrides):
+        if base is None:
+            base = self._defaults()
+        # TODO(robnagler) this prepends lists, which isn't clear what we want for choices
+        self._attrs = base.pkmerge(overrides, make_copy=False)
+        self._assert_attrs()
         v = self.value_check(self._attrs.value)
         if isinstance(v, InvalidFieldValue):
             raise ValueError(v)
         self._attrs.value = v
+
+    def new(self, overrides):
+        if b := getattr(self, "_attrs", None):
+            b = copy.deepcopy(b)
+        return self.__class__(b, overrides)
 
     def value_check(self, value):
         if value is None:
@@ -78,13 +83,13 @@ class Base:
         self._attrs.value = v
         return v
 
-    def _assert_attrs(self, values):
-        if frozenset(values.keys()) != self.__TOP_ATTRS:
-            raise ValueError(f"incorrect top level attrs={sorted(values.keys())}")
-        #TODO(robnagler) verify other fields are valid (nullable, etc.)
-        if values.name is None:
+    def _assert_attrs(self):
+        a = self._attrs
+        if frozenset(a.keys()) != self.__TOP_ATTRS:
+            raise ValueError(f"incorrect top level attrs={sorted(a.keys())}")
+        # TODO(robnagler) verify other fields are valid (nullable, etc.)
+        if a.name is None:
             raise ValueError("no field name")
-        return values
 
 
 class Button(Base):
@@ -116,56 +121,83 @@ class Enum(Base):
             *overrides,
         )
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.__choice_values = xx
-
-    def _assert_attrs(self, values):
+    def _assert_attrs(self):
         def _convert(pairs):
-            t = None
+            t = _type(pairs)
+            s = set()
             for k, v in pairs:
-                if k is None:
-                    raise ValueError("choice label may not be None value={v}")
-                k = str(k)
-                if v is None:
-                    raise ValueError("choice value may not be None label={k}")
-                if not isinstance(v, (int, str)):
-                    raise ValueError("invalid choice value type={type(v)} label={k}")
-                if t is None:
-                    t = type(v)
-                elif t != type(v):
-                    t = False
-                if isinstance(t, int):
-
-
-
-
-
-
+                yield str(k), t(v)
 
         def _iter(choices):
             if isinstance(rv.constraints.choices, dict):
                 return choices.items()
             if isinstance(rv.constraints.choices, (list, tuple, set)):
-                return (k, k) for k in choices
+                return ((k, k) for k in choices)
             raise ValueError(f"invalid choices type={type(choices)}")
 
-        rv = super()._assert_attrs(values)
-        rv.constraints.choices = PKDict(
-            _convert(_iter(rv.constraints.choices)),
-        )
+        def _type(pairs):
+            t = None
+            for k, v in pairs:
+                if k is None:
+                    raise ValueError(f"choice label may not be None value={v}")
+                if v is None:
+                    raise ValueError(f"choice value may not be None label={k}")
+                if not isinstance(v, (int, str)):
+                    raise ValueError(f"invalid choice value type={type(v)} label={k}")
+                if t is None:
+                    t = type(v)
+                elif t != type(v):
+                    return str
+            if t is None:
+                raise ValueError("must have at least one choice")
+            return t
 
+        super()._assert_attrs()
+        if self.__class__ != Enum:
+            # Enum has no choices
+            # TODO(robnagler): may want the ability to have no choices for subclasses
+            self._attrs.constraints.choices = PKDict(
+                _convert(tuple(_iter(self._attrs.constraints.choices))),
+            )
+        self.__map = self.__create_map(self._attrs.constraints.choices)
 
+    def __create_map(self, choices):
+        def _cross_check(labels, values):
+            for k, v in labels.items():
+                yield k, v
+                if (x := values.get(k)) is None and x != v:
+                    raise ValueError(
+                        f"choice labels and values must reversed map lower label={k} maps to {v} and {x}"
+                    )
+            return labels.pkupdate(values)
 
+        def _duplicates(kind):
+            rv = PKDict(_iter(kind))
+            if len(rv) != len(choices):
+                raise ValueError(f"duplicate choice {kind} (case insensitive)")
+            return rv
+
+        def _iter(kind):
+            for k, v in choices.items():
+                yield _lower((v if kind == "value" else k), kind), v
+
+        def _lower(value, kind):
+            rv = str(k).lower()
+            if len(rv) == 0:
+                raise ValueError(f"choice {kind} may not be a zero length string")
+            return rv
+
+        return _cross_check(_duplicates("label"), _duplicates("value"))
 
     def _from_literal(self, value):
         try:
-            if (rv := self.__choices.get(str(value).lower())) is not None:
+            if (rv := self.__map.get(str(value).lower())) is not None:
                 return rv
             return InvalidFieldValue(
                 "unknown choice",
-                choices=tuple(self.__choices.keys()),
+                choices=tuple(self.__map.keys()),
             )
+
         except Exception as e:
             return InvalidFieldValue("incompatible with str", exc=e)
 
@@ -216,7 +248,7 @@ class Plot(Base):
 
     def _from_literal(self, value):
         try:
-            #TODO(robnagler) validate
+            # TODO(robnagler) validate
             return value
         except Exception as e:
             return InvalidFieldValue("not plot", exc=e)
