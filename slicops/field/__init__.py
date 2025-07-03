@@ -7,7 +7,7 @@
 from pykern import pkconfig, pkresource, pkyaml
 from pykern.pkcollections import PKDict
 from pykern.pkdebug import pkdc, pkdexc, pkdlog, pkdp
-import pykern.pkinspect
+import copy
 
 
 class InvalidFieldValue:
@@ -31,24 +31,13 @@ class InvalidFieldValue:
 
 
 class Base:
-    __TOP_ATTRS = frozenset(("constraints", "name", "ui", "value"))
-
-    def _defaults(self, *overrides):
-        rv = PKDict(
-            constraints=PKDict(max=None, min=None, nullable=True),
-            name=None,
-            ui=PKDict(label=None, widget=None, writable=True),
-            value=None,
-        )
-        for o in overrides:
-            rv.pkmerge(o, make_copy=False)
-        return rv
+    __SIMPLE_TOP_ATTRS = frozenset(("name", "value"))
+    __TOP_ATTRS = __SIMPLE_TOP_ATTRS.union(("constraints", "ui"))
 
     def __init__(self, base, overrides):
         if base is None:
             base = self._defaults()
-        # TODO(robnagler) this prepends lists, which isn't clear what we want for choices
-        self._attrs = base.pkmerge(overrides, make_copy=False)
+        self._attrs = self.__merge(base, overrides)
         self._assert_attrs()
         v = self.value_check(self._attrs.value)
         if isinstance(v, InvalidFieldValue):
@@ -91,6 +80,28 @@ class Base:
         if a.name is None:
             raise ValueError("no field name")
 
+    def _defaults(self, *overrides):
+        rv = PKDict(
+            constraints=PKDict(max=None, min=None, nullable=True),
+            name=None,
+            ui=PKDict(label=None, widget=None, writable=True),
+            value=None,
+        )
+        for o in overrides:
+            self.__merge(rv, o)
+        return rv
+
+    def __merge(self, base, overrides):
+        for t in self.__TOP_ATTRS:
+            if t not in overrides:
+                continue
+            if t in self.__SIMPLE_TOP_ATTRS:
+                base[t] = overrides[t]
+            else:
+                for k, v in overrides[t].items():
+                    base[t][k] = v
+        return base
+
 
 class Button(Base):
     def _defaults(self, *overrides):
@@ -111,10 +122,12 @@ class Button(Base):
 
 
 class Enum(Base):
+    __INITIAL_CHOICES = object()
+
     def _defaults(self, *overrides):
         return super()._defaults(
             PKDict(
-                constraints=PKDict(choices=PKDict()),
+                constraints=PKDict(choices=self.__INITIAL_CHOICES),
                 name="Enum",
                 ui=PKDict(widget="select"),
             ),
@@ -122,18 +135,26 @@ class Enum(Base):
         )
 
     def _assert_attrs(self):
+        def _choices(constraints):
+            # Enum._defaults has no choices
+            c = constraints.choices
+            constraints.choices = rv = (
+                PKDict() if c is self.__INITIAL_CHOICES else _convert(tuple(_pairs(c)))
+            )
+            return rv
+
         def _convert(pairs):
             t = _type(pairs)
             s = set()
             for k, v in pairs:
                 yield str(k), t(v)
 
-        def _iter(choices):
-            if isinstance(rv.constraints.choices, dict):
+        def _pairs(values):
+            if isinstance(values, dict):
                 return choices.items()
-            if isinstance(rv.constraints.choices, (list, tuple, set)):
-                return ((k, k) for k in choices)
-            raise ValueError(f"invalid choices type={type(choices)}")
+            if isinstance(values, (list, tuple, set)):
+                return ((k, k) for k in values)
+            raise ValueError(f"invalid choices type={type(values)}")
 
         def _type(pairs):
             t = None
@@ -153,13 +174,7 @@ class Enum(Base):
             return t
 
         super()._assert_attrs()
-        if self.__class__ != Enum:
-            # Enum has no choices
-            # TODO(robnagler): may want the ability to have no choices for subclasses
-            self._attrs.constraints.choices = PKDict(
-                _convert(tuple(_iter(self._attrs.constraints.choices))),
-            )
-        self.__map = self.__create_map(self._attrs.constraints.choices)
+        self.__map = self.__create_map(_choices(self._attrs.constraints))
 
     def __create_map(self, choices):
         def _cross_check(labels, values):

@@ -22,3 +22,4 @@ def test_standard():
     f = field.Enum(None, PKDict())
     v = f.value_check("x")
     pkunit.pkeq("Enum", v.kwargs.field_name)
+    f = f.new(PKDict(constraints=PKDict(choices=[1, 2, 3])))
