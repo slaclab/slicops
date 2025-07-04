@@ -30,6 +30,19 @@ class InvalidFieldValue:
             return super().__str__()
 
 
+def base_classes():
+    global _CLASSES
+
+    def _gen():
+        for c in (Button, Enum, Float, Plot, String):
+            yield c.__name__, c(None, PKDict())
+
+    if not _CLASSES:
+        #TODO(robnagler) import others
+        _CLASSES = PKDict(_gen())
+    return _CLASSES
+
+
 class Base:
     __SIMPLE_TOP_ATTRS = frozenset(("name", "value"))
     __TOP_ATTRS = __SIMPLE_TOP_ATTRS.union(("constraints", "ui"))
@@ -48,10 +61,7 @@ class Base:
         self._attrs.value = v
 
     def new(self, overrides):
-        rjn  # need a registry for simple.Foo and for imported types
-        if b := getattr(self, "_attrs", None):
-            b = copy.deepcopy(b)
-        return self.__class__(b, overrides)
+        return self.__class__(copy.deepcopy(self._attrs), overrides)
 
     def value_check(self, value):
         if value is None or hasattr(value, "__len__") and len(value) == 0:
@@ -72,7 +82,7 @@ class Base:
     def value_put(self, value):
         v = self.value_check(value)
         if isinstance(v, InvalidFieldValue):
-            return v
+            raise ValueError(str(v))
         self._attrs.value = v
         return v
 
@@ -90,9 +100,8 @@ class Base:
             raise ValueError(f"incorrect top level attrs={sorted(a.keys())}")
         # TODO(robnagler) verify other fields are valid (nullable, etc.)
         _check_name(a.name):
-        rjn # move this to constraint check
-        if not a.constraints.nullable and a.value is None:
-            raise ValueError("values is None but not nullable field={a.name}")
+        # raises if incompatible
+        self.value_put(a.value)
 
     def _defaults(self, *overrides):
         rv = PKDict(
@@ -271,7 +280,7 @@ class Integer(Base):
 class Plot(Base):
 
     def _defaults(self, *overrides):
-        rjn  # plot needs attributes
+        # TODO(robnaler) need to verify attributes
         return super()._defaults(
             PKDict(
                 name="Plot",

@@ -8,25 +8,58 @@ from pykern.pkcollections import PKDict
 from pykern.pkdebug import pkdc, pkdexc, pkdlog, pkdp
 import pykern.fconf
 import pykern.pkresource
+import slicops.ui_layout
 
 
 class Ctx:
+    __TOP_KEYS = frozenset(("ctx", "ui_layout"))
+
     def __init__(self, name):
-        # a field becomes a field_class which can be used
-        # it would be something field.increment to reference the type
-        # field cannot be a module but that would be checked
-        self.__fields = self.__init(
-            pykern.fconf.parse_all(
-                pykern.pkresource.file_path("sliclet/{name}")
-            ),
-        )
+        def _check_raw(got):
+            if not isinstance(got, dict):
+                raise ValueError(f"expecting a dict, not type={type(got)}")
+            g = set(got.keys())
+            if x := g - self.__TOP_KEYS:
+                raise ValueError(f"unexpected keys={x}")
+            if x := self.__TOP_KEYS - g:
+                raise ValueError(f"missing keys={x}")
 
-    def ctx_put(self, name, value):
-        assert name in self.fields
-        self.fields[name] = value
+        k = "yaml"
+        try:
+            r = pykern.fconf.parse_all(
+                pykern.pkresource.file_path("sliclet"),
+                glob=f"{name}*",
+            )
+            _check_raw(r)
+            k = "ctx"
+            self.__fields = _Parser(r, name).fields
+            k = "ui_layout"
+            self.__ui_layout = slicops.ui_layout.UILayout(r[k], self)
+        except Exception as e:
+            # TODO(robnagler) eventually use add_note
+            if x := getattr(e, "args", None):
+                x = ()
+            e.args = x + (f"parsing {k} for sliclet={name}",)
+            raise e
 
-    def ui_boot(self):
-        return PKDict(ui_ctx=PKDict(), layout=self._raw.layout)
 
-    def __init(self, raw):
-        # need to deal with relationships, must be DAG
+class _Parser:
+    def __init__(self, raw, sliclet):
+
+        def _sort():
+            rv = []
+            for k, v in tuple(raw.items()):
+                if k in self.fields:
+                    continue
+                del raw[k]
+                if not isinstance(v, dict) or not v:
+                    raise ValueError(f"expecting a non-empty dict for field={k}")
+                if not (b := v.get("base")):
+                    raise ValueError(f"expecting a base for field={k}")
+                if b
+
+        if not isinstance(raw, dict) or not raw:
+            raise ValueError("expecting a non-empty dict")
+        self.fields = PKDict()
+        self.bases = slicops.field.base_classes()
+        for k, v, b in _sort(rv):
