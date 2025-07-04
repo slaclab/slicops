@@ -10,6 +10,7 @@ from pykern.pkdebug import pkdc, pkdexc, pkdlog, pkdp
 import copy
 import re
 
+
 class InvalidFieldValue:
     def __init__(self, msg, **kwargs):
         self.msg = msg
@@ -31,15 +32,16 @@ class InvalidFieldValue:
 
 
 def base_classes():
-    global _CLASSES
+    global _CLASSES, _CLASSES_LOWER
 
     def _gen():
         for c in (Button, Enum, Float, Plot, String):
             yield c.__name__, c(None, PKDict())
 
     if not _CLASSES:
-        #TODO(robnagler) import others
+        # TODO(robnagler) import others
         _CLASSES = PKDict(_gen())
+        _CLASSES_LOWER = frozenset(c.lower() for c in _CLASSES)
     return _CLASSES
 
 
@@ -48,7 +50,7 @@ class Base:
     __TOP_ATTRS = __SIMPLE_TOP_ATTRS.union(("constraints", "ui"))
     # Others that convert from yaml
     __INVALID_NAMES = frozenset(("true", "false", "null", "none"))
-    __VALID_NAME = re.compile("^[a-zA-Z]\w+$")
+    __VALID_NAME = re.compile("^[a-z]\w+$")
 
     def __init__(self, base, overrides):
         if base is None:
@@ -90,16 +92,22 @@ class Base:
         def _check_name(name):
             if not name:
                 raise ValueError(f"no field name attrs={self._attrs}")
-            if name.lower() in self.__INVALID_NAMES:
-                raise ValueError(f"field name={name} must not be {sorted(self.__INVALID_NAMES)}")
-            if not self.__VALID_NAME.search(name):
-                raise ValueError(f"field name={name} must a Python identifier")
+            n = name.lower()
+            if not self.__VALID_NAME.search(n):
+                raise ValueError(f"field name={name} must an identifier starting with a letter")
+            if n in self.__INVALID_NAMES:
+                raise ValueError(
+                    f"field name={name} must not be {sorted(self.__INVALID_NAMES)}"
+                )
+            if n in _CLASSES_LOWER:
+                raise ValueError(f"field name={name} may not match base class")
 
         a = self._attrs
         if frozenset(a.keys()) != self.__TOP_ATTRS:
             raise ValueError(f"incorrect top level attrs={sorted(a.keys())}")
-        # TODO(robnagler) verify other fields are valid (nullable, etc.)
-        _check_name(a.name):
+        base_classes()
+        # TODO(robnagler) verify other attrs are valid (nullable, etc.)
+        _check_name(a.name)
         # raises if incompatible
         self.value_put(a.value)
 

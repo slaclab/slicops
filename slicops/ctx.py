@@ -8,6 +8,7 @@ from pykern.pkcollections import PKDict
 from pykern.pkdebug import pkdc, pkdexc, pkdlog, pkdp
 import pykern.fconf
 import pykern.pkresource
+import slicops.field
 import slicops.ui_layout
 
 
@@ -46,20 +47,26 @@ class Ctx:
 class _Parser:
     def __init__(self, raw, sliclet):
 
+        def _one(name, attrs, base):
+            if not base:
+                raise ValueError(f"expecting a base for field={name}")
+            if not (b := self.bases.get(base)):
+                _sort()
+                if not (b := self.fields.get(base)):
+                    raise ValueError(
+                        f"unknown base={b} or field bases are a cycle field={name}"
+                    )
+            self.fields[name] = b.new(v)
+
         def _sort():
-            rv = []
             for k, v in tuple(raw.items()):
-                if k in self.fields:
-                    continue
                 del raw[k]
                 if not isinstance(v, dict) or not v:
                     raise ValueError(f"expecting a non-empty dict for field={k}")
-                if not (b := v.get("base")):
-                    raise ValueError(f"expecting a base for field={k}")
-                if b
+                # field.Base doesn't know about "base"
+                _one(k, v, v.pkdel("base"))
 
         if not isinstance(raw, dict) or not raw:
             raise ValueError("expecting a non-empty dict")
         self.fields = PKDict()
         self.bases = slicops.field.base_classes()
-        for k, v, b in _sort(rv):
