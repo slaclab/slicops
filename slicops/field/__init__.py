@@ -8,7 +8,7 @@ from pykern import pkconfig, pkresource, pkyaml
 from pykern.pkcollections import PKDict
 from pykern.pkdebug import pkdc, pkdexc, pkdlog, pkdp
 import copy
-
+import re
 
 class InvalidFieldValue:
     def __init__(self, msg, **kwargs):
@@ -33,6 +33,9 @@ class InvalidFieldValue:
 class Base:
     __SIMPLE_TOP_ATTRS = frozenset(("name", "value"))
     __TOP_ATTRS = __SIMPLE_TOP_ATTRS.union(("constraints", "ui"))
+    # Others that convert from yaml
+    __INVALID_NAMES = frozenset(("true", "false", "null", "none"))
+    __VALID_NAME = re.compile("^[a-zA-Z]\w+$")
 
     def __init__(self, base, overrides):
         if base is None:
@@ -45,6 +48,7 @@ class Base:
         self._attrs.value = v
 
     def new(self, overrides):
+        rjn  # need a registry for simple.Foo and for imported types
         if b := getattr(self, "_attrs", None):
             b = copy.deepcopy(b)
         return self.__class__(b, overrides)
@@ -73,12 +77,20 @@ class Base:
         return v
 
     def _assert_attrs(self):
+        def _check_name(name):
+            if not name:
+                raise ValueError(f"no field name attrs={self._attrs}")
+            if name.lower() in self.__INVALID_NAMES:
+                raise ValueError(f"field name={name} must not be {sorted(self.__INVALID_NAMES)}")
+            if not self.__VALID_NAME.search(name):
+                raise ValueError(f"field name={name} must a Python identifier")
+
         a = self._attrs
         if frozenset(a.keys()) != self.__TOP_ATTRS:
             raise ValueError(f"incorrect top level attrs={sorted(a.keys())}")
         # TODO(robnagler) verify other fields are valid (nullable, etc.)
-        if a.name is None:
-            raise ValueError(f"no field name attrs={a}")
+        _check_name(a.name):
+        rjn # move this to constraint check
         if not a.constraints.nullable and a.value is None:
             raise ValueError("values is None but not nullable field={a.name}")
 
@@ -257,7 +269,9 @@ class Integer(Base):
 
 
 class Plot(Base):
+
     def _defaults(self, *overrides):
+        rjn  # plot needs attributes
         return super()._defaults(
             PKDict(
                 name="Plot",

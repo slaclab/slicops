@@ -1,4 +1,4 @@
-fields:
+ctx:
   increment:
     base: Integer
     constraints:
@@ -39,18 +39,18 @@ fields:
       html_class: primary
       label: Save
 
-layout:
-  columns:
-  - layout: col-lg-6 offset-lg-3 col-xl-4 offset-xl-4
-    rows:
-    - name: run_mode
-    - name: increment
-    - name: divisor
-    - columns:
-      - layout: col-sm-6
-        rows:
-        - cell:
-            - save_button
-            - revert_button
-    - name: output1
-    - name: output2
+ui_layout:
+  - cols:
+    - css: col-lg-6 offset-lg-3 col-xl-4 offset-xl-4
+      rows:
+      - run_mode
+      - increment
+      - divisor
+      - cols:
+        - css: col-sm-6
+          rows:
+            - cell_group:
+              - save_button
+              - revert_button
+      - output1
+      - output2
