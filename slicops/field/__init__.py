@@ -19,7 +19,7 @@ class InvalidFieldValue:
         def _values():
             for k in sorted(self.kwargs.keys()):
                 try:
-                    yield f"{k}={str(self.kwargs[v]):.500}"
+                    yield f"{k}={str(self.kwargs[k]):.100}"
                 except:
                     # TODO(robnagler) may be not the best
                     pass
@@ -50,12 +50,12 @@ class Base:
         return self.__class__(b, overrides)
 
     def value_check(self, value):
-        if value is None:
+        if value is None or hasattr(value, "__len__") and len(value) == 0:
             if self._attrs.constraints.nullable:
                 return None
             rv = InvalidValue(msg="None")
         else:
-            v = self._from_literal(self._attrs.value)
+            v = self._from_literal(value)
             if not isinstance(v, InvalidFieldValue):
                 return v
             rv = v
@@ -78,7 +78,9 @@ class Base:
             raise ValueError(f"incorrect top level attrs={sorted(a.keys())}")
         # TODO(robnagler) verify other fields are valid (nullable, etc.)
         if a.name is None:
-            raise ValueError("no field name")
+            raise ValueError(f"no field name attrs={a}")
+        if not a.constraints.nullable and a.value is None:
+            raise ValueError("values is None but not nullable field={a.name}")
 
     def _defaults(self, *overrides):
         rv = PKDict(
@@ -138,8 +140,8 @@ class Enum(Base):
         def _choices(constraints):
             # Enum._defaults has no choices
             c = constraints.choices
-            constraints.choices = rv = (
-                PKDict() if c is self.__INITIAL_CHOICES else _convert(tuple(_pairs(c)))
+            constraints.choices = rv = PKDict(
+                () if c is self.__INITIAL_CHOICES else _convert(tuple(_pairs(c)))
             )
             return rv
 
@@ -179,17 +181,18 @@ class Enum(Base):
     def __create_map(self, choices):
         def _cross_check(labels, values):
             for k, v in labels.items():
-                yield k, v
                 if (x := values.get(k)) is None and x != v:
                     raise ValueError(
-                        f"choice labels and values must reversed map lower label={k} maps to {v} and {x}"
+                        f"choice labels and values must reverse map with lower label={k} maps to {v} and {x}"
                     )
             return labels.pkupdate(values)
 
         def _duplicates(kind):
             rv = PKDict(_iter(kind))
             if len(rv) != len(choices):
-                raise ValueError(f"duplicate choice {kind} (case insensitive)")
+                raise ValueError(
+                    f"duplicate choice {kind} (case insensitive) choices={choices}"
+                )
             return rv
 
         def _iter(kind):
@@ -197,7 +200,7 @@ class Enum(Base):
                 yield _lower((v if kind == "value" else k), kind), v
 
         def _lower(value, kind):
-            rv = str(k).lower()
+            rv = str(value).lower()
             if len(rv) == 0:
                 raise ValueError(f"choice {kind} may not be a zero length string")
             return rv
@@ -206,14 +209,16 @@ class Enum(Base):
 
     def _from_literal(self, value):
         try:
-            if (rv := self.__map.get(str(value).lower())) is not None:
+            if (rv := self.__map.get(pkdp(str(value).lower()))) is not None:
                 return rv
             return InvalidFieldValue(
                 "unknown choice",
+                value=value,
                 choices=tuple(self.__map.keys()),
             )
 
         except Exception as e:
+            pkdp("xx={}", pkdexc())
             return InvalidFieldValue("incompatible with str", exc=e)
 
 
