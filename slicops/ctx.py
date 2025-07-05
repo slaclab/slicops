@@ -33,7 +33,7 @@ class Ctx:
             )
             _check_raw(r)
             k = "ctx"
-            self._fields = _Parser(r[k]).fields
+            self._fields = self.__parse(r[k], PKDict(), slicops.field.prototypes())
             k = "ui_layout"
             self._ui_layout = slicops.ui_layout.UILayout(r[k], self)
         except Exception as e:
@@ -46,21 +46,19 @@ class Ctx:
     def is_field(self, name):
         return name in self._fields
 
-
-class _Parser:
-    def __init__(self, raw):
+    def __parse(self, raw, fields, prototypes):
 
         def _one(name, attrs, prototype):
             if not prototype:
                 raise ValueError(f"expecting a prototype for field={name}")
-            if not (b := self.prototypes.get(prototype)):
+            if not (b := prototypes.get(prototype)):
                 _sort()
-                if not (b := self.fields.get(prototype)):
+                if not (b := fields.get(prototype)):
                     raise ValueError(
                         f"unknown prototype={prototype} or prototypes are a cycle field={name}"
                     )
             attrs.name = name
-            self.fields[name] = b.new(attrs)
+            fields[name] = b.new(attrs)
 
         def _sort():
             for k, v in tuple(raw.items()):
@@ -75,6 +73,5 @@ class _Parser:
 
         if not isinstance(raw, dict) or not raw:
             raise ValueError("expecting a non-empty dict")
-        self.fields = PKDict()
-        self.prototypes = slicops.field.prototypes()
         _sort()
+        return fields
