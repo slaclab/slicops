@@ -10,6 +10,12 @@ from pykern.pkdebug import pkdc, pkdexc, pkdlog, pkdp
 import copy
 import re
 
+_CLASSES = None
+
+
+def base_classes():
+    return _CLASSES
+
 
 class InvalidFieldValue:
     def __init__(self, msg, **kwargs):
@@ -29,20 +35,6 @@ class InvalidFieldValue:
             return str(self.msg) + " " + " ".join(_values())
         except:
             return super().__str__()
-
-
-def base_classes():
-    global _CLASSES, _CLASSES_LOWER
-
-    def _gen():
-        for c in (Button, Enum, Float, Plot, String):
-            yield c.__name__, c(None, PKDict())
-
-    if not _CLASSES:
-        # TODO(robnagler) import others
-        _CLASSES = PKDict(_gen())
-        _CLASSES_LOWER = frozenset(c.lower() for c in _CLASSES)
-    return _CLASSES
 
 
 class Base:
@@ -94,7 +86,9 @@ class Base:
                 raise ValueError(f"no field name attrs={self._attrs}")
             n = name.lower()
             if not self.__VALID_NAME.search(n):
-                raise ValueError(f"field name={name} must an identifier starting with a letter")
+                raise ValueError(
+                    f"field name={name} must an identifier starting with a letter"
+                )
             if n in self.__INVALID_NAMES:
                 raise ValueError(
                     f"field name={name} must not be {sorted(self.__INVALID_NAMES)}"
@@ -105,7 +99,6 @@ class Base:
         a = self._attrs
         if frozenset(a.keys()) != self.__TOP_ATTRS:
             raise ValueError(f"incorrect top level attrs={sorted(a.keys())}")
-        base_classes()
         # TODO(robnagler) verify other attrs are valid (nullable, etc.)
         _check_name(a.name)
         # raises if incompatible
@@ -123,14 +116,27 @@ class Base:
         return rv
 
     def __merge(self, base, overrides):
+        def _update(attr, new):
+            # ok if empty
+            for k, v in new.items():
+                if v is None:
+                    attr.pkdel(k)
+                else:
+                    attr[k] = v
+
         for t in self.__TOP_ATTRS:
-            if t not in overrides:
+            if (o := overrides.pkdel(t)) is None:
                 continue
             if t in self.__SIMPLE_TOP_ATTRS:
-                base[t] = overrides[t]
+                base[t] = o
+            elif not isinstance(o, dict):
+                raise ValueError(f"overrides {t} is not a dict type={type(o)}")
             else:
-                for k, v in overrides[t].items():
-                    base[t][k] = v
+                _update(base[t], o)
+        if overrides:
+            raise ValueError(
+                f"unexpected top key(s)={sorted(overrides.keys())}; must be {sorted(self.__TOP_ATTRS)}"
+            )
         return base
 
 
@@ -182,7 +188,7 @@ class Enum(Base):
 
         def _pairs(values):
             if isinstance(values, dict):
-                return choices.items()
+                return values.items()
             if isinstance(values, (list, tuple, set)):
                 return ((k, k) for k in values)
             raise ValueError(f"invalid choices type={type(values)}")
@@ -210,7 +216,7 @@ class Enum(Base):
     def __create_map(self, choices):
         def _cross_check(labels, values):
             for k, v in labels.items():
-                if (x := values.get(k)) is None and x != v:
+                if (x := values.get(k)) is not None and x != v:
                     raise ValueError(
                         f"choice labels and values must reverse map with lower label={k} maps to {v} and {x}"
                     )
@@ -238,7 +244,7 @@ class Enum(Base):
 
     def _from_literal(self, value):
         try:
-            if (rv := self.__map.get(pkdp(str(value).lower()))) is not None:
+            if (rv := self.__map.get(str(value).lower())) is not None:
                 return rv
             return InvalidFieldValue(
                 "unknown choice",
@@ -247,7 +253,6 @@ class Enum(Base):
             )
 
         except Exception as e:
-            pkdp("xx={}", pkdexc())
             return InvalidFieldValue("incompatible with str", exc=e)
 
 
@@ -320,3 +325,19 @@ class String(Base):
             return str(value)
         except Exception as e:
             return InvalidFieldValue("not string", exc=e)
+
+
+def _init():
+    global _CLASSES, _CLASSES_LOWER
+
+    def _gen():
+        for c in (Button, Enum, Float, Integer, Plot, String):
+            yield c.__name__, c(None, PKDict())
+
+    # needed in Base.__init__
+    _CLASSES_LOWER = frozenset()
+    _CLASSES = PKDict(_gen())
+    _CLASSES_LOWER = frozenset(c.lower() for c in _CLASSES)
+
+
+_init()

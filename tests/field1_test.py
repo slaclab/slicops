@@ -10,19 +10,29 @@ def test_classes():
     from pykern import pkunit
     from slicops import field
 
-    f = field.Button(None, PKDict())
+    b = field.base_classes()
+    f = b.Button.new(PKDict(name="my_button"))
     pkunit.pkeq(None, f.value_check(None))
-    f = field.Integer(None, PKDict())
+    f = b.Integer.new(PKDict(name="my_int"))
     pkunit.pkok(1, f.value_put("1"))
     v = f.value_check("x")
     pkunit.pkok(
         isinstance(v, field.InvalidFieldValue), "expected InvalidFieldValue={}", v
     )
-    pkunit.pkeq("Integer", v.kwargs.field_name)
-    f = field.Enum(None, PKDict())
+    pkunit.pkeq("my_int", v.kwargs.field_name)
+    f = b.Enum.new(
+        PKDict(
+            name="colors",
+            constraints=PKDict(
+                choices=PKDict(red="cyan", green="magenta", blue="yellow")
+            ),
+        )
+    )
+    pkunit.pkeq("magenta", f.value_check("green"))
+    pkunit.pkeq("yellow", f.value_check("yellow"))
     v = f.value_check("x")
-    pkunit.pkeq("Enum", v.kwargs.field_name)
-    f = f.new(PKDict(constraints=PKDict(choices=[1, 2, 3])))
+    pkunit.pkeq("colors", v.kwargs.field_name)
+    f = f.new(PKDict(name="nums", constraints=PKDict(choices=[1, 2, 3])))
     pkunit.pkeq(PKDict({"1": 1, "2": 2, "3": 3}), f._attrs.constraints.choices)
     pkunit.pkeq(3, f.value_check(3))
     pkunit.pkeq(2, f.value_check("2"))

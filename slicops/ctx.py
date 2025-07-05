@@ -15,7 +15,7 @@ import slicops.ui_layout
 class Ctx:
     __TOP_KEYS = frozenset(("ctx", "ui_layout"))
 
-    def __init__(self, name):
+    def __init__(self, name, path=None):
         def _check_raw(got):
             if not isinstance(got, dict):
                 raise ValueError(f"expecting a dict, not type={type(got)}")
@@ -28,17 +28,17 @@ class Ctx:
         k = "yaml"
         try:
             r = pykern.fconf.parse_all(
-                pykern.pkresource.file_path("sliclet"),
+                path or pykern.pkresource.file_path("sliclet"),
                 glob=f"{name}*",
             )
             _check_raw(r)
             k = "ctx"
-            self.__fields = _Parser(r, name).fields
+            self._fields = _Parser(r, name).fields
             k = "ui_layout"
-            self.__ui_layout = slicops.ui_layout.UILayout(r[k], self)
+            self._ui_layout = slicops.ui_layout.UILayout(r[k], self)
         except Exception as e:
             # TODO(robnagler) eventually use add_note
-            if x := getattr(e, "args", None):
+            if not (x := getattr(e, "args", None)):
                 x = ()
             e.args = x + (f"parsing {k} for sliclet={name}",)
             raise e
