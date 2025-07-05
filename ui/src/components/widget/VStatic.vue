@@ -4,11 +4,11 @@
 <template>
     <VLabel
         :field="field"
-        :ui_ctx="ui_ctx"
+        :ctx="ctx"
     />
     <div>
         <input
-            v-model="ui_ctx[field].value"
+            v-model="ctx[field].value"
             class="form-control form-control-sm form-control-plaintext"
             :id="field"
         />
@@ -20,6 +20,6 @@
 
  const props = defineProps({
      field: String,
-     ui_ctx: Object,
+     ctx: Object,
  });
 </script>

@@ -10,19 +10,19 @@
             <div v-if="key === 'name'">
                 <VFieldEditor
                     :name="value"
-                    :ui_ctx="ui_ctx"
+                    :ctx="ctx"
                 />
             </div>
             <div v-else-if="key === 'cell'">
                 <VCell
                     :fields="value"
-                    :ui_ctx="ui_ctx"
+                    :ctx="ctx"
                 />
             </div>
             <div v-else-if="key === 'columns'">
                  <VColumns
                      :columns="value"
-                     :ui_ctx="ui_ctx"
+                     :ctx="ctx"
                  />
             </div>
         </div>
@@ -36,6 +36,6 @@
 
  const props = defineProps({
      layout: Object,
-     ui_ctx: Object,
+     ctx: Object,
  });
 </script>

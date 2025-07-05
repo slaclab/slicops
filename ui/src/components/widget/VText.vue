@@ -4,7 +4,7 @@
 <template>
     <VLabel
         :field="field"
-        :ui_ctx="ui_ctx"
+        :ctx="ctx"
     />
     <div>
         <input
@@ -12,7 +12,7 @@
             autocomplete="off"
             class="form-control form-control-sm"
             :class="{'slicops-invalid': isInvalid}"
-            :readonly="! ui_ctx[field].enabled"
+            :readonly="! ctx[field].enabled"
             :id="field"
             @blur="onBlur()"
             @keydown="onKeydown($event)"
@@ -28,32 +28,32 @@
 
  const props = defineProps({
      field: String,
-     ui_ctx: Object,
+     ctx: Object,
  });
 
  const { isInvalid, parsedValue, rawValue } = ['integer', 'float'].includes(
-     props.ui_ctx[props.field].widget)
-     ? useNumberValidation(props.ui_ctx[props.field])
-     : useValidation(props.ui_ctx[props.field]);
- rawValue.value = props.ui_ctx[props.field].value;
+     props.ctx[props.field].widget)
+     ? useNumberValidation(props.ctx[props.field])
+     : useValidation(props.ctx[props.field]);
+ rawValue.value = props.ctx[props.field].value;
 
  const onBlur = () => {
-     // Restore the ui_ctx value when focus is lost
-     rawValue.value = props.ui_ctx[props.field].value;
+     // Restore the ctx value when focus is lost
+     rawValue.value = props.ctx[props.field].value;
      parsedValue.value = rawValue.value;
      isInvalid.value = false;
  };
 
  const onKeydown = ($event) => {
      if ($event.key == 'Enter' && ! isInvalid.value) {
-         props.ui_ctx[props.field].value = parsedValue.value;
-         props.ui_ctx.serverAction(props.field, parsedValue.value);
+         props.ctx[props.field].value = parsedValue.value;
+         props.ctx.serverAction(props.field, parsedValue.value);
      }
  };
 
- watch(() => props.ui_ctx[props.field].value, () => {
-     if (props.ui_ctx[props.field].value !== parsedValue.value) {
-         rawValue.value = props.ui_ctx[props.field].value;
+ watch(() => props.ctx[props.field].value, () => {
+     if (props.ctx[props.field].value !== parsedValue.value) {
+         rawValue.value = props.ctx[props.field].value;
      }
  });
 

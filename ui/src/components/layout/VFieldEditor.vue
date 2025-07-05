@@ -1,39 +1,39 @@
 <!--
-   Field editor based on ui_ctx field widget.
+   Field editor based on ctx field widget.
  -->
 <template>
     <div
         class="mb-3"
-        v-if="ui_ctx[name].visible">
-        <div v-if="ui_ctx[name].widget == 'select'">
+        v-if="ctx[name].visible">
+        <div v-if="ctx[name].widget == 'select'">
             <VSelect
                 :field="name"
-                :ui_ctx="ui_ctx"
+                :ctx="ctx"
             />
         </div>
-        <div v-else-if="['text', 'float', 'integer'].includes(ui_ctx[name].widget)">
+        <div v-else-if="['text', 'float', 'integer'].includes(ctx[name].widget)">
             <VText
                 :field="name"
-                :ui_ctx="ui_ctx"
+                :ctx="ctx"
             />
         </div>
-        <div v-else-if="ui_ctx[name].widget == 'static'">
+        <div v-else-if="ctx[name].widget == 'static'">
             <VStatic
                 :field="name"
-                :ui_ctx="ui_ctx"
+                :ctx="ctx"
             />
         </div>
-        <div v-else-if="ui_ctx[name].widget == 'button'">
+        <div v-else-if="ctx[name].widget == 'button'">
             <VButton
                 :field="name"
-                :ui_ctx="ui_ctx"
+                :ctx="ctx"
             />
         </div>
-        <div v-else-if="ui_ctx[name].widget == 'heatmap_with_lineouts'">
+        <div v-else-if="ctx[name].widget == 'heatmap_with_lineouts'">
             <VHeatmapWithLineouts
-                v-if="ui_ctx.image"
-                :colorMap="ui_ctx.color_map.value"
-                :plot="ui_ctx.image"
+                v-if="ctx.image"
+                :colorMap="ctx.color_map.value"
+                :plot="ctx.image"
             />
         </div>
     </div>
@@ -48,6 +48,6 @@
 
  const props = defineProps({
      name: String,
-     ui_ctx: Object,
+     ctx: Object,
  });
 </script>

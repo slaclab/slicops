@@ -16,7 +16,7 @@
                 :key="index2">
                 <VLayout
                     :layout="row"
-                    :ui_ctx="ui_ctx"
+                    :ctx="ctx"
                 />
             </div>
         </div>
@@ -28,6 +28,6 @@
 
  const props = defineProps({
      columns: Object,
-     ui_ctx: Object,
+     ctx: Object,
  });
 </script>

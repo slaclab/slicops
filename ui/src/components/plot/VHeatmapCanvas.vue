@@ -17,7 +17,7 @@
      colorMap: String,
  });
 
- let ctx = null;
+ let context = null;
  let cacheCanvas = null;
  let colorScale = null;
  let previousValues = {};
@@ -30,7 +30,7 @@
          d3.min(d.raw_pixels, (row) => d3.min(row)),
          d3.max(d.raw_pixels, (row) => d3.max(row)),
      ]);
-     const imageData = ctx.getImageData(0, 0, cacheCanvas.width, cacheCanvas.height);
+     const imageData = context.getImageData(0, 0, cacheCanvas.width, cacheCanvas.height);
      const xSize = d.raw_pixels[0].length;
      const ySize = d.raw_pixels.length;
      for (let yi = 0, p = -1; yi < ySize; ++yi) {
@@ -51,13 +51,13 @@
      const c = d3.select('canvas').node();
      c.width = props.width;
      c.height = props.height;
-     ctx.imageSmoothingEnabled = false;
-     ctx.drawImage(cacheCanvas, ...props.zoomOffsets);
+     context.imageSmoothingEnabled = false;
+     context.drawImage(cacheCanvas, ...props.zoomOffsets);
  };
 
  onMounted(() => {
      colorScale = d3.scaleSequential(d3["interpolate" + props.colorMap]);
-     ctx = d3.select('canvas').node().getContext('2d', { willReadFrequently: true });
+     context = d3.select('canvas').node().getContext('2d', { willReadFrequently: true });
      cacheCanvas = document.createElement('canvas');
      initImage();
      refresh();

@@ -6,7 +6,7 @@
         <div v-for="(item, index) of fields" :key="index" style="display: inline">
             <VFieldEditor
                 :name="item"
-                :ui_ctx="ui_ctx"
+                :ctx="ctx"
             />
         </div>
     </div>
@@ -17,6 +17,6 @@
 
  const props = defineProps({
      fields: Object,
-     ui_ctx: Object,
+     ctx: Object,
  });
 </script>
