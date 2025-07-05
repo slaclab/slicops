@@ -6,33 +6,34 @@
  -->
 <template>
     <div class="row">
-        <div v-for="value in rows" :key="key">
-            <div v-if="key === 'cell'">
+        <div v-for="r in rows">
+            <div v-if="r.layout === 'cell'">
                 <VCell
                     :field="value.field"
                     :ctx="ctx"
                 />
             </div>
-            <div v-else-if="key === 'cell_group'">
+            <div v-else-if="r.layout === 'cell_group'">
                 <VCellGroup
-                    :cells="value"
+                    :cells="value.cells"
                     :ctx="ctx"
                 />
             </div>
-            <div v-else-if="key === 'cols'">
+            <div v-else-if="r.layout === 'cols'">
                  <VCols
-                     :columns="value"
+                     :cols="value.cols"
                      :ctx="ctx"
                  />
             </div>
+            <!-- TODO(robnagler) need error -->
         </div>
     </div>
 </template>
 
 <script setup>
+ import VCell from '@/components/layout/VCell.vue';
  import VCellGroup from '@/components/layout/VCellGroup.vue';
  import VCols from '@/components/layout/VCols.vue';
- import VCell from '@/components/layout/VCell.vue';
 
  const props = defineProps({
      rows: Object,

@@ -18,6 +18,8 @@ class UILayout:
         r = self._recurse("row", rows, True)
         if self._errors:
             raise ValueError("\n".join(self._errors))
+        #TODO(robnagler) this is irregular. Each level should have a layout to
+        # dispatch from. rows should have an attributed rows
         self.rows = r
         delattr(self, "_ctx")
         delattr(self, "_errors")
@@ -64,17 +66,23 @@ class UILayout:
         return value
 
     def _op_row(self, value):
+        def _row(layout, values):
+            if layout == "cell_group":
+                op = "cell"
+            elif layout == "cols":
+                op = "col"
+            else:
+                return None
+            return PKDict({f"{op}s": self._recurse(op, values, True), "layout": layout})
+
         if isinstance(value, str):
+            # Different here, because don't have the container layout
             return self._recurse("cell", value)
         if not isinstance(value, dict):
             return self._error("must be a field name, cols, or cell_group")
         k = tuple(value.keys())
-        if len(k) == 1:
-            v = value[k[0]]
-            if k[0] == "cell_group":
-                return PKDict(cells=self._recurse("cell", v, True), layout="cell_group")
-            elif k[0] == "cols":
-                return PKDict(cols=self._recurse("col", v, True), layout="cols")
+        if len(k) == 1 and (rv := _row(k[0], value[k[0]])):
+            return rv
         return _self._error("must be cols or cell_group")
 
     def _recurse(self, op, value, is_list=False):

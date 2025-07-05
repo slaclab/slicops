@@ -4,6 +4,8 @@
 <template>
     <div :style="'column-count:' + cells.length">
         <div v-for="cell of cells" style="display: inline">
+            <!-- TODO(robnagler) need error if not layout cell -->
+            <!-- TODO(robnagler) seems like VCell should look at field -->
             <VCell
                 :field="cell.field"
                 :ctx="ctx"
@@ -13,7 +15,7 @@
 </template>
 
 <script setup>
- import VFieldEditor from '@/components/layout/VFieldEditor.vue';
+ import VCell from '@/components/layout/VCell.vue';
 
  const props = defineProps({
      cells: Object,

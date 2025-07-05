@@ -10,6 +10,7 @@
         <div
             v-for="col of cols"
             :class="col.css">
+            <!-- TODO(robnagler) need error if layout not col(?) -->
 <!--            <div
                 v-for="(row, index2) of col.rows"
                 :key="index2">  -->
