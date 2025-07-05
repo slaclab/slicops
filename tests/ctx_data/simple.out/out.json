@@ -1,0 +1,56 @@
+{
+    "fields": {
+        "divisor": "Float(divisor=None)",
+        "increment": "Integer(increment=5)",
+        "output1": "String(output1=None)",
+        "output2": "String(output2=None)",
+        "revert_button": "Button(revert_button=None)",
+        "run_mode": "Enum(run_mode=method_1)",
+        "save_button": "Button(save_button=None)"
+    },
+    "ui_layout": [
+        {
+            "cols": [
+                {
+                    "css": "col-lg-6 offset-lg-3 col-xl-4 offset-xl-4",
+                    "rows": [
+                        {
+                            "cell": "run_mode"
+                        },
+                        {
+                            "cell": "increment"
+                        },
+                        {
+                            "cell": "divisor"
+                        },
+                        {
+                            "cols": [
+                                {
+                                    "css": "col-sm-6",
+                                    "rows": [
+                                        {
+                                            "cell_group": [
+                                                {
+                                                    "cell": "save_button"
+                                                },
+                                                {
+                                                    "cell": "revert_button"
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "cell": "output1"
+                        },
+                        {
+                            "cell": "output2"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}
