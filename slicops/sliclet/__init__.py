@@ -88,10 +88,6 @@ class Base:
     def ui_action(self, api_args):
         self.__put_work(_Work.ui_action, api_args)
 
-    async def ui_boot(self):
-        with self.lock_for_update() as txn:
-            return self.__ctx.ui_boot(txn)
-
     def __assert_not_destroyed(self):
         if self.__destroyed:
             pass
@@ -142,9 +138,10 @@ class Base:
         self.__ui_update(exc)
 
     def _work_ui_action(self, arg):
-        self.__ctx.put_field(arg.field, arg.value)
-        if a := self.__ui_actions.get(arg.field):
-            a(field.value)
+        with self.lock_for_update() as txn:
+            txn.field_set(arg.field, arg.value)
+            if a := self.__ui_actions.get(arg.field):
+                a(field.value)
 
 
 class _Txn:
