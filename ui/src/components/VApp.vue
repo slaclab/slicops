@@ -41,7 +41,7 @@
      errorMessage.value = '';
      ctx.value[field].enabled = false;
      apiService.call(
-         `ui_action`, {
+         `ui_field_change`, {
              field: field,
              value: value,
          },
@@ -74,7 +74,7 @@
 
  const uiUpdate = (result) => {
      if (! result.ctx) {
-         logService.error(["no ctx ui_update result", result]);
+         logService.error(["no ctx ui_ctx_update result", result]);
          handleError("server returned invalid update")
          return;
      }
@@ -100,7 +100,7 @@
 
  watch(websocketConnectedRef, () => {
      if (websocketConnectedRef.value) {
-         apiConnection = apiService.subscribe(`ui_update`, {sliclet: props.prefix}, uiUpdate, handleError);
+         apiConnection = apiService.subscribe(`ui_ctx_update`, {sliclet: props.prefix}, uiUpdate, handleError);
      }
  });
 

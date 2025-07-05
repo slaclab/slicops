@@ -32,18 +32,18 @@ class Simple(slicops.sliclet.Base):
             self.__db_watcher = None
 
     def thread_run_start(self):
-        self.__db_watcher = _DBWatcher(self._db_watcher_update)
+        self.__db_watcher = _DBWatcher(self.__db_watcher_update)
 
-    def ui_action_save_button(self, txn):
+    def ui_field_change_save_button(self, txn, **kwargs):
         def _values():
             for k in self.__writable_keys(txn):
                 yield k, txn.field_get(k)
 
-        # TODO(robnagler) work item maybe should happen outside ui_action()
+        # TODO(robnagler) work item maybe should happen outside ui_field_change
         #    work_queue is a separate thing that could be queued
         slicops.pkcli.simple.write(PKDict(_values()))
 
-    def ui_action_revert_button(self, txn):
+    def ui_field_change_revert_button(self, txn, **kwargs):
         # TODO(robnagler) the read and the ctx_put could happen outside the context
         return self.__read_db(txn)
 

@@ -43,6 +43,12 @@ class Ctx:
             e.args = x + (f"parsing {step} for sliclet={name}",)
             raise e
 
+    def as_api_result(self):
+        return PKDict(
+            ctx=PKDict((k, v.as_api_result()) for k, v in self.fields.items()),
+            ui_layout=PKDict(rows=self.ui_layout.rows),
+        )
+
     def __parse(self, raw, fields, prototypes):
 
         def _one(name, attrs, prototype):

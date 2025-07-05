@@ -6,10 +6,11 @@
 
 from pykern.pkcollections import PKDict
 from pykern.pkdebug import pkdc, pkdlog, pkdp
-import slicops.quest.API
-import slicops.sliclet
+import asyncio
 import pykern.api.util
 import pykern.util
+import slicops.quest
+import slicops.sliclet
 
 
 def api_classes():
@@ -23,11 +24,11 @@ _SLICLET_KEY = "sliclet"
 class API(slicops.quest.API):
     """Implementation for the Screen (Profile Monitor) application"""
 
-    async def api_ui_action(self, api_args):
-        return await self.session[_SLICLET_KEY].ui_action()
+    async def api_ui_field_change(self, api_args):
+        return self.session[_SLICLET_KEY].ui_field_change(api_args)
 
     @pykern.api.util.subscription
-    async def api_ui_update(self, api_args):
+    async def api_ui_ctx_update(self, api_args):
         if self.session.get(_UPDATE_Q_KEY):
             raise pykern.util.APIError("already updating")
         try:
@@ -44,7 +45,7 @@ class API(slicops.quest.API):
                 if r is None:
                     return None
                 if isinstance(r, Exception):
-                    raise pykern.util.APIError(r)
+                    raise r
                 self.subscription.result_put(r)
         finally:
             if "session" in self:
