@@ -4,10 +4,10 @@
 <template>
     <button
         type="button"
-        :class="'btn btn-' + ctx[field].html_class"
-        :disabled="! ctx[field].enabled"
+        :class="'btn btn-' + ctx[field].ui.css_kind"
+        :disabled="! ctx[field].ui.enabled"
         @click="onClick()"
-    >{{ ctx[field].label }}</button>
+    >{{ ctx[field].ui.label }}</button>
 </template>
 
 <script setup>

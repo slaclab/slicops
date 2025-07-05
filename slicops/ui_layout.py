@@ -46,7 +46,7 @@ class UILayout:
     def _op_cell(self, value):
         if value not in self._ctx.fields:
             return self._error("field not found")
-        return PKDict(cell=value)
+        return PKDict(field=value, layout="cell")
 
     def _op_col(self, value):
         if c := value.pkdel("css"):
@@ -57,7 +57,7 @@ class UILayout:
             r = self._recurse("row", r, True)
         if value:
             self._error("expecting css or rows")
-        return PKDict(css=c, rows=r)
+        return PKDict(css=c, rows=r, layout="col")
 
     def _op_css(self, value):
         # TODO(robnagler) validate
@@ -72,9 +72,9 @@ class UILayout:
         if len(k) == 1:
             v = value[k[0]]
             if k[0] == "cell_group":
-                return PKDict(cell_group=self._recurse("cell", v, True))
+                return PKDict(cells=self._recurse("cell", v, True), layout="cell_group")
             elif k[0] == "cols":
-                return PKDict(cols=self._recurse("col", v, True))
+                return PKDict(cols=self._recurse("col", v, True), layout="cols")
         return _self._error("must be cols or cell_group")
 
     def _recurse(self, op, value, is_list=False):

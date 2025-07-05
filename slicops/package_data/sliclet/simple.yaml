@@ -24,14 +24,14 @@ ctx:
   revert_button:
     prototype: Button
     ui:
-      html_class: danger
+      css_kind: danger
       label: Revert
   run_mode:
     prototype: Enum
     constraints:
       choices:
         "Method One": method_1
-        "Method Two": method 2
+        "Method Two": method_2
         "Method Three": method_3
     value: method_1
     ui:
@@ -40,7 +40,7 @@ ctx:
   save_button:
     prototype: Button
     ui:
-      html_class: primary
+      css_kind: primary
       label: Save
 
 ui_layout:

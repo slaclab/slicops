@@ -1,22 +1,53 @@
 <!--
-   A collection of fields displayed horizontally in a row.
+   Field editor based on ctx field widget.
  -->
 <template>
-    <div :style="'column-count:' + fields.length">
-        <div v-for="(item, index) of fields" :key="index" style="display: inline">
-            <VFieldEditor
-                :name="item"
+    <div
+        class="mb-3"
+        v-if="ctx[field].ui.visible">
+        <div v-if="ctx[field].ui.widget == 'select'">
+            <VSelect
+                :field="field"
                 :ctx="ctx"
+            />
+        </div>
+        <div v-else-if="['text', 'float', 'integer'].includes(ctx[field].ui.widget)">
+            <VText
+                :field="field"
+                :ctx="ctx"
+            />
+        </div>
+        <div v-else-if="ctx[field].ui.widget == 'static'">
+            <VStatic
+                :field="field"
+                :ctx="ctx"
+            />
+        </div>
+        <div v-else-if="ctx[field].ui.widget == 'button'">
+            <VButton
+                :field="field"
+                :ctx="ctx"
+            />
+        </div>
+        <div v-else-if="ctx[field].ui.widget == 'heatmap_with_lineouts'">
+            <VHeatmapWithLineouts
+                v-if="ctx.image"
+                :colorMap="ctx.color_map.value"
+                :plot="ctx.image"
             />
         </div>
     </div>
 </template>
 
 <script setup>
- import VFieldEditor from '@/components/layout/VFieldEditor.vue';
+ import VButton from '@/components/widget/VButton.vue';
+ import VSelect from '@/components/widget/VSelect.vue';
+ import VStatic from '@/components/widget/VStatic.vue';
+ import VText from '@/components/widget/VText.vue';
+ import VHeatmapWithLineouts from '@/components/plot/VHeatmapWithLineouts.vue';
 
  const props = defineProps({
-     fields: Object,
+     field: String,
      ctx: Object,
  });
 </script>

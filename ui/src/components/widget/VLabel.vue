@@ -6,7 +6,7 @@
         class="col-form-label col-form-label-sm"
         :for="field"
     >
-        {{ ctx[field].label }}
+        {{ ctx[field].ui.label }}
     </label>
 </template>
 

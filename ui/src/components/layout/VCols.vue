@@ -1,24 +1,23 @@
 <!--
    A series of layout components arranged within a bootstrap column class.
    Attributes are:
-     - columns: a group of column definitions:
-       - layout: the col-* class
+     - cols: a group of column definitions:
+       - css: the col-* class
        - rows: a group of layout definitions
  -->
 <template>
     <div class="row">
         <div
-            v-for="(col, index) of columns"
-            :key="index"
-            :class="col.layout">
-            <div
+            v-for="col of cols"
+            :class="col.css">
+<!--            <div
                 v-for="(row, index2) of col.rows"
-                :key="index2">
-                <VLayout
-                    :layout="row"
+                :key="index2">  -->
+                <VRows
+                    :rows="col.rows"
                     :ctx="ctx"
                 />
-            </div>
+<!--            </div> -->
         </div>
     </div>
 </template>
@@ -27,7 +26,7 @@
  import VLayout from '@/components/VLayout.vue';
 
  const props = defineProps({
-     columns: Object,
+     cols: Object,
      ctx: Object,
  });
 </script>

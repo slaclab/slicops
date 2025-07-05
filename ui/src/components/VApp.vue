@@ -10,8 +10,8 @@
                 v-if="errorMessage"
                 class="alert alert-warning">{{ errorMessage }}
             </div>
-            <VLayout
-                :layout="ui_layout.value.rows"
+            <VRows
+                :rows="ui_layout.value.rows"
                 :ctx="ctx.value"
             />
         </div>
@@ -22,7 +22,7 @@
  import { onUnmounted, ref, reactive, watch } from 'vue';
  import { apiService, websocketConnectedRef } from '@/services/api.js';
  import { logService } from '@/services/log.js';
- import VLayout from '@/components/VLayout.vue';
+ import VRows from '@/components/layout/VRows.vue';
 
  const props = defineProps({
      prefix: String,
@@ -83,9 +83,7 @@
          Object.assign(ui_layout.value, result.ui_layout);
      }
      if (! ctx.value) {
-         Object.assign(ctx.value, result.ctx);
          ctx.value.serverAction = serverAction;
-         return;
      }
      const c = ctx.value;
      for (const [f, r] of Object.entries(lessReactiveCtx(result.ctx))) {

@@ -14,9 +14,9 @@
             @change="onChange()"
         >
             <option
-                v-for="v of ctx[field].choices"
-                :key="v.code"
-                :value="v.code">{{ v.display }}
+                v-for="(value, label) of ctx[field].ui.choices"
+                :key="value"
+                :value="value">{{ label }}
             </option>
         </select>
     </div>

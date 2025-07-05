@@ -12,7 +12,7 @@
             autocomplete="off"
             class="form-control form-control-sm"
             :class="{'slicops-invalid': isInvalid}"
-            :readonly="! ctx[field].enabled"
+            :readonly="! ctx[field].ui.enabled"
             :id="field"
             @blur="onBlur()"
             @keydown="onKeydown($event)"
@@ -32,7 +32,7 @@
  });
 
  const { isInvalid, parsedValue, rawValue } = ['integer', 'float'].includes(
-     props.ctx[props.field].widget)
+     props.ctx[props.field].ui.widget)
      ? useNumberValidation(props.ctx[props.field])
      : useValidation(props.ctx[props.field]);
  rawValue.value = props.ctx[props.field].value;
