@@ -1,7 +1,7 @@
-"""parse layout
+"""Display layout
 
-:copyright: Copyright (c) 2025 RadiaSoft LLC.  All Rights Reserved.
-:license: http://www.apache.org/licenses/LICENSE-2.0.html
+:copyright: Copyright (c) 2025 The Board of Trustees of the Leland Stanford Junior University, through SLAC National Accelerator Laboratory (subject to receipt of any required approvals from the U.S. Dept. of Energy).  All Rights Reserved.
+:license: http://github.com/slaclab/slicops/LICENSE
 """
 
 from pykern.pkcollections import PKDict
@@ -15,7 +15,6 @@ class UILayout:
         self._errors = []
         self._path = []
         self._ctx = ctx
-        pkdp(ctx._fields)
         r = self._recurse("row", rows, True)
         if self._errors:
             raise ValueError("\n".join(self._errors))
@@ -29,7 +28,7 @@ class UILayout:
             for p in self._path:
                 rv = p.op
                 if p.index is not None:
-                    rv += f"[{p.index}]"
+                    rv += p.index
                 yield rv
 
         if v := self._path[-1].value:
@@ -37,19 +36,15 @@ class UILayout:
                 v = "keys=" + " ".join(v.keys())
             else:
                 v = str(v)
-            # doesn't need to be too long
+            # can be long so truncate
             v = " value=" + v[:50]
         else:
             v = ""
         self._errors.append(".".join(_path()) + v + " " + msg)
-        try:
-            raise ValueError()
-        except:
-            pkdp("{}", pkdexc())
         return None
 
     def _op_cell(self, value):
-        if not self._ctx.is_field(value):
+        if value not in self._ctx.fields:
             return self._error("field not found")
         return PKDict(cell=value)
 

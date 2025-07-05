@@ -60,6 +60,9 @@ class Base:
     def new(self, overrides):
         return self.__class__(self, overrides)
 
+    def ui_get(self, name):
+        return self._attrs.ui[name]
+
     def value_check(self, value):
         if value is None or hasattr(value, "__len__") and len(value) == 0:
             if self._attrs.constraints.nullable:
@@ -76,7 +79,7 @@ class Base:
     def value_get(self):
         return self._attrs.value
 
-    def value_put(self, value):
+    def value_set(self, value):
         v = self.value_check(value)
         if isinstance(v, InvalidFieldValue):
             raise ValueError(str(v))
@@ -224,8 +227,8 @@ class Enum(Base):
 
         super()._assert_attrs()
         self.__map = self.__create_map(_choices(self._attrs.constraints))
-        # raises if incompatible
-        self.value_put(self._attrs.value)
+        # validate and raise
+        self.value_set(self._attrs.value)
 
     def __create_map(self, choices):
         def _cross_check(labels, values):

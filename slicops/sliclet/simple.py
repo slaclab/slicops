@@ -34,24 +34,24 @@ class Simple(slicops.sliclet.Base):
     def thread_run_start(self):
         self.__db_watcher = _DBWatcher(self._db_watcher_update)
 
-    def ui_action_save_button(self, ctx):
+    def ui_action_save_button(self, txn):
         def _values():
-            for k in self.__writable_keys(ctx):
-                yield k, ctx.ctx_get(k)
+            for k in self.__writable_keys(txn):
+                yield k, txn.field_get(k)
 
         # TODO(robnagler) work item maybe should happen outside ui_action()
         #    work_queue is a separate thing that could be queued
         slicops.pkcli.simple.write(PKDict(_values()))
 
-    def ui_action_revert_button(self, ctx):
+    def ui_action_revert_button(self, txn):
         # TODO(robnagler) the read and the ctx_put could happen outside the context
-        return self.__read_db(ctx)
+        return self.__read_db(txn)
 
     def __db_watcher_update(self):
-        with self.lock_for_update() as ctx:
-            self.__read_db(ctx)
+        with self.lock_for_update() as txn:
+            self.__read_db(txn)
 
-    def __read_db(self, ctx):
+    def __read_db(self, txn):
         try:
             d = slicops.pkcli.simple.read()
         except Exception as e:
@@ -59,13 +59,13 @@ class Simple(slicops.sliclet.Base):
             if pykern.pkio.exception_is_not_found(e):
                 return
             raise
-        for k in self.__writable_keys(ctx):
+        for k in self.__writable_keys(txn):
             if k in d:
-                ctx.ctx_put(k, d[k])
+                txn.field_set(k, d[k])
 
-    def __writable_keys(self, ctx):
-        for k in ctx.ctx_keys():
-            if ctx.ctx_get(f"{k}.ui.writable"):
+    def __writable_keys(self, txn):
+        for k in txn.field_names():
+            if txn.ui_get(k, "writable"):
                 yield k
 
 

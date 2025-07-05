@@ -40,14 +40,16 @@
      errorMessage.value = '';
      ui_ctx.value[field].enabled = false;
      apiService.call(
-         `ui_action`, {
-             field: field,
-             value: value,
+         `${props.prefix}_${field}`, {
+             field_value: value,
          },
          (result) => {
-//TODO(robnagler): need "voting" between two values, one from the ui and one
-//    from the ctx. ctx should not be updated locally, only remotely by server
-             ui_ctx.value[field].enabled = true;
+             updateUIState(result);
+             if (result.ui_ctx && result.ui_ctx[field] && 'enabled' in result.ui_ctx[field]) {
+             }
+             else {
+                 ui_ctx.value[field].enabled = true;
+             }
          },
          (err) => {
              handleError(err);
@@ -67,8 +69,8 @@
  }
 
  apiService.call(
-     `ui_boot`,
-     {sliclet: props.prefix},
+     `${props.prefix}_ui_ctx`,
+     {},
      (result) => {
          ui_ctx.value = result.ui_ctx;
          layout.value = result.layout;
@@ -86,7 +88,7 @@
 
  watch(websocketConnectedRef, () => {
      if (websocketConnectedRef.value) {
-         apiConnection = apiService.subscribe(`ui_update`, {}, updateUIState, handleError);
+         apiConnection = apiService.subscribe(`${props.prefix}_update`, {}, updateUIState, handleError);
      }
  });
 

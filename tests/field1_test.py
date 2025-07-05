@@ -14,7 +14,7 @@ def test_classes():
     f = p.Button.new(PKDict(name="my_button"))
     pkunit.pkeq(None, f.value_check(None))
     f = p.Integer.new(PKDict(name="my_int"))
-    pkunit.pkok(1, f.value_put("1"))
+    pkunit.pkok(1, f.value_set("1"))
     v = f.value_check("x")
     pkunit.pkok(
         isinstance(v, field.InvalidFieldValue), "expected InvalidFieldValue={}", v

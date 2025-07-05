@@ -1,4 +1,4 @@
-"""Holds Fields and Layout
+"""Holds fields and ui_layout
 
 :copyright: Copyright (c) 2025 The Board of Trustees of the Leland Stanford Junior University, through SLAC National Accelerator Laboratory (subject to receipt of any required approvals from the U.S. Dept. of Energy).  All Rights Reserved.
 :license: http://github.com/slaclab/slicops/LICENSE
@@ -25,26 +25,23 @@ class Ctx:
             if x := self.__TOP_KEYS - g:
                 raise ValueError(f"missing keys={x}")
 
-        k = "yaml"
+        step = "yaml"
         try:
             r = pykern.fconf.parse_all(
                 path or pykern.pkresource.file_path("sliclet"),
                 glob=f"{name}*",
             )
             _check_raw(r)
-            k = "ctx"
-            self._fields = self.__parse(r[k], PKDict(), slicops.field.prototypes())
-            k = "ui_layout"
-            self._ui_layout = slicops.ui_layout.UILayout(r[k], self)
+            step = "ctx"
+            self.fields = self.__parse(r[step], PKDict(), slicops.field.prototypes())
+            step = "ui_layout"
+            self.ui_layout = slicops.ui_layout.UILayout(r[step], self)
         except Exception as e:
             # TODO(robnagler) eventually use add_note
             if not (x := getattr(e, "args", None)):
                 x = ()
-            e.args = x + (f"parsing {k} for sliclet={name}",)
+            e.args = x + (f"parsing {step} for sliclet={name}",)
             raise e
-
-    def is_field(self, name):
-        return name in self._fields
 
     def __parse(self, raw, fields, prototypes):
 
