@@ -5,7 +5,7 @@
     <div :style="'column-count:' + cells.length">
         <div v-for="cell of cells" style="display: inline">
             <VCell
-                :field="cell"
+                :field="cell.field"
                 :ctx="ctx"
             />
         </div>

@@ -105,7 +105,7 @@ class Base:
         a = self._attrs
         if frozenset(a.keys()) != self.__TOP_ATTRS:
             raise ValueError(f"incorrect top level attrs={sorted(a.keys())}")
-        # TODO(robnagler) verify other attrs are valid (nullable, etc.)
+        # TODO(robnagler) verify other attrs are valid (nullable, etc.) and ui.label/widget
         _check_name(a.name)
 
     def _defaults(self, *overrides):
