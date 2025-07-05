@@ -50,14 +50,14 @@ class Ctx:
 class _Parser:
     def __init__(self, raw):
 
-        def _one(name, attrs, base):
-            if not base:
-                raise ValueError(f"expecting a base for field={name}")
-            if not (b := self.bases.get(base)):
+        def _one(name, attrs, prototype):
+            if not prototype:
+                raise ValueError(f"expecting a prototype for field={name}")
+            if not (b := self.prototypes.get(prototype)):
                 _sort()
-                if not (b := self.fields.get(base)):
+                if not (b := self.fields.get(prototype)):
                     raise ValueError(
-                        f"unknown base={base} or bases are a cycle field={name}"
+                        f"unknown prototype={prototype} or prototypes are a cycle field={name}"
                     )
             attrs.name = name
             self.fields[name] = b.new(attrs)
@@ -70,11 +70,11 @@ class _Parser:
                 del raw[k]
                 if not isinstance(v, dict) or not v:
                     raise ValueError(f"expecting a non-empty dict for field={k}")
-                # field.Base doesn't know about "base"
-                _one(k, v, v.pkdel("base"))
+                # field.Base doesn't know about "prototype"
+                _one(k, v, v.pkdel("prototype"))
 
         if not isinstance(raw, dict) or not raw:
             raise ValueError("expecting a non-empty dict")
         self.fields = PKDict()
-        self.bases = slicops.field.base_classes()
+        self.prototypes = slicops.field.prototypes()
         _sort()

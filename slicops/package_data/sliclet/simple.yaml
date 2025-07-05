@@ -1,6 +1,6 @@
 ctx:
   increment:
-    base: Integer
+    prototype: Integer
     constraints:
       min: 1
       nullable: False
@@ -8,26 +8,26 @@ ctx:
       label: Increment Amount
     value: 5
   divisor:
-    base: Float
+    prototype: Float
     ui:
       label: Divisor
   output1:
-    base: String
+    prototype: String
     ui:
       label: 'Output #1'
       writable: False
       widget: static
   output2:
-    base: output1
+    prototype: output1
     ui:
       label: 'Output #2'
   revert_button:
-    base: Button
+    prototype: Button
     ui:
       html_class: danger
       label: Revert
   run_mode:
-    base: Enum
+    prototype: Enum
     constraints:
       choices:
         "Method One": method_1
@@ -38,7 +38,7 @@ ctx:
       label: Run Mode
       widget: select
   save_button:
-    base: Button
+    prototype: Button
     ui:
       html_class: primary
       label: Save

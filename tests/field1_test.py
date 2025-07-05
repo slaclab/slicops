@@ -10,17 +10,17 @@ def test_classes():
     from pykern import pkunit
     from slicops import field
 
-    b = field.base_classes()
-    f = b.Button.new(PKDict(name="my_button"))
+    p = field.prototypes()
+    f = p.Button.new(PKDict(name="my_button"))
     pkunit.pkeq(None, f.value_check(None))
-    f = b.Integer.new(PKDict(name="my_int"))
+    f = p.Integer.new(PKDict(name="my_int"))
     pkunit.pkok(1, f.value_put("1"))
     v = f.value_check("x")
     pkunit.pkok(
         isinstance(v, field.InvalidFieldValue), "expected InvalidFieldValue={}", v
     )
     pkunit.pkeq("my_int", v.kwargs.field_name)
-    f = b.Enum.new(
+    f = p.Enum.new(
         PKDict(
             name="colors",
             constraints=PKDict(

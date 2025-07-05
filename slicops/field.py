@@ -10,11 +10,11 @@ from pykern.pkdebug import pkdc, pkdexc, pkdlog, pkdp
 import copy
 import re
 
-_CLASSES = None
+_PROTOTYPES = None
 
 
-def base_classes():
-    return _CLASSES
+def prototypes():
+    return _PROTOTYPES
 
 
 class InvalidFieldValue:
@@ -44,10 +44,13 @@ class Base:
     __INVALID_NAMES = frozenset(("true", "false", "null", "none"))
     __VALID_NAME = re.compile("^[a-z]\w+$")
 
-    def __init__(self, base, overrides):
-        if base is None:
-            base = self._defaults()
-        self._attrs = self.__merge(base, overrides)
+    def __init__(self, prototype, overrides):
+        def _copy():
+            if prototype is None:
+                return self._defaults()
+            return copy.deepcopy(prototype._attrs)
+
+        self._attrs = self.__merge(_copy(), overrides)
         self._assert_attrs()
         v = self.value_check(self._attrs.value)
         if isinstance(v, InvalidFieldValue):
@@ -55,7 +58,7 @@ class Base:
         self._attrs.value = v
 
     def new(self, overrides):
-        return self.__class__(copy.deepcopy(self._attrs), overrides)
+        return self.__class__(self, overrides)
 
     def value_check(self, value):
         if value is None or hasattr(value, "__len__") and len(value) == 0:
@@ -93,8 +96,8 @@ class Base:
                 raise ValueError(
                     f"field name={name} must not be {sorted(self.__INVALID_NAMES)}"
                 )
-            if n in _CLASSES_LOWER:
-                raise ValueError(f"field name={name} may not match base class")
+            if n in _PROTOTYPES_LOWER:
+                raise ValueError(f"field name={name} may not match builtin prototypes")
 
         a = self._attrs
         if frozenset(a.keys()) != self.__TOP_ATTRS:
@@ -113,7 +116,7 @@ class Base:
             self.__merge(rv, o)
         return rv
 
-    def __merge(self, base, overrides):
+    def __merge(self, result, overrides):
         def _update(attr, new):
             # ok if empty
             for k, v in new.items():
@@ -126,16 +129,16 @@ class Base:
             if (o := overrides.pkdel(t)) is None:
                 continue
             if t in self.__SIMPLE_TOP_ATTRS:
-                base[t] = o
+                result[t] = o
             elif not isinstance(o, dict):
                 raise ValueError(f"overrides {t} is not a dict type={type(o)}")
             else:
-                _update(base[t], o)
+                _update(result[t], o)
         if overrides:
             raise ValueError(
                 f"unexpected top key(s)={sorted(overrides.keys())}; must be {sorted(self.__TOP_ATTRS)}"
             )
-        return base
+        return result
 
     def __str__(self):
         try:
@@ -339,16 +342,16 @@ class String(Base):
 
 
 def _init():
-    global _CLASSES, _CLASSES_LOWER
+    global _PROTOTYPES, _PROTOTYPES_LOWER
 
     def _gen():
         for c in (Button, Enum, Float, Integer, Plot, String):
             yield c.__name__, c(None, PKDict())
 
     # needed in Base.__init__
-    _CLASSES_LOWER = frozenset()
-    _CLASSES = PKDict(_gen())
-    _CLASSES_LOWER = frozenset(c.lower() for c in _CLASSES)
+    _PROTOTYPES_LOWER = frozenset()
+    _PROTOTYPES = PKDict(_gen())
+    _PROTOTYPES_LOWER = frozenset(c.lower() for c in _PROTOTYPES)
 
 
 _init()
