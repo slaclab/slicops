@@ -7,6 +7,10 @@ ctx:
     ui:
       label: Increment Amount
     value: 5
+  divisor:
+    base: Float
+    ui:
+      label: Divisor
   output1:
     base: String
     ui:
@@ -14,7 +18,7 @@ ctx:
       writable: False
       widget: static
   output2:
-    base: simple.output1
+    base: output1
     ui:
       label: 'Output #2'
   revert_button:

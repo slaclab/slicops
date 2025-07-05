@@ -3,8 +3,9 @@
 :copyright: Copyright (c) 2025 RadiaSoft LLC.  All Rights Reserved.
 :license: http://www.apache.org/licenses/LICENSE-2.0.html
 """
+
 from pykern.pkcollections import PKDict
-from pykern.pkdebug import pkdc, pkdlog, pkdp
+from pykern.pkdebug import pkdc, pkdlog, pkdp, pkdexc
 import copy
 
 
@@ -13,19 +14,22 @@ class UILayout:
     def __init__(self, rows, ctx):
         self._errors = []
         self._path = []
+        self._ctx = ctx
+        pkdp(ctx._fields)
         r = self._recurse("row", rows, True)
         if self._errors:
             raise ValueError("\n".join(self._errors))
-        del self["_errors"]
-        del self["_path"]
         self.rows = r
+        delattr(self, "_ctx")
+        delattr(self, "_errors")
+        delattr(self, "_path")
 
     def _error(self, msg):
         def _path():
             for p in self._path:
                 rv = p.op
                 if p.index is not None:
-                    rv += f"[p.index]"
+                    rv += f"[{p.index}]"
                 yield rv
 
         if v := self._path[-1].value:
@@ -38,42 +42,50 @@ class UILayout:
         else:
             v = ""
         self._errors.append(".".join(_path()) + v + " " + msg)
+        try:
+            raise ValueError()
+        except:
+            pkdp("{}", pkdexc())
         return None
 
     def _op_cell(self, value):
-        if not ctx.is_field(value):
-            return _error("field not found")
+        if not self._ctx.is_field(value):
+            return self._error("field not found")
         return PKDict(cell=value)
 
     def _op_col(self, value):
-        if (c := value.pkdel("css")):
+        if c := value.pkdel("css"):
             c = self._recurse("css", c)
         else:
             self._error("no css")
-        if (r := value.pkdel("rows")):
+        if r := value.pkdel("rows"):
             r = self._recurse("row", r, True)
         if value:
             self._error("expecting css or rows")
         return PKDict(css=c, rows=r)
 
+    def _op_css(self, value):
+        # TODO(robnagler) validate
+        return value
+
     def _op_row(self, value):
-        if isinstance(v, str):
-            return self._recurse("cell", v)
-        if isinstance(v, dict):
-            k = tuple(v.keys())
-            if len(k) == 1:
-                v = value[k[0]]
-                if k[0] == "cell_group":
-                    return self._recurse("cell", v)
-                elif k[0] == "cols":
-                    return self._recurse("col", v, True)
-            return _self._error("must be cols or cell_group")
-        return self._error("must be a field name, cols, or cell_group")
+        if isinstance(value, str):
+            return self._recurse("cell", value)
+        if not isinstance(value, dict):
+            return self._error("must be a field name, cols, or cell_group")
+        k = tuple(value.keys())
+        if len(k) == 1:
+            v = value[k[0]]
+            if k[0] == "cell_group":
+                return PKDict(cell_group=self._recurse("cell", v, True))
+            elif k[0] == "cols":
+                return PKDict(cols=self._recurse("col", v, True))
+        return _self._error("must be cols or cell_group")
 
     def _recurse(self, op, value, is_list=False):
         self._path.append(PKDict(op=op, value=value, index=None))
         try:
-            o = getattr(self, op)
+            o = getattr(self, f"_op_{op}")
             if not is_list:
                 if not isinstance(value, str):
                     return self._error("must be a string")

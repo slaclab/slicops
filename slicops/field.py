@@ -101,8 +101,6 @@ class Base:
             raise ValueError(f"incorrect top level attrs={sorted(a.keys())}")
         # TODO(robnagler) verify other attrs are valid (nullable, etc.)
         _check_name(a.name)
-        # raises if incompatible
-        self.value_put(a.value)
 
     def _defaults(self, *overrides):
         rv = PKDict(
@@ -138,6 +136,17 @@ class Base:
                 f"unexpected top key(s)={sorted(overrides.keys())}; must be {sorted(self.__TOP_ATTRS)}"
             )
         return base
+
+    def __str__(self):
+        try:
+            if a := getattr(self, "_attrs", None):
+                rv = f"{self.__class__.__name__}("
+                if n := a.get("name"):
+                    rv += f"{n}={a.get('value')}"
+                return rv + ")"
+        except:
+            pass
+        return super().__str__()
 
 
 class Button(Base):
@@ -212,6 +221,8 @@ class Enum(Base):
 
         super()._assert_attrs()
         self.__map = self.__create_map(_choices(self._attrs.constraints))
+        # raises if incompatible
+        self.value_put(self._attrs.value)
 
     def __create_map(self, choices):
         def _cross_check(labels, values):

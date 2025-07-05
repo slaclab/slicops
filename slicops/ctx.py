@@ -33,7 +33,7 @@ class Ctx:
             )
             _check_raw(r)
             k = "ctx"
-            self._fields = _Parser(r, name).fields
+            self._fields = _Parser(r[k]).fields
             k = "ui_layout"
             self._ui_layout = slicops.ui_layout.UILayout(r[k], self)
         except Exception as e:
@@ -43,9 +43,12 @@ class Ctx:
             e.args = x + (f"parsing {k} for sliclet={name}",)
             raise e
 
+    def is_field(self, name):
+        return name in self._fields
+
 
 class _Parser:
-    def __init__(self, raw, sliclet):
+    def __init__(self, raw):
 
         def _one(name, attrs, base):
             if not base:
@@ -54,12 +57,16 @@ class _Parser:
                 _sort()
                 if not (b := self.fields.get(base)):
                     raise ValueError(
-                        f"unknown base={b} or field bases are a cycle field={name}"
+                        f"unknown base={base} or bases are a cycle field={name}"
                     )
-            self.fields[name] = b.new(v)
+            attrs.name = name
+            self.fields[name] = b.new(attrs)
 
         def _sort():
             for k, v in tuple(raw.items()):
+                if k not in raw:
+                    # recursion already handled
+                    continue
                 del raw[k]
                 if not isinstance(v, dict) or not v:
                     raise ValueError(f"expecting a non-empty dict for field={k}")
@@ -70,3 +77,4 @@ class _Parser:
             raise ValueError("expecting a non-empty dict")
         self.fields = PKDict()
         self.bases = slicops.field.base_classes()
+        _sort()
