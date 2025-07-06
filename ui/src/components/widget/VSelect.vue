@@ -14,7 +14,7 @@
             @change="onChange()"
         >
             <option
-                v-for="(value, label) of ctx[field].ui.choices"
+                v-for="(value, label) of ctx[field].constraints.choices"
                 :key="value"
                 :value="value">{{ label }}
             </option>
