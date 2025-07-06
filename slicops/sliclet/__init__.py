@@ -175,6 +175,9 @@ class _Txn:
             update(self.__updates)
         self.__updates = None
 
+    def field_check(self, name, value):
+        return self.__ctx.fields[name].value_check(value)
+
     def field_get(self, name):
         return self.__ctx.fields[name].value_get()
 
