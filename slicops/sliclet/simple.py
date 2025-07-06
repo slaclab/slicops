@@ -26,12 +26,12 @@ class Simple(slicops.sliclet.Base):
         super().__init__(*args, **kwargs)
         self.__db_watcher = None
 
-    def destroy(self):
+    def handle_destroy(self):
         if self.__db_watcher:
             self.__db_watcher.destroy()
             self.__db_watcher = None
 
-    def thread_run_start(self):
+    def handle_start(self):
         with self.lock_for_update() as txn:
             if not self.__read_db(txn):
                 self.__write(txn)
@@ -45,6 +45,9 @@ class Simple(slicops.sliclet.Base):
         self.__read_db(txn)
 
     def __db_watcher_update(self):
+        if not self.__db_watcher_update:
+            # destroyed
+            return
         with self.lock_for_update() as txn:
             self.__read_db(txn)
 

@@ -39,7 +39,7 @@
 
  const serverAction = (field, value) => {
      errorMessage.value = '';
-     ctx.value[field].enabled = false;
+     ctx.value[field].ui.enabled = false;
      apiService.call(
          'ui_ctx_write',
          {
@@ -52,11 +52,11 @@
          (result) => {
 //TODO(robnagler): need "voting" between two values, one from the ui and one
 //    from the ctx. ctx should not be updated locally, only remotely by server
-             ctx.value[field].enabled = true;
+             ctx.value[field].ui.enabled = true;
          },
          (err) => {
              handleError(err);
-             ctx.value[field].enabled = true;
+             ctx.value[field].ui.enabled = true;
          }
      );
  };
@@ -77,7 +77,6 @@
  };
 
  const uiUpdate = (result) => {
-     console.log(result);
      if (! result.fields) {
          logService.error(["no fields ui_ctx_update result", result]);
          handleError("server returned invalid update")

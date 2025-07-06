@@ -115,7 +115,7 @@ class Base:
         rv = PKDict(
             constraints=PKDict(max=None, min=None, nullable=True),
             name=None,
-            ui=PKDict(label=None, widget=None, writable=True),
+            ui=PKDict(css_kind=None, enabled=True, label=None, visible=True, widget=None, writable=True),
             value=None,
         )
         for o in overrides:

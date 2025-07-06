@@ -43,6 +43,12 @@ class Base:
         self.__thread = threading.Thread(target=self._run, daemon=True)
         self.__thread.start()
 
+    def handle_destroy(self):
+        pass
+
+    def handle_start(self):
+        pass
+
     @contextlib.contextmanager
     def lock_for_update(self, log_op=None):
         ok = True
@@ -80,9 +86,6 @@ class Base:
     def session_end(self):
         self.__put_work(_Work.session_end, None)
 
-    def thread_run_start(self):
-        pass
-
     def ui_ctx_write(self, api_args):
         # Evaluate args here so gets back to the app. There can be
         # other errors:invalid field name or type could do value_check
@@ -112,11 +115,15 @@ class Base:
     def _run(self):
         def _destroy():
             try:
+                self.handle_destroy()
+            except Exception:
+               pass
+            try:
                 # Try to end session. Might already be ended
                 self.__loop.call_soon_threadsafe(
                     self.__ui_ctx_update_q.put_nowait, None
                 )
-            except:
+            except Exception:
                 pass
             self.__ui_ctx_update_q = None
             self.__work_q = None
@@ -125,7 +132,7 @@ class Base:
 
         try:
             self.__init_rest()
-            self.thread_run_start()
+            self.handle_start()
             while True:
                 w = a = None
                 try:
