@@ -8,7 +8,10 @@
             },
             "name": "divisor",
             "ui": {
+                "css_kind": null,
+                "enabled": true,
                 "label": "Divisor",
+                "visible": true,
                 "widget": "float",
                 "writable": true
             },
@@ -22,7 +25,10 @@
             },
             "name": "increment",
             "ui": {
+                "css_kind": null,
+                "enabled": true,
                 "label": "Increment Amount",
+                "visible": true,
                 "widget": "integer",
                 "writable": true
             },
@@ -36,7 +42,10 @@
             },
             "name": "output1",
             "ui": {
+                "css_kind": null,
+                "enabled": true,
                 "label": "Output #1",
+                "visible": true,
                 "widget": "static",
                 "writable": false
             },
@@ -50,7 +59,10 @@
             },
             "name": "output2",
             "ui": {
+                "css_kind": null,
+                "enabled": true,
                 "label": "Output #2",
+                "visible": true,
                 "widget": "static",
                 "writable": false
             },
@@ -65,7 +77,9 @@
             "name": "revert_button",
             "ui": {
                 "css_kind": "danger",
+                "enabled": true,
                 "label": "Revert",
+                "visible": true,
                 "widget": "button",
                 "writable": true
             },
@@ -84,7 +98,10 @@
             },
             "name": "run_mode",
             "ui": {
+                "css_kind": null,
+                "enabled": true,
                 "label": "Run Mode",
+                "visible": true,
                 "widget": "select",
                 "writable": true
             },
@@ -99,7 +116,9 @@
             "name": "save_button",
             "ui": {
                 "css_kind": "primary",
+                "enabled": true,
                 "label": "Save",
+                "visible": true,
                 "widget": "button",
                 "writable": true
             },

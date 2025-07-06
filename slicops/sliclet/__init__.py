@@ -23,12 +23,12 @@ class _Work(enum.IntEnum):
     # sort in value order
     error = (1,)
     session_end = (2,)
-    ui_ctx_write = (3,)
+    ctx_write = (3,)
 
 
-_UI_CTX_WRITE_RE = re.compile("^ui_ctx_write_(\w+)$")
+_HANDLE_CTX_SET_RE = re.compile("^handle_ctx_set_(\w+)$")
 
-_UI_CTX_WRITE_ARGS = frozenset(["field_values"])
+_CTX_WRITE_ARGS = frozenset(["field_values"])
 
 
 def instance(name, queue):
@@ -36,12 +36,15 @@ def instance(name, queue):
 
 
 class Base:
-    def __init__(self, name, ui_ctx_update_q):
+    def __init__(self, name, ctx_update_q):
         self.__name = name
-        self.__ui_ctx_update_q = ui_ctx_update_q
+        self.__ctx_update_q = ctx_update_q
         self.__loop = asyncio.get_event_loop()
         self.__thread = threading.Thread(target=self._run, daemon=True)
         self.__thread.start()
+
+    def ctx_write(self, field_values):
+        self.__put_work(_Work.ctx_write, field_values)
 
     def handle_destroy(self):
         pass
@@ -67,7 +70,7 @@ class Base:
                         t.rollback()
                     raise
                 else:
-                    t.commit(self.__ui_ctx_update)
+                    t.commit(self.__ctx_update)
                 finally:
                     self.__locked = False
         except Exception as e:
@@ -86,27 +89,17 @@ class Base:
     def session_end(self):
         self.__put_work(_Work.session_end, None)
 
-    def ui_ctx_write(self, api_args):
-        # Evaluate args here so gets back to the app. There can be
-        # other errors:invalid field name or type could do value_check
-        if frozenset(api_args.keys()) != _UI_CTX_WRITE_ARGS or not isinstance(
-            api_args.field_values, dict
-        ):
-            raise pykern.util.APIError("invalid ui_ctx_write api_args={}", api_args)
-        self.__put_work(_Work.ui_ctx_write, api_args)
-        return PKDict()
-
     def __init_rest(self):
         self.__work_q = queue.PriorityQueue()
         self.__lock = threading.RLock()
         self.__locked = False
-        self.__ui_ctx_write_funcs = PKDict(self.__inspect_ui_ctx_write_funcs())
+        self.__ctx_set_handlers = PKDict(self.__inspect_ctx_set_handlers())
         self.__ctx = slicops.ctx.Ctx(self.__name)
-        self.__ui_ctx_update(self.__ctx.as_dict())
+        self.__ctx_update(self.__ctx.as_dict())
 
-    def __inspect_ui_ctx_write_funcs(self):
+    def __inspect_ctx_set_handlers(self):
         for n, o in inspect.getmembers(self):
-            if (m := _UI_CTX_WRITE_RE.search(n)) and inspect.ismethod(o):
+            if (m := _HANDLE_CTX_SET_RE.search(n)) and inspect.ismethod(o):
                 yield m.group(1), o
 
     def __put_work(self, work, arg):
@@ -117,15 +110,13 @@ class Base:
             try:
                 self.handle_destroy()
             except Exception:
-               pass
+                pass
             try:
                 # Try to end session. Might already be ended
-                self.__loop.call_soon_threadsafe(
-                    self.__ui_ctx_update_q.put_nowait, None
-                )
+                self.__loop.call_soon_threadsafe(self.__ctx_update_q.put_nowait, None)
             except Exception:
                 pass
-            self.__ui_ctx_update_q = None
+            self.__ctx_update_q = None
             self.__work_q = None
             self.__thread = None
             self.__lock = None
@@ -150,23 +141,23 @@ class Base:
         finally:
             _destroy()
 
-    def __ui_ctx_update(self, result):
-        self.__loop.call_soon_threadsafe(self.__ui_ctx_update_q.put_nowait, result)
+    def __ctx_update(self, result):
+        self.__loop.call_soon_threadsafe(self.__ctx_update_q.put_nowait, result)
 
     def _work_error(self, msg):
-        self.__ui_ctx_update(pykern.util.APIError("{}", msg))
+        self.__ctx_update(pykern.util.APIError("{}", msg))
         return False
 
     def _work_session_end(self, unused):
         # TODO(robnagler) maybe if there are too many errors fail or stop logging?
         return False
 
-    def _work_ui_ctx_write(self, arg):
-        with self.lock_for_update(log_op="ui_ctx_write") as txn:
-            for c in tuple(txn.field_set(*x) for x in arg.field_values.items()):
-                if a := self.__ui_ctx_write_funcs.get(c.field):
+    def _work_ctx_write(self, field_values):
+        with self.lock_for_update(log_op="ctx_write") as txn:
+            for c in tuple(txn.field_set(*x) for x in field_values.items()):
+                if a := self.__ctx_set_handlers.get(c.field):
                     a(txn, **c)
-            # TODO(robnagler) possibly look for ui_ctx_write with all updates
+            # TODO(robnagler) possibly look for ctx_write with all updates
         return True
 
 

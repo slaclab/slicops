@@ -50,4 +50,8 @@ class API(slicops.quest.API):
                 self.session.pkdel(_SLICLET_KEY)
 
     async def api_ui_ctx_write(self, api_args):
-        return self.session[_SLICLET_KEY].ui_ctx_write(api_args)
+        v = api_args.field_values
+        if not (isinstance(v, dict) and v):
+            raise pykern.util.APIError("invalid field_values={}", v)
+        self.session[_SLICLET_KEY].ctx_write(v)
+        return PKDict()

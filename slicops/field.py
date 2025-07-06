@@ -115,7 +115,14 @@ class Base:
         rv = PKDict(
             constraints=PKDict(max=None, min=None, nullable=True),
             name=None,
-            ui=PKDict(css_kind=None, enabled=True, label=None, visible=True, widget=None, writable=True),
+            ui=PKDict(
+                css_kind=None,
+                enabled=True,
+                label=None,
+                visible=True,
+                widget=None,
+                writable=True,
+            ),
             value=None,
         )
         for o in overrides:
@@ -176,6 +183,22 @@ class Button(Base):
         return InvalidFieldValue("not None")
 
 
+class Dict(Base):
+
+    def _defaults(self, *overrides):
+        # TODO(robnagler) need to verify attributes
+        return super()._defaults(
+            PKDict(name="Dict"),
+            *overrides,
+        )
+
+    def _from_literal(self, value):
+        try:
+            return PKDict(value)
+        except Exception as e:
+            return InvalidFieldValue("not dict", exc=e)
+
+
 class Enum(Base):
     __INITIAL_CHOICES = object()
 
@@ -225,7 +248,8 @@ class Enum(Base):
                 elif t != type(v):
                     return str
             if t is None:
-                raise ValueError("must have at least one choice")
+                # Default to string when no choices
+                t = str
             return t
 
         super()._assert_attrs()
@@ -310,26 +334,6 @@ class Integer(Base):
             return InvalidFieldValue("not integer", exc=e)
 
 
-class Plot(Base):
-
-    def _defaults(self, *overrides):
-        # TODO(robnaler) need to verify attributes
-        return super()._defaults(
-            PKDict(
-                name="Plot",
-                ui=PKDict(widget="plot"),
-            ),
-            *overrides,
-        )
-
-    def _from_literal(self, value):
-        try:
-            # TODO(robnagler) validate
-            return value
-        except Exception as e:
-            return InvalidFieldValue("not plot", exc=e)
-
-
 class String(Base):
     def _defaults(self, *overrides):
         return super()._defaults(
@@ -351,7 +355,7 @@ def _init():
     global _PROTOTYPES, _PROTOTYPES_LOWER
 
     def _gen():
-        for c in (Button, Enum, Float, Integer, Plot, String):
+        for c in (Button, Dict, Enum, Float, Integer, String):
             yield c.__name__, c(None, PKDict())
 
     # needed in Base.__init__

@@ -37,10 +37,10 @@ class Simple(slicops.sliclet.Base):
                 self.__write(txn)
         self.__db_watcher = _DBWatcher(self.__db_watcher_update)
 
-    def ui_ctx_write_save_button(self, txn, **kwargs):
+    def handle_ctx_set_save_button(self, txn, **kwargs):
         self.__write(txn)
 
-    def ui_ctx_write_revert_button(self, txn, **kwargs):
+    def handle_ctx_set_revert_button(self, txn, **kwargs):
         # TODO(robnagler) the read and the ctx_put could happen outside the context
         self.__read_db(txn)
 
@@ -69,7 +69,7 @@ class Simple(slicops.sliclet.Base):
             for k in self.__writable_keys(txn):
                 yield k, txn.field_get(k)
 
-        # TODO(robnagler) work item maybe should happen outside ui_ctx_write
+        # TODO(robnagler) work item maybe should happen outside handle_ctx_set
         #    work_queue is a separate thing that could be queued
         slicops.pkcli.simple.write(PKDict(_values()))
 

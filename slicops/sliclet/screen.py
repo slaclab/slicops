@@ -7,11 +7,8 @@
 from pykern.pkcollections import PKDict
 from pykern.pkdebug import pkdc, pkdexc, pkdlog, pkdp
 import slicops.sliclet
-import pykern.pkio
-import numpy
 import pykern.api.util
 import pykern.util
-import scipy.optimize
 import slicops.device
 import slicops.device_db
 import slicops.quest
@@ -27,19 +24,19 @@ class Screen(slicops.sliclet.Base):
         self.__device = None
         self.__monitor = None
 
-    def destroy(self):
-        if self.__monitor:
-            self.__monitor.destroy()
-            self.__monitor = None
+    def handle_destroy(self):
         if self.__device:
             self.__device.destroy()
             self.__device = None
+        if self.__monitor:
+            self.__monitor.destroy()
+            self.__monitor = None
 
-    def ui_action_beam_path(self, txn):
+    def ui_ctx_write_beam_path(self, txn):
         if txn.has_field_changed("beam_path"):
             self._beam_path_change(txn.field("beam_path"))
 
-    def ui_action_start_button(self, value):
+    def ui_ctx_write_start_button(self, value):
         self._set_acquire(1)
         self._button_setup(True)
 
@@ -106,7 +103,7 @@ class Screen(slicops.sliclet.Base):
                 d = self.__device slicops.device.Device(ux.camera.value)
                 ux.pv.value = d.meta.pv_prefix
                 self._button_setup(ux, _acquiring(d))
-                self.__monitor = _Monitor(self)
+                self.__monitor = _Monitor(self.__image_update)
                 d.accessor("image").monitor(self.__monitor)
             except slicops.device.DeviceError as e:
                 pkdlog("error={} on {}, clearing camera; stack={}", e, d, pkdexc())
@@ -125,100 +122,23 @@ CLASS = Screen
 
 class _Monitor:
     # TODO(robnagler) handle more values besides plot
-    def __init__(self, sliclet):
-        self._destroyed = False
-        self._sliclet = sliclet
-        self.plot = _Plot(sliclet)
+    def __init__(self, update):
+        self.__destroyed = False
+        self.__update = update
+        self.plot = slicops.plot.Heatmap()
+
+    def destroy(self):
+        self.__destroyed = True
+        self.__update = None
+        self.plot = None
 
     def __call__(self, change):
-        if self._destroyed:
+        if self.__destroyed:
             return
         if e := change.get("error"):
             #TODO(robnagler) alert?
             pkdlog("error={} on {}", e, change.get("accessor"))
             return
         if (v := change.get("value")) is not None:
-            self._update(v))
-
-    def _update(self, image):
-        with self.sliclet.protected_ctx() as txn:
-            self.plot.new_image(image, txn)
-
-
-class _Plot:
-    def __init__(self, sliclet):
-        self.image = None
-        self.sliclet = sliclet
-
-    def new_image(self, image, txn):
-        self.image = image
-        p = None
-        if v := bool(image):
-            m = txn.field_value("curve_fit_method")
-            #TODO(robnagler) This needs to be a type or is PKDict good enough
-            # for a field value
-            p = PKDict(
-                raw_pixels=self.image,
-                x=self._fit(m, self.image.sum(axis=0)),
-                y=self._fit(m, self.image.sum(axis=1)[::-1]),
-            )
-        )
-        txn.put_fields({
-            "plot.value": p,
-            "curve_fit_method.ui.visible": v,
-            "color_map.ui.visible": v,
-        })
-
-    def _fit(self, method, profile, count=0):
-        """Use the scipy curve_fit() to match the selected method.
-        Valid methods are (gaussian, super_gaussian).
-        """
-
-        def _fix(results):
-            # sigma may be negative from the fit
-            results.sig = abs(results.sig)
-            return results
-
-        def _gaussian(x, amplitude, mean, sigma, offset):
-            return amplitude * numpy.exp(-(((x - mean) / sigma) ** 2) / 2) + offset
-
-        def _super_gaussian(x, amplitude, mean, sigma, offset, p):
-            return amplitude * numpy.exp(-numpy.abs((x - mean) / sigma) ** p) + offset
-
-        popt = None
-        dist_keys = ["amp", "mean", "sig", "offset"]
-        # TODO(pjm): should use physical camera dimensions
-        x = numpy.arange(len(profile))
-        try:
-            m = _gaussian
-            popt, pcov = scipy.optimize.curve_fit(
-                m,
-                x,
-                profile,
-                p0=[
-                    numpy.mean(profile),
-                    len(profile) / 2,
-                    len(profile) / 5,
-                    numpy.min(profile),
-                ],
-            )
-            if method == "super_gaussian":
-                # use gaussian fit to guess other distribution starting values
-                m = _super_gaussian
-                dist_keys.append("p")
-                popt, pcov = scipy.optimize.curve_fit(
-                    m, x, profile, p0=numpy.append(popt, 1.1)
-                )
-            elif method != "gaussian":
-                raise AssertionError(f"invalid fit method={ux.curve_fit_method.value}")
-            fit_line = m(x, *popt)
-        except RuntimeError as e:
-            # TODO(pjm): show fitting error message on curve fit method field
-            fit_line = numpy.zeros(len(x))
-        return PKDict(
-            lineout=profile,
-            fit=PKDict(
-                fit_line=fit_line,
-                results=None if popt is None else _fix(PKDict(zip(dist_keys, popt))),
-            ),
-        )
+            self.plot.image = v
+            self.__update()
