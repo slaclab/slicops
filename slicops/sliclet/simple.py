@@ -33,7 +33,7 @@ class Simple(slicops.sliclet.Base):
 
     def thread_run_start(self):
         with self.lock_for_update() as txn:
-            if not pkdp(self.__read_db(txn)):
+            if not self.__read_db(txn):
                 self.__write(txn)
         self.__db_watcher = _DBWatcher(self.__db_watcher_update)
 
@@ -68,7 +68,7 @@ class Simple(slicops.sliclet.Base):
 
         # TODO(robnagler) work item maybe should happen outside ui_ctx_write
         #    work_queue is a separate thing that could be queued
-        slicops.pkcli.simple.write(pkdp(PKDict(_values())))
+        slicops.pkcli.simple.write(PKDict(_values()))
 
 
 CLASS = Simple

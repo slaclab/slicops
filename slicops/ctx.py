@@ -14,7 +14,7 @@ import slicops.ui_layout
 
 
 class Ctx:
-    __TOP_KEYS = frozenset(("ctx", "ui_layout"))
+    __TOP_KEYS = frozenset(("fields", "ui_layout"))
 
     def __init__(self, name, path=None):
         def _check_raw(got):
@@ -33,7 +33,7 @@ class Ctx:
                 glob=f"{name}*",
             )
             _check_raw(r)
-            step = "ctx"
+            step = "fields"
             self.fields = self.__parse(r[step], PKDict(), slicops.field.prototypes())
             step = "ui_layout"
             self.ui_layout = slicops.ui_layout.UILayout(r[step], self)
@@ -46,7 +46,7 @@ class Ctx:
 
     def as_dict(self):
         return PKDict(
-            ctx=PKDict((k, v.as_dict()) for k, v in self.fields.items()),
+            fields=PKDict((k, v.as_dict()) for k, v in self.fields.items()),
             ui_layout=PKDict(rows=copy.deepcopy(self.ui_layout.rows)),
         )
 

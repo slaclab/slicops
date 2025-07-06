@@ -76,8 +76,8 @@
  };
 
  const uiUpdate = (result) => {
-     if (! result.ctx) {
-         logService.error(["no ctx ui_ctx_update result", result]);
+     if (! result.fields) {
+         logService.error(["no fields ui_ctx_update result", result]);
          handleError("server returned invalid update")
          return;
      }
@@ -89,7 +89,7 @@
          ctx.value.serverAction = serverAction;
      }
      const c = ctx.value;
-     for (const [f, r] of Object.entries(lessReactiveCtx(result.ctx))) {
+     for (const [f, r] of Object.entries(lessReactiveCtx(result.fields))) {
          Object.assign(c[f], r);
      }
  }

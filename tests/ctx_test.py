@@ -12,9 +12,8 @@ def test_cases():
 
     for d in pkunit.case_dirs():
         try:
-            r = ctx.Ctx("input", path=d)
-            r = PKDict(fields=r._fields, ui_layout=r._ui_layout.rows)
+            r = ctx.Ctx("input", path=d).as_dict()
         except Exception as e:
-            pkdebug.pkdlog('{}', pkdebug.pkdexc())
+            pkdebug.pkdlog("{}", pkdebug.pkdexc())
             r = PKDict(error=e)
         pkjson.dump_pretty(r, filename=d.join(f"out.json"))

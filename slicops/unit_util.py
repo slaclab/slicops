@@ -28,9 +28,7 @@ class Setup(pykern.api.unit_util.Setup):
         from pykern.pkcollections import PKDict
         from pykern import pkdebug
 
-        await self.client.call_api(
-            "ui_ctx_write", pkdebug.pkdp(PKDict(field_values=PKDict(kwargs)))
-        )
+        await self.client.call_api("ui_ctx_write", PKDict(field_values=PKDict(kwargs)))
 
     async def __aenter__(self):
         await super().__aenter__()

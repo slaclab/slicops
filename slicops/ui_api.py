@@ -50,4 +50,4 @@ class API(slicops.quest.API):
                 self.session.pkdel(_SLICLET_KEY)
 
     async def api_ui_ctx_write(self, api_args):
-        return self.session[_SLICLET_KEY].ui_ctx_write(pkdp(api_args))
+        return self.session[_SLICLET_KEY].ui_ctx_write(api_args)

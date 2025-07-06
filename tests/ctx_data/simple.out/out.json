@@ -1,56 +1,168 @@
 {
     "fields": {
-        "divisor": "Float(divisor=None)",
-        "increment": "Integer(increment=5)",
-        "output1": "String(output1=None)",
-        "output2": "String(output2=None)",
-        "revert_button": "Button(revert_button=None)",
-        "run_mode": "Enum(run_mode=method_1)",
-        "save_button": "Button(save_button=None)"
-    },
-    "ui_layout": [
-        {
-            "cols": [
-                {
-                    "css": "col-lg-6 offset-lg-3 col-xl-4 offset-xl-4",
-                    "rows": [
-                        {
-                            "cell": "run_mode"
-                        },
-                        {
-                            "cell": "increment"
-                        },
-                        {
-                            "cell": "divisor"
-                        },
-                        {
-                            "cols": [
-                                {
-                                    "css": "col-sm-6",
-                                    "rows": [
-                                        {
-                                            "cell_group": [
-                                                {
-                                                    "cell": "save_button"
-                                                },
-                                                {
-                                                    "cell": "revert_button"
-                                                }
-                                            ]
-                                        }
-                                    ]
-                                }
-                            ]
-                        },
-                        {
-                            "cell": "output1"
-                        },
-                        {
-                            "cell": "output2"
-                        }
-                    ]
-                }
-            ]
+        "divisor": {
+            "constraints": {
+                "max": null,
+                "min": null,
+                "nullable": true
+            },
+            "name": "divisor",
+            "ui": {
+                "label": "Divisor",
+                "widget": "float",
+                "writable": true
+            },
+            "value": null
+        },
+        "increment": {
+            "constraints": {
+                "max": null,
+                "min": 1,
+                "nullable": false
+            },
+            "name": "increment",
+            "ui": {
+                "label": "Increment Amount",
+                "widget": "integer",
+                "writable": true
+            },
+            "value": 5
+        },
+        "output1": {
+            "constraints": {
+                "max": null,
+                "min": null,
+                "nullable": true
+            },
+            "name": "output1",
+            "ui": {
+                "label": "Output #1",
+                "widget": "static",
+                "writable": false
+            },
+            "value": null
+        },
+        "output2": {
+            "constraints": {
+                "max": null,
+                "min": null,
+                "nullable": true
+            },
+            "name": "output2",
+            "ui": {
+                "label": "Output #2",
+                "widget": "static",
+                "writable": false
+            },
+            "value": null
+        },
+        "revert_button": {
+            "constraints": {
+                "max": null,
+                "min": null,
+                "nullable": true
+            },
+            "name": "revert_button",
+            "ui": {
+                "css_kind": "danger",
+                "label": "Revert",
+                "widget": "button",
+                "writable": true
+            },
+            "value": null
+        },
+        "run_mode": {
+            "constraints": {
+                "choices": {
+                    "Method One": "method_1",
+                    "Method Three": "method_3",
+                    "Method Two": "method_2"
+                },
+                "max": null,
+                "min": null,
+                "nullable": true
+            },
+            "name": "run_mode",
+            "ui": {
+                "label": "Run Mode",
+                "widget": "select",
+                "writable": true
+            },
+            "value": "method_1"
+        },
+        "save_button": {
+            "constraints": {
+                "max": null,
+                "min": null,
+                "nullable": true
+            },
+            "name": "save_button",
+            "ui": {
+                "css_kind": "primary",
+                "label": "Save",
+                "widget": "button",
+                "writable": true
+            },
+            "value": null
         }
-    ]
+    },
+    "ui_layout": {
+        "rows": [
+            {
+                "cols": [
+                    {
+                        "css": "col-lg-6 offset-lg-3 col-xl-4 offset-xl-4",
+                        "layout": "col",
+                        "rows": [
+                            {
+                                "field": "run_mode",
+                                "layout": "cell"
+                            },
+                            {
+                                "field": "increment",
+                                "layout": "cell"
+                            },
+                            {
+                                "field": "divisor",
+                                "layout": "cell"
+                            },
+                            {
+                                "cols": [
+                                    {
+                                        "css": "col-sm-6",
+                                        "layout": "col",
+                                        "rows": [
+                                            {
+                                                "cells": [
+                                                    {
+                                                        "field": "save_button",
+                                                        "layout": "cell"
+                                                    },
+                                                    {
+                                                        "field": "revert_button",
+                                                        "layout": "cell"
+                                                    }
+                                                ],
+                                                "layout": "cell_group"
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "layout": "cols"
+                            },
+                            {
+                                "field": "output1",
+                                "layout": "cell"
+                            },
+                            {
+                                "field": "output2",
+                                "layout": "cell"
+                            }
+                        ]
+                    }
+                ],
+                "layout": "cols"
+            }
+        ]
+    }
 }

@@ -86,8 +86,8 @@ class Base:
     def ui_ctx_write(self, api_args):
         # Evaluate args here so gets back to the app. There can be
         # other errors:invalid field name or type could do value_check
-        if pkdp(frozenset(api_args.keys())) != pkdp(_UI_CTX_WRITE_ARGS) or pkdp(
-            not isinstance(api_args.field_values, dict)
+        if frozenset(api_args.keys()) != _UI_CTX_WRITE_ARGS or not isinstance(
+            api_args.field_values, dict
         ):
             raise pykern.util.APIError("invalid ui_ctx_write api_args={}", api_args)
         self.__put_work(_Work.ui_ctx_write, api_args)
@@ -97,13 +97,13 @@ class Base:
         self.__work_q = queue.PriorityQueue()
         self.__lock = threading.RLock()
         self.__locked = False
-        self.__ui_ctx_writes = PKDict(self.__inspect_ui_ctx_writes())
+        self.__ui_ctx_write_funcs = PKDict(self.__inspect_ui_ctx_write_funcs())
         self.__ctx = slicops.ctx.Ctx(self.__name)
         self.__ui_ctx_update(self.__ctx.as_dict())
 
-    def __inspect_ui_ctx_writes(self):
+    def __inspect_ui_ctx_write_funcs(self):
         for n, o in inspect.getmembers(self):
-            if (m := _UI_CTX_WRITE_RE.search(n)) and inspect.isfunction(o):
+            if (m := _UI_CTX_WRITE_RE.search(n)) and inspect.ismethod(o):
                 yield m.group(1), o
 
     def __put_work(self, work, arg):
@@ -163,7 +163,7 @@ class Base:
     def _work_ui_ctx_write(self, arg):
         with self.lock_for_update(log_op="ui_ctx_write") as txn:
             for c in tuple(txn.field_set(*x) for x in arg.field_values.items()):
-                if a := self.__ui_ctx_writes.get(c.field):
+                if a := self.__ui_ctx_write_funcs.get(c.field):
                     a(txn, **c)
             # TODO(robnagler) possibly look for ui_ctx_write with all updates
         return True
@@ -172,13 +172,13 @@ class Base:
 class _Txn:
     def __init__(self, ctx):
         self.__ctx = ctx
-        self.__updates = PKDict(ctx=PKDict())
+        self.__updates = PKDict(fields=PKDict())
         self.__destroyed = False
 
     def commit(self, update):
         if self.__destroyed:
             return
-        if self.__updates.ctx:
+        if self.__updates.fields:
             # Only send if there are changes
             update(self.__updates)
         self.__updates = None
@@ -196,7 +196,7 @@ class _Txn:
         rv = PKDict(field=name, value=self.__ctx.fields[name].value_set(value))
         rv.changed = rv.value != p
         if rv.changed:
-            self.__updates.ctx.pksetdefault1(name, PKDict).value = rv.value
+            self.__updates.fields.pksetdefault1(name, PKDict).value = rv.value
         # assumes caller will not modify value
         return rv
 

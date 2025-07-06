@@ -17,24 +17,25 @@ async def test_basic():
         import asyncio
 
         r = await s.ui_ctx_update()
-        pkdebug.pkdp(simple.read())
-        pkunit.pkeq(5, r.ctx.increment.value)
-        pkunit.pkeq(None, r.ctx.divisor.value)
-        pkunit.pkeq("method_1", r.ctx.run_mode.value)
-        pkunit.pkeq(5, r.ctx.increment.value)
+        pkunit.pkeq(5, r.fields.increment.value)
+        pkunit.pkeq(None, r.fields.divisor.value)
+        pkunit.pkeq("method_1", r.fields.run_mode.value)
+        pkunit.pkeq(5, r.fields.increment.value)
         await s.ui_ctx_write(divisor=1.0)
         r = await s.ui_ctx_update()
-        pkunit.pkeq(["divisor"], list(r.ctx.keys()))
-        pkunit.pkeq(1.0, r.ctx.divisor.value)
-        simple.read().divisor
+        pkunit.pkeq(["divisor"], list(r.fields.keys()))
+        pkunit.pkeq(1.0, r.fields.divisor.value)
+        pkunit.pkeq(None, simple.read().divisor)
         await s.ui_ctx_write(save_button=None)
         # write happens async and there's no db until we start
         await asyncio.sleep(0.5)
+        pkunit.pkeq(1.0, simple.read().divisor)
         # no update client side
         simple.write("divisor=3")
         r = await s.ui_ctx_update()
-        pkunit.pkeq(3.0, r.ctx.divisor.value)
+        pkunit.pkeq(3.0, r.fields.divisor.value)
         await s.ui_ctx_write(run_mode="method_2")
         r = await s.ui_ctx_update()
         await s.ui_ctx_write(revert_button=None)
-        r = await s.ui_ctx_update()
+        # no update, bc no change
+        pkunit.pkeq("method_1", simple.read().run_mode)

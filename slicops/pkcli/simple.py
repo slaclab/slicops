@@ -66,11 +66,12 @@ def write(*key_value_pairs):
         n.rename(o)
     finally:
         pykern.pkio.unchecked_remove(n)
-    return pkdp(rv)
+    return rv
 
 
 def _read(path):
     try:
+        # TODO(robnagler) should validate
         return pykern.pkyaml.load_file(path)
     except Exception as e:
         if pykern.pkio.exception_is_not_found(e):
@@ -81,4 +82,4 @@ def _read(path):
 def _validate(pairs):
     ctx = slicops.ctx.Ctx("simple")
     for k, v in pairs:
-        yield k, ctx.fields[k].value_check(v)
+        yield k, ctx.fields[k].value_set(v)
