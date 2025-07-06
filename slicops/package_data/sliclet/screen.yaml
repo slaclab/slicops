@@ -11,7 +11,6 @@ fields:
       choices: []
     ui:
       label: Camera
-      visible: false
   color_map:
     prototype: Enum
     constraints:
@@ -23,7 +22,6 @@ fields:
         - Viridis
     ui:
       label: Color Map
-      visible: false
     value: Inferno
   curve_fit_method:
     prototype: Enum
@@ -33,13 +31,12 @@ fields:
         "Super Gaussian": super_gaussian
     ui:
       label: Curve Fit Method
-      visible: false
     value: gaussian
   plot:
     prototype: Dict
     ui:
       label: Plot
-      widget: plot
+      widget: heatmap_with_lineouts
       writable: false
   pv:
     prototype: String

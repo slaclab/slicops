@@ -31,10 +31,9 @@ class Simple(slicops.sliclet.Base):
             self.__db_watcher.destroy()
             self.__db_watcher = None
 
-    def handle_start(self):
-        with self.lock_for_update() as txn:
-            if not self.__read_db(txn):
-                self.__write(txn)
+    def handle_start(self, txn):
+        if not self.__read_db(txn):
+            self.__write(txn)
         self.__db_watcher = _DBWatcher(self.__db_watcher_update)
 
     def handle_ctx_set_save_button(self, txn, **kwargs):

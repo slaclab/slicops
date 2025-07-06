@@ -95,7 +95,6 @@ class Base:
         self.__locked = False
         self.__ctx_set_handlers = PKDict(self.__inspect_ctx_set_handlers())
         self.__ctx = slicops.ctx.Ctx(self.__name)
-        self.__ctx_update(self.__ctx.as_dict())
 
     def __inspect_ctx_set_handlers(self):
         for n, o in inspect.getmembers(self):
@@ -123,7 +122,9 @@ class Base:
 
         try:
             self.__init_rest()
-            self.handle_start()
+            with self.lock_for_update() as txn:
+                self.handle_start(txn)
+                self.__first_update = True
             while True:
                 w = a = None
                 try:
@@ -142,6 +143,9 @@ class Base:
             _destroy()
 
     def __ctx_update(self, result):
+        if self.__first_update:
+            result = self.__ctx.as_dict()
+            self.__first_update = False
         self.__loop.call_soon_threadsafe(self.__ctx_update_q.put_nowait, result)
 
     def _work_error(self, msg):
@@ -170,10 +174,11 @@ class _Txn:
     def commit(self, update):
         if self.__destroyed:
             return
-        if self.__updates.fields:
-            # Only send if there are changes
-            update(self.__updates)
-        self.__updates = None
+        u = self.__updates
+        self.__updates
+        if u.get("fields") or u.get("ui_layout"):
+            # Only esnd if there are changes
+            update(u)
 
     def field_check(self, name, value):
         return self.__ctx.fields[name].value_check(value)
@@ -196,6 +201,7 @@ class _Txn:
         return rv
 
     def rollback(self):
+        # TODO(robnagler) need to undo all changes
         self.__updates = None
 
     def ui_get(self, field, attr):

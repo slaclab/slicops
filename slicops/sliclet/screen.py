@@ -23,7 +23,9 @@ _BUTTONS_DISABLE = (
 )
 
 _DEVICE_DISABLE = (
+    ("color_map.ui.enabled", False),
     ("color_map.ui.visible", False),
+    ("curve_fit_method.ui.enabled", False),
     ("curve_fit_method.ui.visible", False),
     ("plot.ui.visible", False),
     ("plot.value", None),
@@ -42,7 +44,9 @@ _DEVICE_ENABLE = (
 )
 
 _PLOT_ENABLE = (
+    ("color_map.ui.enabled", True),
     ("color_map.ui.visible", True),
+    ("curve_fit_method.ui.enabled", True),
     ("curve_fit_method.ui.visible", True),
     ("plot.ui.visible", True),
 )
@@ -80,6 +84,11 @@ class Screen(slicops.sliclet.Base):
     def handle_ctx_set_stop_button(self, txn, **kwargs):
         self.__set_acquire(txn, 0)
 
+    def handle_start(self):
+        with self.lock_for_update() as txn:
+            # Disable all buttons except beam_path
+            self.__beam_path_change(txn, None)
+
     def __beam_path_change(self, txn, value):
         def _choices():
             if value is None:
@@ -92,7 +101,10 @@ class Screen(slicops.sliclet.Base):
             ("camera.value", None),
         )
         if value is None:
-            txn.multi_set(_DEVICE_DISABLE)
+            txn.multi_set(
+                _DEVICE_DISABLE
+                + (("camera.ui.enabled", False), ("camera.ui.visible", False))
+            )
         if txn.field_check("camera", c) is None:
             txn.field_set("camera", c)
 
@@ -180,9 +192,11 @@ class Screen(slicops.sliclet.Base):
             return False
         if not ((i := self.monitors.image.value) and i.size):
             return False
-        if not txn.field_get("plot"):
+        if not txn.ui_get("plot", "enabled"):
             txn.multi_set(_PLOT_ENABLE)
-        txn.field_set("plot", slicops.plot.fit_image(image, txn.field_get("curve_fit_method")))
+        txn.field_set(
+            "plot", slicops.plot.fit_image(image, txn.field_get("curve_fit_method"))
+        )
         return True
 
 
