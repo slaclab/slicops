@@ -1,0 +1,85 @@
+fields:
+  beam_path:
+    prototype: Enum
+    constraints:
+      choices: []
+    ui:
+      label: Beam Path
+  camera:
+    prototype: Enum
+    constraints:
+      choices: []
+    ui:
+      label: Camera
+      visible: false
+  color_map:
+    prototype: Enum
+    constraints:
+      choices:
+        - Cividis
+        - Blues
+        - Inferno
+        - Turbo
+        - Viridis
+    ui:
+      label: Color Map
+      visible: false
+    value: Inferno
+  curve_fit_method:
+    prototype: Enum
+    constraints:
+      choices:
+        Gaussian: gaussian
+        "Super Gaussian": super_gaussian
+    ui:
+      label: Curve Fit Method
+      visible: false
+    value: gaussian
+  plot:
+    prototype: Dict
+    ui:
+      label: Plot
+      widget: plot
+      writable: false
+  pv:
+    prototype: String
+    ui:
+      label: PV
+      writable: false
+  single_button:
+    prototype: Button
+    ui:
+      css_kind: outline-info
+      label: Single
+  start_button:
+    prototype: Button
+    ui:
+      css_kind: primary
+      label: Start
+  stop_button:
+    prototype: Button
+    ui:
+      css_kind: dnager
+      label: Stop
+
+ui_layout:
+  - cols:
+    - css: col-sm-3
+      rows:
+      - beam_path
+      - camera
+      - pv
+      - cell_group:
+        - start_button
+        - stop_button
+        - single_button
+    - css: col-sm-9 col-xxl-7
+      rows:
+      - plot
+      - cols:
+        - css: col-sm-3
+          rows:
+          - curve_fit_method
+        - css: col-sm-3
+          rows:
+          - color_map
