@@ -24,9 +24,6 @@ _SLICLET_KEY = "sliclet"
 class API(slicops.quest.API):
     """Implementation for the Screen (Profile Monitor) application"""
 
-    async def api_ui_field_change(self, api_args):
-        return self.session[_SLICLET_KEY].ui_field_change(api_args)
-
     @pykern.api.util.subscription
     async def api_ui_ctx_update(self, api_args):
         if self.session.get(_UPDATE_Q_KEY):
@@ -51,3 +48,6 @@ class API(slicops.quest.API):
             if "session" in self:
                 self.session.pkdel(_UPDATE_Q_KEY)
                 self.session.pkdel(_SLICLET_KEY)
+
+    async def api_ui_ctx_write(self, api_args):
+        return self.session[_SLICLET_KEY].ui_ctx_write(pkdp(api_args))

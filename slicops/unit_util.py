@@ -24,19 +24,13 @@ class Setup(pykern.api.unit_util.Setup):
             pkunit.pkfail("subscription ended unexpectedly")
         return r
 
-    async def ui_field_change(self, field, new, expect=None):
-        from pykern import pkunit
+    async def ui_ctx_write(self, **kwargs):
         from pykern.pkcollections import PKDict
+        from pykern import pkdebug
 
-        if expect == Exception:
-            with pkunit.pkexcept(f"exception={field}"):
-                await self.client.call_api(
-                    f"ui_field_change", PKDict(field=field, value=new)
-                )
-        else:
-            await self.client.call_api(
-                f"ui_field_change", PKDict(field=field, value=new)
-            )
+        await self.client.call_api(
+            "ui_ctx_write", pkdebug.pkdp(PKDict(field_values=PKDict(kwargs)))
+        )
 
     async def __aenter__(self):
         await super().__aenter__()

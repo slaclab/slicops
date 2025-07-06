@@ -32,41 +32,43 @@ class Simple(slicops.sliclet.Base):
             self.__db_watcher = None
 
     def thread_run_start(self):
+        with self.lock_for_update() as txn:
+            if not pkdp(self.__read_db(txn)):
+                self.__write(txn)
         self.__db_watcher = _DBWatcher(self.__db_watcher_update)
 
-    def ui_field_change_save_button(self, txn, **kwargs):
-        def _values():
-            for k in self.__writable_keys(txn):
-                yield k, txn.field_get(k)
+    def ui_ctx_write_save_button(self, txn, **kwargs):
+        self.__write(txn)
 
-        # TODO(robnagler) work item maybe should happen outside ui_field_change
-        #    work_queue is a separate thing that could be queued
-        slicops.pkcli.simple.write(PKDict(_values()))
-
-    def ui_field_change_revert_button(self, txn, **kwargs):
+    def ui_ctx_write_revert_button(self, txn, **kwargs):
         # TODO(robnagler) the read and the ctx_put could happen outside the context
-        return self.__read_db(txn)
+        self.__read_db(txn)
 
     def __db_watcher_update(self):
         with self.lock_for_update() as txn:
             self.__read_db(txn)
 
     def __read_db(self, txn):
-        try:
-            d = slicops.pkcli.simple.read()
-        except Exception as e:
-            # Db may not exist
-            if pykern.pkio.exception_is_not_found(e):
-                return
-            raise
+        if not (r := slicops.pkcli.simple.read()):
+            return False
         for k in self.__writable_keys(txn):
-            if k in d:
-                txn.field_set(k, d[k])
+            if k in r:
+                txn.field_set(k, r[k])
+        return True
 
     def __writable_keys(self, txn):
         for k in txn.field_names():
             if txn.ui_get(k, "writable"):
                 yield k
+
+    def __write(self, txn):
+        def _values():
+            for k in self.__writable_keys(txn):
+                yield k, txn.field_get(k)
+
+        # TODO(robnagler) work item maybe should happen outside ui_ctx_write
+        #    work_queue is a separate thing that could be queued
+        slicops.pkcli.simple.write(pkdp(PKDict(_values())))
 
 
 CLASS = Simple

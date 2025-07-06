@@ -5,7 +5,7 @@
 """
 
 from pykern.pkcollections import PKDict
-from pykern.pkdebug import pkdc, pkdexc, pkdlog, pkdp
+from pykern.pkdebug import pkdc, pkdexc, pkdlog, pkdp, pkdformat
 import asyncio
 import contextlib
 import enum
@@ -23,12 +23,12 @@ class _Work(enum.IntEnum):
     # sort in value order
     error = (1,)
     session_end = (2,)
-    ui_field_change = (3,)
+    ui_ctx_write = (3,)
 
 
-_UI_FIELD_CHANGE_RE = re.compile("^ui_field_change_(\w+)$")
+_UI_CTX_WRITE_RE = re.compile("^ui_ctx_write_(\w+)$")
 
-_UI_FIELD_CHANGE_ARGS = frozenset(("field", "value"))
+_UI_CTX_WRITE_ARGS = frozenset(["field_values"])
 
 
 def instance(name, queue):
@@ -83,23 +83,27 @@ class Base:
     def thread_run_start(self):
         pass
 
-    def ui_field_change(self, api_args):
-        if (x := set(api_args.keys())) != _UI_FIELD_CHANGE_ARGS:
-            raise pykern.util.APIError("invalid ui_field_change api_args={x}")
-        self.__put_work(_Work.ui_field_change, api_args)
+    def ui_ctx_write(self, api_args):
+        # Evaluate args here so gets back to the app. There can be
+        # other errors:invalid field name or type could do value_check
+        if pkdp(frozenset(api_args.keys())) != pkdp(_UI_CTX_WRITE_ARGS) or pkdp(
+            not isinstance(api_args.field_values, dict)
+        ):
+            raise pykern.util.APIError("invalid ui_ctx_write api_args={}", api_args)
+        self.__put_work(_Work.ui_ctx_write, api_args)
         return PKDict()
 
     def __init_rest(self):
         self.__work_q = queue.PriorityQueue()
         self.__lock = threading.RLock()
         self.__locked = False
-        self.__ui_field_changes = PKDict(self.__inspect_ui_field_changes())
+        self.__ui_ctx_writes = PKDict(self.__inspect_ui_ctx_writes())
         self.__ctx = slicops.ctx.Ctx(self.__name)
-        self.__ui_ctx_update(self.__ctx.as_api_result())
+        self.__ui_ctx_update(self.__ctx.as_dict())
 
-    def __inspect_ui_field_changes(self):
+    def __inspect_ui_ctx_writes(self):
         for n, o in inspect.getmembers(self):
-            if (m := _UI_FIELD_CHANGE_RE.search(n)) and inspect.isfunction(o):
+            if (m := _UI_CTX_WRITE_RE.search(n)) and inspect.isfunction(o):
                 yield m.group(1), o
 
     def __put_work(self, work, arg):
@@ -156,11 +160,12 @@ class Base:
         # TODO(robnagler) maybe if there are too many errors fail or stop logging?
         return False
 
-    def _work_ui_field_change(self, arg):
-        with self.lock_for_update(log_op=f"ui_field_change_{arg.field}") as txn:
-            x = txn.field_set(arg.field, arg.value)
-            if a := self.__ui_field_changes.get(arg.field):
-                a(txn, **x)
+    def _work_ui_ctx_write(self, arg):
+        with self.lock_for_update(log_op="ui_ctx_write") as txn:
+            for c in tuple(txn.field_set(*x) for x in arg.field_values.items()):
+                if a := self.__ui_ctx_writes.get(c.field):
+                    a(txn, **c)
+            # TODO(robnagler) possibly look for ui_ctx_write with all updates
         return True
 
 
@@ -188,7 +193,7 @@ class _Txn:
     def field_set(self, name, value):
         p = self.__ctx.fields[name].value_get()
         # TODO(robnagler) rollback
-        rv = PKDict(value=self.__ctx.fields[name].value_set(value))
+        rv = PKDict(field=name, value=self.__ctx.fields[name].value_set(value))
         rv.changed = rv.value != p
         if rv.changed:
             self.__updates.ctx.pksetdefault1(name, PKDict).value = rv.value

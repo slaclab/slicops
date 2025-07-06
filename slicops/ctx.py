@@ -6,6 +6,7 @@
 
 from pykern.pkcollections import PKDict
 from pykern.pkdebug import pkdc, pkdexc, pkdlog, pkdp
+import copy
 import pykern.fconf
 import pykern.pkresource
 import slicops.field
@@ -43,10 +44,10 @@ class Ctx:
             e.args = x + (f"parsing {step} for sliclet={name}",)
             raise e
 
-    def as_api_result(self):
+    def as_dict(self):
         return PKDict(
-            ctx=PKDict((k, v.as_api_result()) for k, v in self.fields.items()),
-            ui_layout=PKDict(rows=self.ui_layout.rows),
+            ctx=PKDict((k, v.as_dict()) for k, v in self.fields.items()),
+            ui_layout=PKDict(rows=copy.deepcopy(self.ui_layout.rows)),
         )
 
     def __parse(self, raw, fields, prototypes):

@@ -57,8 +57,8 @@ class Base:
             raise ValueError(v)
         self._attrs.value = v
 
-    def as_api_result(self):
-        return PKDict((k, self._attrs[k]) for k in self.__TOP_ATTRS)
+    def as_dict(self):
+        return PKDict((k, copy.deepcopy(self._attrs[k])) for k in self.__TOP_ATTRS)
 
     def new(self, overrides):
         return self.__class__(self, overrides)

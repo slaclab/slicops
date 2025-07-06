@@ -41,9 +41,12 @@
      errorMessage.value = '';
      ctx.value[field].enabled = false;
      apiService.call(
-         `ui_field_change`, {
-             field: field,
-             value: value,
+         `ui_ctx_write`, {
+             field_values: {
+                 [field]: value,
+                 //TODO(nagler) could send enabled = false
+                 // and then then button would turn itself back on once it hits the server
+             },
          },
          (result) => {
 //TODO(robnagler): need "voting" between two values, one from the ui and one
