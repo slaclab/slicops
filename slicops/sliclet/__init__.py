@@ -59,6 +59,7 @@ class Base:
                 except Exception:
                     if t:
                         t.rollback()
+                    raise
                 else:
                     t.commit(self.__ui_ctx_update)
                 finally:
@@ -185,9 +186,9 @@ class _Txn:
         return tuple(self.__ctx.fields.keys())
 
     def field_set(self, name, value):
-        p = ctx.fields[name].value_get()
+        p = self.__ctx.fields[name].value_get()
         # TODO(robnagler) rollback
-        rv = PKDict(value=ctx.fields[name].value_set(value))
+        rv = PKDict(value=self.__ctx.fields[name].value_set(value))
         rv.changed = rv.value != p
         if rv.changed:
             self.__updates.ctx.pksetdefault1(name, PKDict).value = rv.value
