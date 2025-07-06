@@ -205,12 +205,12 @@ class APIService {
     #socketOnError(event) {
         // close: event.code : short, event.reason : str, wasClean : boolean
         // error: app specific
-        this.#socket = null;
-        websocketConnectedRef.value = false;
         if (this.#timeout) {
             // already waiting to retry
             return;
         }
+        this.#socket = null;
+        websocketConnectedRef.value = false;
         if (this.#socketRetryBackoff <= 0) {
             this.#socketRetryBackoff = 1;
             this.log.error(['WebSocket failed', event]);

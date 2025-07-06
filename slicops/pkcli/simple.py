@@ -30,7 +30,6 @@ def read():
     """
     rv = _read(path())
     if rv is None:
-        pkdlog("{} does not exist", path())
         return PKDict()
     return rv
 
@@ -75,6 +74,7 @@ def _read(path):
         return pykern.pkyaml.load_file(path)
     except Exception as e:
         if pykern.pkio.exception_is_not_found(e):
+            pkdlog("ignoring not found path={}", path)
             return None
         raise
 

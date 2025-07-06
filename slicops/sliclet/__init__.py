@@ -122,12 +122,6 @@ class Base:
             self.__work_q = None
             self.__thread = None
             self.__lock = None
-            if self.__txn:
-                try:
-                    self.__txn.rollback()
-                except Exception:
-                    pass
-                self.__txn = None
 
         try:
             self.__init_rest()

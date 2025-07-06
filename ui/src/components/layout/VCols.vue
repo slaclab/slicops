@@ -24,7 +24,7 @@
 </template>
 
 <script setup>
- import VLayout from '@/components/VLayout.vue';
+ import VRows from '@/components/layout/VRows.vue';
 
  const props = defineProps({
      cols: Object,

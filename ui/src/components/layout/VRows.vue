@@ -9,19 +9,19 @@
         <div v-for="r in rows">
             <div v-if="r.layout === 'cell'">
                 <VCell
-                    :field="value.field"
+                    :field="r.field"
                     :ctx="ctx"
                 />
             </div>
             <div v-else-if="r.layout === 'cell_group'">
                 <VCellGroup
-                    :cells="value.cells"
+                    :cells="r.cells"
                     :ctx="ctx"
                 />
             </div>
             <div v-else-if="r.layout === 'cols'">
                  <VCols
-                     :cols="value.cols"
+                     :cols="r.cols"
                      :ctx="ctx"
                  />
             </div>

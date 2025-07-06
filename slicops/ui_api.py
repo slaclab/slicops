@@ -43,7 +43,7 @@ class API(slicops.quest.API):
                     return None
                 if isinstance(r, Exception):
                     raise r
-                self.subscription.result_put(r)
+                self.subscription.result_put(pkdp(r))
         finally:
             if "session" in self:
                 self.session.pkdel(_UPDATE_Q_KEY)

@@ -4,7 +4,7 @@
 <template>
     <form>
         <div
-            v-if="ctx"
+            v-if="ctx.value"
             class="row">
             <div
                 v-if="errorMessage"
@@ -41,7 +41,8 @@
      errorMessage.value = '';
      ctx.value[field].enabled = false;
      apiService.call(
-         `ui_ctx_write`, {
+         'ui_ctx_write',
+         {
              field_values: {
                  [field]: value,
                  //TODO(nagler) could send enabled = false
@@ -61,7 +62,7 @@
  };
 
  const isObject = (value) => {
-     return value !== null && typeof value === 'object' && !Array.isArray(value));
+     return value !== null && typeof value === 'object' && !Array.isArray(value);
  };
 
  const lessReactiveCtx = (ctx) => {
@@ -76,6 +77,7 @@
  };
 
  const uiUpdate = (result) => {
+     console.log(result);
      if (! result.fields) {
          logService.error(["no fields ui_ctx_update result", result]);
          handleError("server returned invalid update")
@@ -83,10 +85,12 @@
      }
      if (result.ui_layout) {
          // layout is always a full update
-         Object.assign(ui_layout.value, result.ui_layout);
+         ui_layout.value = result.ui_layout;
      }
      if (! ctx.value) {
+         ctx.value = result.fields;
          ctx.value.serverAction = serverAction;
+         return;
      }
      const c = ctx.value;
      for (const [f, r] of Object.entries(lessReactiveCtx(result.fields))) {
