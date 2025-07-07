@@ -108,7 +108,7 @@ class Txn:
         if u:
             update(u)
 
-    def is_field_value_value(self, name, value):
+    def is_field_value_valid(self, name, value):
         return not isinstance(
             self.__field(name).value_check(value), slicops.field.InvalidFieldValue
         )
@@ -127,20 +127,27 @@ class Txn:
         self.__field_update(name, self.__field(name), PKDict(value=value))
 
     def field_set_via_api(self, name, value):
-        o = self.__field(name)
-        if not o.ui_get("writable"):
-            raise pykern.util.APIError("field={} is not writable value={}", name, value)
-        n = self.__field_update(name, o, PKDict(value=value))
-        rv = PKDict(field=name, value=n.value_get(), old_value=o.value_get())
-        # TODO(robnagler) optimize, similar to field_set
-        return rv.pkupdate(changed=rv.value != rv.old_value)
+        try:
+            o = self.__field(name)
+            if not o.ui_get("writable"):
+                raise pykern.util.APIError(
+                    "field={} is not writable value={}", name, value
+                )
+            n = self.__field_update(name, o, PKDict(value=value))
+            rv = PKDict(field=name, value=n.value_get(), old_value=o.value_get())
+            # TODO(robnagler) optimize, similar to field_set
+            return rv.pkupdate(changed=rv.value != rv.old_value)
+        except Exception as e:
+            if isinstance(e, pykern.util.APIError):
+                raise
+            raise pykern.util.APIError("invalid value for field={} error={}", name, e)
 
     def multi_set(self, *args):
         def _args():
             if len(args) > 1:
                 return args
             if len(args) == 0:
-                raise ValueError("must be at list one update")
+                raise AssetionError("must be at list one update")
             if isinstance(args[0][0], str):
                 # (("a", 1))
                 return args
@@ -168,5 +175,5 @@ class Txn:
         return self.__ctx.fields[name]
 
     def __field_update(self, name, field, overrides):
-        rv = self.__updates[name] = field.new(overrides)
+        rv = self.__updates[name] = field.new(copy.deepcopy(overrides))
         return rv

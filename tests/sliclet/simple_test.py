@@ -16,29 +16,29 @@ async def test_basic():
         from slicops.pkcli import simple
         import asyncio
 
-        r = await s.ui_ctx_update()
+        r = await s.ctx_update()
         pkunit.pkeq(5, r.fields.increment.value)
         pkunit.pkeq(None, r.fields.divisor.value)
         pkunit.pkeq("method_1", r.fields.run_mode.value)
         pkunit.pkeq(5, r.fields.increment.value)
-        await s.ui_ctx_write(divisor=1.0)
-        r = await s.ui_ctx_update()
+        await s.ctx_field_set(divisor=1.0)
+        r = await s.ctx_update()
         pkunit.pkeq(["divisor"], list(r.fields.keys()))
         pkunit.pkeq(1.0, r.fields.divisor.value)
         pkunit.pkeq(None, simple.read().divisor)
-        r = await s.ui_ctx_write(save_button=None)
+        r = await s.ctx_field_set(save_button=None)
         # save button
-        await s.ui_ctx_update()
+        await s.ctx_update()
         # db_watcher read
-        await s.ui_ctx_update()
+        await s.ctx_update()
         pkunit.pkeq(1.0, simple.read().divisor)
         # no update client side
         simple.write("divisor=3")
-        r = await s.ui_ctx_update()
+        r = await s.ctx_update()
         pkunit.pkeq(3.0, r.fields.divisor.value)
-        await s.ui_ctx_write(run_mode="method_2")
-        r = await s.ui_ctx_update()
-        await s.ui_ctx_write(revert_button=None)
-        await s.ui_ctx_update()
+        await s.ctx_field_set(run_mode="method_2")
+        r = await s.ctx_update()
+        await s.ctx_field_set(revert_button=None)
+        await s.ctx_update()
         # no update, bc no change
         pkunit.pkeq("method_1", simple.read().run_mode)

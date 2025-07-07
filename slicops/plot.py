@@ -10,11 +10,19 @@ import numpy
 import scipy.optimize
 
 
-def fit_image(self, image, fit_method):
-    """Use the scipy curve_fit() to match the selected method.
-       Valid methods are (gaussian, super_gaussian).
+def fit_image(image, method):
+    """Attemp an analytical fit for the sum along the x and y dimensions
+
+    Uses scipy.optimize.curve_fit
+
+    Args:
+        image (ndarray): 2-d matrix
+        method (str): Either gaussian or  super_gaussian
+    Returns:
+        PKDict: raw_pixels, x & y={lineout: sum, fit: {fit_line, results: {sig, amp, mean, offset}}
     """
-    def _one(self, profile):
+
+    def _one(profile):
         def _fix(results):
             # sigma may be negative from the fit
             results.sig = abs(results.sig)
@@ -43,15 +51,15 @@ def fit_image(self, image, fit_method):
                     numpy.min(profile),
                 ],
             )
-            if fit_method == "super_gaussian":
+            if method == "super_gaussian":
                 # use gaussian fit to guess other distribution starting values
                 m = _super_gaussian
                 dist_keys.append("p")
                 popt, pcov = scipy.optimize.curve_fit(
                     m, x, profile, p0=numpy.append(popt, 1.1)
                 )
-            elif fit_method != "gaussian":
-                raise AssertionError(f"invalid fit method={fit_method}")
+            elif method != "gaussian":
+                raise AssertionError(f"invalid fit method={method}")
             fit_line = m(x, *popt)
         except RuntimeError as e:
             # TODO(pjm): show fitting error message on curve fit method field
@@ -65,7 +73,7 @@ def fit_image(self, image, fit_method):
         )
 
     return PKDict(
-        raw_pixels=self.image,
+        raw_pixels=image,
         x=_one(image.sum(axis=0)),
         y=_one(image.sum(axis=1)[::-1]),
     )

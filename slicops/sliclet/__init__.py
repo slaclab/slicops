@@ -44,6 +44,12 @@ class Base:
         self.__thread.start()
 
     def ctx_write(self, field_values):
+        for k, v in field_values.items():
+            if not (f := self.__ctx.fields.get(k)):
+                raise pykern.util.APIError("unknown field={}", k)
+            # This is pre-emptive so errors make sense in context of write
+            if isinstance((v := f.value_check(v)), slicops.field.InvalidFieldValue):
+                raise pykern.util.APIError("invalid value for field={} error={}", k, v)
         self.__put_work(_Work.ctx_write, field_values)
 
     def handle_destroy(self):
@@ -83,7 +89,9 @@ class Base:
                 d += f" op={log_op}"
             except Exception as e2:
                 pkdlog("error={} during exception stack={}", e2, pkdexc())
-            pkdlog("ERROR {} stack={}", d, pkdexc())
+            if not isinstance(e, pykern.util.APIError):
+                pkdlog("stack={}", pkdexc())
+            pkdlog("ERROR {}", d)
             self.__put_work(_Work.error, PKDict(desc=d))
 
     def session_end(self):

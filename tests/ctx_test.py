@@ -28,4 +28,11 @@ def test_txn():
     txn = ctx.Txn(c)
     with pkunit.pkexcept(ValueError):
         txn.field_set("increment", 0)
+    txn.multi_set(
+        ("run_mode.constraints.choices", ("a", "b", "c")),
+        ("run_mode.value", None),
+    )
+    r = PKDict()
+    txn.commit(lambda x: r.pkupdate(fields=x.fields))
+    pkunit.pkeq(None, r.fields.run_mode.value)
     # TODO(robnagler) more tests

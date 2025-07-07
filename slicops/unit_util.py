@@ -15,7 +15,7 @@ class Setup(pykern.api.unit_util.Setup):
         self.__sliclet = sliclet
         self.__update_q = asyncio.Queue()
 
-    async def ui_ctx_update(self):
+    async def ctx_update(self):
         from pykern import pkunit
 
         r = await self.__update_q.get()
@@ -24,7 +24,7 @@ class Setup(pykern.api.unit_util.Setup):
             pkunit.pkfail("subscription ended unexpectedly")
         return r
 
-    async def ui_ctx_write(self, **kwargs):
+    async def ctx_field_set(self, **kwargs):
         from pykern.pkcollections import PKDict
         from pykern import pkdebug
 

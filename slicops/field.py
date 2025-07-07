@@ -146,8 +146,9 @@ class Base:
                     attr[k] = v
 
         for t in self.__TOP_ATTRS:
-            if (o := overrides.pkdel(t)) is None:
+            if t not in overrides:
                 continue
+            o = overrides.pkdel(t)
             if t in self.__SIMPLE_TOP_ATTRS:
                 result[t] = o
             elif not isinstance(o, dict):
@@ -261,8 +262,6 @@ class Enum(Base):
 
         super()._assert_attrs()
         self.__map = self.__create_map(_choices(self._attrs.constraints))
-        # validate and raise
-        self.value_set(self._attrs.value)
 
     def __create_map(self, choices):
         def _cross_check(labels, values):

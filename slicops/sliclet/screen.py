@@ -7,6 +7,7 @@
 from pykern.pkcollections import PKDict
 from pykern.pkdebug import pkdc, pkdexc, pkdlog, pkdp
 import slicops.sliclet
+import pykern.pkconfig
 import pykern.util
 import slicops.device
 import slicops.device_db
@@ -71,9 +72,9 @@ class Screen(slicops.sliclet.Base):
         if changed:
             self.__beam_path_change(txn, value)
 
-    def handle_ctx_set_curve_fit_method(self, txn, changed):
+    def handle_ctx_set_curve_fit_method(self, txn, changed, **kwargs):
         if changed:
-            self.__update_plot()
+            self.__update_plot(txn)
 
     def handle_ctx_set_single_button(self, txn, **kwargs):
         self.__single_button = True
@@ -85,10 +86,18 @@ class Screen(slicops.sliclet.Base):
     def handle_ctx_set_stop_button(self, txn, **kwargs):
         self.__set_acquire(txn, 0)
 
-    def handle_start(self):
-        with self.lock_for_update() as txn:
-            # Disable all buttons except beam_path
-            self.__beam_path_change(txn, None)
+    def handle_start(self, txn):
+        txn.multi_set(("beam_path.constraints.choices", slicops.device_db.beam_paths()))
+        b = c = None
+        if pykern.pkconfig.in_dev_mode():
+            b = _cfg.dev.beam_path
+            c = _cfg.dev.camera
+        # the values are None by default, but this initializes
+        # the state of the choices, buttons and fields appropriately
+        txn.field_set("beam_path", b)
+        self.__beam_path_change(txn, b)
+        txn.field_set("camera", c)
+        self.__device_change(txn, c)
 
     def __beam_path_change(self, txn, value):
         def _choices():
@@ -96,21 +105,24 @@ class Screen(slicops.sliclet.Base):
                 return ()
             return slicops.device_db.device_names(value, _DEVICE_TYPE)
 
-        c = txn.field_get("camera")
         txn.multi_set(
             ("camera.constraints.choices", _choices()),
             ("camera.value", None),
         )
+        # This technically shouldn't happen
         if value is None:
             txn.multi_set(
                 _DEVICE_DISABLE
                 + (("camera.ui.enabled", False), ("camera.ui.visible", False))
             )
-        if c is None:
-            # No device change and nothing to set
+        else:
+            txn.multi_set((("camera.ui.enabled", True), ("camera.ui.visible", True)))
+        if not self.__device:
+            # No device change
             return
-        if txn.is_field_value_value("camera", c):
-            # Camera is the same so restore the value
+        c = self.__device.device_name
+        if txn.is_field_value_valid("camera", c):
+            # Camera is the same so restore the value, no device change
             txn.field_set("camera", c)
         else:
             self.__device_change(txn, None)
@@ -140,14 +152,16 @@ class Screen(slicops.sliclet.Base):
         self.__device_destroy()
         txn.multi_set(_DEVICE_DISABLE)
         if camera:
-            _setup(c)
-            txn.multi_set(_DEVICE_ENABLE + (("pv", self.__device.meta.pv_prefix),))
+            _setup()
+            txn.multi_set(
+                _DEVICE_ENABLE + (("pv.value", self.__device.meta.pv_prefix),)
+            )
 
-    def __device_destroy():
+    def __device_destroy(self):
         if not self.__device:
             return
         self.__single_button = False
-        for n, m in self.__monitors.items():
+        for m in self.__monitors.values():
             m.destroy()
         self.__monitors = PKDict()
         try:
@@ -197,12 +211,13 @@ class Screen(slicops.sliclet.Base):
     def __update_plot(self, txn):
         if not self.__device:
             return False
-        if not ((i := self.monitors.image.value) and i.size):
+        if (i := self.__monitors.image.value) is None or not i.size:
             return False
         if not txn.ui_get("plot", "enabled"):
             txn.multi_set(_PLOT_ENABLE)
         txn.field_set(
-            "plot", slicops.plot.fit_image(image, txn.field_get("curve_fit_method"))
+            "plot",
+            slicops.plot.fit_image(i, txn.field_get("curve_fit_method")),
         )
         return True
 
@@ -236,3 +251,17 @@ class _Monitor:
             self.__handler(v)
         except Exception as e:
             pkdlog("handler error={} accessor={} stack={}", e, self.__name, pkdexc())
+
+
+def _init():
+    global _cfg
+
+    _cfg = pykern.pkconfig.init(
+        dev=PKDict(
+            beam_path=("DEV_BEAM_PATH", str, "dev beam path name"),
+            camera=("DEV_CAMERA", str, "dev camera name"),
+        ),
+    )
+
+
+_init()

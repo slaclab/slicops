@@ -26,6 +26,9 @@ class API(slicops.quest.API):
 
     @pykern.api.util.subscription
     async def api_ui_ctx_update(self, api_args):
+        # TODO(robnagler) reply with an error that doesn't
+        #  terminate the session in all cases.
+        #  Or, should the UI restart the subscription
         if self.session.get(_UPDATE_Q_KEY):
             raise pykern.util.APIError("already updating")
         try:
