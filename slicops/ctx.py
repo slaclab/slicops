@@ -121,6 +121,9 @@ class Txn:
         return tuple(self.__ctx.fields.keys())
 
     def field_set(self, name, value):
+        # TODO(robnagler) optimize this case to not validate constraints/ui
+        #   could possibly optimize the ui and constraints parts when a copy
+        #   vs new with _defaults() (which should get validated first time)
         self.__field_update(name, self.__field(name), PKDict(value=value))
 
     def field_set_via_api(self, name, value):
@@ -129,6 +132,7 @@ class Txn:
             raise pykern.util.APIError("field={} is not writable value={}", name, value)
         n = self.__field_update(name, o, PKDict(value=value))
         rv = PKDict(field=name, value=n.value_get(), old_value=o.value_get())
+        # TODO(robnagler) optimize, similar to field_set
         return rv.pkupdate(changed=rv.value != rv.old_value)
 
     def multi_set(self, *args):
