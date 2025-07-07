@@ -53,7 +53,7 @@ class Base:
         pass
 
     @contextlib.contextmanager
-    def lock_for_update(self, log_op=None):
+    def lock_for_update(self, log_op=None, _first_time=False):
         ok = True
         try:
             with self.__lock:
@@ -63,7 +63,7 @@ class Base:
                 txn = None
                 try:
                     self.__locked = True
-                    txn = slicops.ctx.Txn(self.__ctx)
+                    txn = slicops.ctx.Txn(self.__ctx, first_time=_first_time)
                     yield txn
                 except Exception:
                     if txn:
@@ -122,9 +122,8 @@ class Base:
 
         try:
             self.__init_rest()
-            with self.lock_for_update() as txn:
+            with self.lock_for_update(_first_time=True) as txn:
                 self.handle_start(txn)
-                self.__first_update = True
             while True:
                 w = a = None
                 try:
@@ -143,9 +142,6 @@ class Base:
             _destroy()
 
     def __ctx_update(self, result):
-        if self.__first_update:
-            self.__first_update = False
-            result = self.__ctx.as_dict()
         self.__loop.call_soon_threadsafe(self.__ctx_update_q.put_nowait, result)
 
     def _work_error(self, msg):

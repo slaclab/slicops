@@ -51,21 +51,26 @@ class Simple(slicops.sliclet.Base):
             self.__read_db(txn)
 
     def __read_db(self, txn):
+        def _keys():
+            for k in txn.field_names():
+                if txn.ui_get(k, "widget") != "button":
+                    yield k
+
         if not (r := slicops.pkcli.simple.read()):
             return False
-        for k in self.__writable_keys(txn):
+        for k in _keys():
             if k in r:
                 txn.field_set(k, r[k])
         return True
 
-    def __writable_keys(self, txn):
-        for k in txn.field_names():
-            if txn.ui_get(k, "writable"):
-                yield k
-
     def __write(self, txn):
+        def _keys():
+            for k in txn.field_names():
+                if txn.ui_get(k, "writable") and txn.ui_get(k, "widget") != "button":
+                    yield k
+
         def _values():
-            for k in self.__writable_keys(txn):
+            for k in _keys():
                 yield k, txn.field_get(k)
 
         # TODO(robnagler) work item maybe should happen outside handle_ctx_set

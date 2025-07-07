@@ -26,9 +26,11 @@ async def test_basic():
         pkunit.pkeq(["divisor"], list(r.fields.keys()))
         pkunit.pkeq(1.0, r.fields.divisor.value)
         pkunit.pkeq(None, simple.read().divisor)
-        await s.ui_ctx_write(save_button=None)
-        # write happens async and there's no db until we start
-        await asyncio.sleep(0.5)
+        r = await s.ui_ctx_write(save_button=None)
+        # save button
+        await s.ui_ctx_update()
+        # db_watcher read
+        await s.ui_ctx_update()
         pkunit.pkeq(1.0, simple.read().divisor)
         # no update client side
         simple.write("divisor=3")
@@ -37,5 +39,6 @@ async def test_basic():
         await s.ui_ctx_write(run_mode="method_2")
         r = await s.ui_ctx_update()
         await s.ui_ctx_write(revert_button=None)
+        await s.ui_ctx_update()
         # no update, bc no change
         pkunit.pkeq("method_1", simple.read().run_mode)

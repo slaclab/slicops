@@ -83,26 +83,35 @@ class Ctx:
 
 
 class Txn:
-    def __init__(self, ctx):
+    def __init__(self, ctx, first_time=False):
         self.__ctx = ctx
         self.__updates = PKDict()
+        self.__first_time = first_time
 
     def commit(self, update):
+
         def _pairs(updates):
             for k, v in updates.items():
                 yield k, v.as_dict()
 
-        if u := self.__updates:
-            c = self.__ctx
-            self.__ctx = self.__updates = None
+        c = self.__ctx
+        u = self.__updates
+        self.__ctx = self.__updates = None
+        if u:
             # could technically do collision checking on the update
             c.fields.update(u)
-            # TODO(robnagler) only send changes and protect large data being sent
-            # screen protects against this by clearing plot when irrelevant
-            update(PKDict(fields=PKDict(_pairs(u))))
+            u = PKDict(fields=PKDict(_pairs(u)))
+        if self.__first_time:
+            u = c.as_dict()
+        # TODO(robnagler) only send changes and protect large data being sent
+        # screen protects against this by clearing plot when irrelevant
+        if u:
+            update(u)
 
     def is_field_value_value(self, name, value):
-        return not isinstance(self.__field(name).value_check(value), slicops.field.InvalidFieldValue)
+        return not isinstance(
+            self.__field(name).value_check(value), slicops.field.InvalidFieldValue
+        )
 
     def field_get(self, name):
         return self.__field(name).value_get()
@@ -116,12 +125,11 @@ class Txn:
 
     def field_set_via_api(self, name, value):
         o = self.__field(name)
-        if not o.ui.writable:
+        if not o.ui_get("writable"):
             raise pykern.util.APIError("field={} is not writable value={}", name, value)
         n = self.__field_update(name, o, PKDict(value=value))
-        return PKDict(
-            field=name, value=n.value, old_value=o.value, changed=o.value != n.value
-        )
+        rv = PKDict(field=name, value=n.value_get(), old_value=o.value_get())
+        return rv.pkupdate(changed=rv.value != rv.old_value)
 
     def multi_set(self, *args):
         def _args():

@@ -341,6 +341,22 @@ class Integer(Base):
             return InvalidFieldValue("not integer", exc=e)
 
 
+class List(Base):
+
+    def _defaults(self, *overrides):
+        # TODO(robnagler) need to verify attributes
+        return super()._defaults(
+            PKDict(name="List"),
+            *overrides,
+        )
+
+    def _from_literal(self, value):
+        try:
+            return list(value)
+        except Exception as e:
+            return InvalidFieldValue("not a list", exc=e)
+
+
 class String(Base):
     def _defaults(self, *overrides):
         return super()._defaults(
