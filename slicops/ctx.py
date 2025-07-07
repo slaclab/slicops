@@ -9,6 +9,7 @@ from pykern.pkdebug import pkdc, pkdexc, pkdlog, pkdp
 import copy
 import pykern.fconf
 import pykern.pkresource
+import pykern.util
 import slicops.field
 import slicops.ui_layout
 
@@ -79,3 +80,81 @@ class Ctx:
             raise ValueError("expecting a non-empty dict")
         _sort()
         return fields
+
+
+class Txn:
+    def __init__(self, ctx):
+        self.__ctx = ctx
+        self.__updates = PKDict()
+
+    def commit(self, update):
+        def _pairs(updates):
+            for k, v in updates.items():
+                yield k, v.as_dict()
+
+        if u := self.__updates:
+            c = self.__ctx
+            self.__ctx = self.__updates = None
+            # could technically do collision checking on the update
+            c.fields.update(u)
+            # TODO(robnagler) only send changes and protect large data being sent
+            # screen protects against this by clearing plot when irrelevant
+            update(PKDict(fields=PKDict(_pairs(u))))
+
+    def is_field_value_value(self, name, value):
+        return not isinstance(self.__field(name).value_check(value), slicops.field.InvalidFieldValue)
+
+    def field_get(self, name):
+        return self.__field(name).value_get()
+
+    def field_names(self):
+        # keys are always the same
+        return tuple(self.__ctx.fields.keys())
+
+    def field_set(self, name, value):
+        self.__field_update(name, self.__field(name), PKDict(value=value))
+
+    def field_set_via_api(self, name, value):
+        o = self.__field(name)
+        if not o.ui.writable:
+            raise pykern.util.APIError("field={} is not writable value={}", name, value)
+        n = self.__field_update(name, o, PKDict(value=value))
+        return PKDict(
+            field=name, value=n.value, old_value=o.value, changed=o.value != n.value
+        )
+
+    def multi_set(self, *args):
+        def _args():
+            if len(args) > 1:
+                return args
+            if len(args) == 0:
+                raise ValueError("must be at list one update")
+            if isinstance(args[0][0], str):
+                # (("a", 1))
+                return args
+            # ((("a", 1), ("b", 2), ..)) or a dict
+            return args[0]
+
+        def _parse():
+            rv = PKDict()
+            for k, v in _args():
+                rv.pknested_set(k, v)
+            return rv
+
+        for k, v in _parse().items():
+            self.__field_update(k, self.__field(k), v)
+
+    def rollback(self):
+        self.__ctx = self.__updates = None
+
+    def ui_get(self, field, attr):
+        return self.__ctx.fields[field].ui_get(attr)
+
+    def __field(self, name):
+        if rv := self.__updates.get(name):
+            return rv
+        return self.__ctx.fields[name]
+
+    def __field_update(self, name, field, overrides):
+        rv = self.__updates[name] = field.new(overrides)
+        return rv

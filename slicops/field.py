@@ -111,6 +111,13 @@ class Base:
         # TODO(robnagler) verify other attrs are valid (nullable, etc.) and ui.label/widget
         _check_name(a.name)
 
+    def _check_min_max(self, value):
+        if (m := self._attrs.constraints.min) is not None and value < m:
+            return InvalidFieldValue(f"less than min={m}")
+        if (m := self._attrs.constraints.max) is not None and value > m:
+            return InvalidFieldValue(f"greater than max={m}")
+        return value
+
     def _defaults(self, *overrides):
         rv = PKDict(
             constraints=PKDict(max=None, min=None, nullable=True),
@@ -196,7 +203,7 @@ class Dict(Base):
         try:
             return PKDict(value)
         except Exception as e:
-            return InvalidFieldValue("not dict", exc=e)
+            return InvalidFieldValue("not a dict", exc=e)
 
 
 class Enum(Base):
@@ -312,7 +319,7 @@ class Float(Base):
 
     def _from_literal(self, value):
         try:
-            return float(value)
+            return self._check_min_max(float(value))
         except Exception as e:
             return InvalidFieldValue("not float", exc=e)
 
@@ -329,7 +336,7 @@ class Integer(Base):
 
     def _from_literal(self, value):
         try:
-            return int(value)
+            return self._check_min_max(int(value))
         except Exception as e:
             return InvalidFieldValue("not integer", exc=e)
 
@@ -346,7 +353,10 @@ class String(Base):
 
     def _from_literal(self, value):
         try:
-            return str(value)
+            v = str(value)
+            if isinstance((rv := self._check_min_max(len(v))), InvalidFieldValue):
+                return rv
+            return v
         except Exception as e:
             return InvalidFieldValue("not string", exc=e)
 

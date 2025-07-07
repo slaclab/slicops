@@ -17,3 +17,14 @@ def test_cases():
             pkdebug.pkdlog("{}", pkdebug.pkdexc())
             r = PKDict(error=e)
         pkjson.dump_pretty(r, filename=d.join(f"out.json"))
+
+
+def test_txn():
+    from pykern import pkdebug, pkjson, pkunit
+    from pykern.pkcollections import PKDict
+    from slicops import ctx
+
+    c = ctx.Ctx("input", path=pkunit.data_dir().join("simple.in"))
+    txn = ctx.Txn(c)
+    with pkunit.pkexcept(ValueError):
+        txn.field_set("increment", 0)

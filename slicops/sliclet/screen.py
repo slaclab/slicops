@@ -28,6 +28,7 @@ _DEVICE_DISABLE = (
     ("curve_fit_method.ui.enabled", False),
     ("curve_fit_method.ui.visible", False),
     ("plot.ui.visible", False),
+    # Useful to avoid large ctx sends
     ("plot.value", None),
     ("pv.ui.visible", False),
     ("pv.value", None),
@@ -105,8 +106,14 @@ class Screen(slicops.sliclet.Base):
                 _DEVICE_DISABLE
                 + (("camera.ui.enabled", False), ("camera.ui.visible", False))
             )
-        if txn.field_check("camera", c) is None:
+        if c is None:
+            # No device change and nothing to set
+            return
+        if txn.is_field_value_value("camera", c):
+            # Camera is the same so restore the value
             txn.field_set("camera", c)
+        else:
+            self.__device_change(txn, None)
 
     def __device_change(self, txn, camera):
         def _monitors():

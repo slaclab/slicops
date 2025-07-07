@@ -60,17 +60,17 @@ class Base:
                 if self.__locked:
                     ok = False
                     raise AssertionError("may only lock once")
-                t = None
+                txn = None
                 try:
                     self.__locked = True
-                    t = _Txn(self.__ctx)
-                    yield t
+                    txn = slicops.ctx.Txn(self.__ctx)
+                    yield txn
                 except Exception:
-                    if t:
-                        t.rollback()
+                    if txn:
+                        txn.rollback()
                     raise
                 else:
-                    t.commit(self.__ctx_update)
+                    txn.commit(self.__ctx_update)
                 finally:
                     self.__locked = False
         except Exception as e:
@@ -144,8 +144,8 @@ class Base:
 
     def __ctx_update(self, result):
         if self.__first_update:
-            result = self.__ctx.as_dict()
             self.__first_update = False
+            result = self.__ctx.as_dict()
         self.__loop.call_soon_threadsafe(self.__ctx_update_q.put_nowait, result)
 
     def _work_error(self, msg):
@@ -158,51 +158,7 @@ class Base:
 
     def _work_ctx_write(self, field_values):
         with self.lock_for_update(log_op="ctx_write") as txn:
-            for c in tuple(txn.field_set(*x) for x in field_values.items()):
+            for c in tuple(txn.field_set_via_api(*x) for x in field_values.items()):
                 if a := self.__ctx_set_handlers.get(c.field):
                     a(txn, **c)
-            # TODO(robnagler) possibly look for ctx_write with all updates
         return True
-
-
-class _Txn:
-    def __init__(self, ctx):
-        self.__ctx = ctx
-        self.__updates = PKDict(fields=PKDict())
-        self.__destroyed = False
-
-    def commit(self, update):
-        if self.__destroyed:
-            return
-        u = self.__updates
-        self.__updates
-        if u.get("fields") or u.get("ui_layout"):
-            # Only esnd if there are changes
-            update(u)
-
-    def field_check(self, name, value):
-        return self.__ctx.fields[name].value_check(value)
-
-    def field_get(self, name):
-        return self.__ctx.fields[name].value_get()
-
-    def field_names(self):
-        # might be used outside of txn
-        return tuple(self.__ctx.fields.keys())
-
-    def field_set(self, name, value):
-        p = self.__ctx.fields[name].value_get()
-        # TODO(robnagler) rollback
-        rv = PKDict(field=name, value=self.__ctx.fields[name].value_set(value))
-        rv.changed = rv.value != p
-        if rv.changed:
-            self.__updates.fields.pksetdefault1(name, PKDict).value = rv.value
-        # assumes caller will not modify value
-        return rv
-
-    def rollback(self):
-        # TODO(robnagler) need to undo all changes
-        self.__updates = None
-
-    def ui_get(self, field, attr):
-        return self.__ctx.fields[field].ui_get(attr)
