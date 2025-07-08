@@ -2,9 +2,11 @@ ctx:
   density_i:
     prototype: Float
     value: .27015
+    min/max
   density_r:
     prototype: Float
     value: -0.7
+    min/max
   iterations:
     prototype: Integer
     constraints:

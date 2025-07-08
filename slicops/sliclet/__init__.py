@@ -165,6 +165,6 @@ class Base:
     def _work_ctx_write(self, field_values):
         with self.lock_for_update(log_op="ctx_write") as txn:
             for c in tuple(txn.field_set_via_api(*x) for x in field_values.items()):
-                if a := self.__ctx_set_handlers.get(c.field):
+                if a := self.__ctx_set_handlers.get(c.field_name):
                     a(txn=txn, **c)
         return True

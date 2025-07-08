@@ -1,4 +1,4 @@
-ctx:
+fields:
   increment:
     prototype: Integer
     constraints:
@@ -32,9 +32,6 @@ ctx:
         "Method Two": method_2
         "Method Three": method_3
     value: method_1
-    ui:
-      label: Run Mode
-      widget: select
   save_button:
     prototype: Button
     ui:
