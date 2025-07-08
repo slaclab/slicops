@@ -36,7 +36,7 @@ class Simple(slicops.sliclet.Base):
             self.__write(txn)
         self.__db_watcher = _DBWatcher(self.__db_watcher_update)
 
-    #TODO(robnagler) name?
+    # TODO(robnagler) name?
     def handle_ctx_set_save_button(self, txn, **kwargs):
         self.__write(txn)
 

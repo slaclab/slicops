@@ -122,7 +122,7 @@ class Base:
                 self.__loop.call_soon_threadsafe(self.__ctx_update_q.put_nowait, None)
             except Exception:
                 pass
-            #TODO(robnagler) may not want all these to be None
+            # TODO(robnagler) may not want all these to be None
             self.__ctx_update_q = None
             self.__work_q = None
             self.__thread = None

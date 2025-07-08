@@ -18,7 +18,7 @@ class UILayout:
         r = self._recurse("row", rows, True)
         if self._errors:
             raise ValueError("\n".join(self._errors))
-        #TODO(robnagler) this is irregular. Each level should have a layout to
+        # TODO(robnagler) this is irregular. Each level should have a layout to
         # dispatch from. rows should have an attributed rows
         self.rows = r
         delattr(self, "_ctx")
