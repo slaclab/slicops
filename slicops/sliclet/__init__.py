@@ -38,9 +38,15 @@ def instance(name, queue):
 class Base:
     def __init__(self, name, ctx_update_q):
         self.__name = name
-        self.__ctx_update_q = ctx_update_q
         self.__loop = asyncio.get_event_loop()
-        self.__thread = threading.Thread(target=self._run, daemon=True)
+        self.__ctx_update_q = ctx_update_q
+        # This might fail due to errors in the yaml
+        self.__locked = False
+        self.__ctx = slicops.ctx.Ctx(self.__name)
+        self.__work_q = queue.PriorityQueue()
+        self.__lock = threading.RLock()
+        self.__ctx_set_handlers = PKDict(self.__inspect_ctx_set_handlers())
+        self.__thread = threading.Thread(target=self.__run, daemon=True)
         self.__thread.start()
 
     def ctx_write(self, field_values):
@@ -97,13 +103,6 @@ class Base:
     def session_end(self):
         self.__put_work(_Work.session_end, None)
 
-    def __init_rest(self):
-        self.__work_q = queue.PriorityQueue()
-        self.__lock = threading.RLock()
-        self.__locked = False
-        self.__ctx_set_handlers = PKDict(self.__inspect_ctx_set_handlers())
-        self.__ctx = slicops.ctx.Ctx(self.__name)
-
     def __inspect_ctx_set_handlers(self):
         for n, o in inspect.getmembers(self):
             if (m := _HANDLE_CTX_SET_RE.search(n)) and inspect.ismethod(o):
@@ -112,7 +111,7 @@ class Base:
     def __put_work(self, work, arg):
         self.__work_q.put_nowait((work, arg))
 
-    def _run(self):
+    def __run(self):
         def _destroy():
             try:
                 self.handle_destroy()
@@ -129,7 +128,6 @@ class Base:
             self.__lock = None
 
         try:
-            self.__init_rest()
             with self.lock_for_update(_first_time=True) as txn:
                 self.handle_start(txn)
             while True:

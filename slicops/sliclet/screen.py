@@ -6,12 +6,15 @@
 
 from pykern.pkcollections import PKDict
 from pykern.pkdebug import pkdc, pkdexc, pkdlog, pkdp
-import slicops.sliclet
+import enum
 import pykern.pkconfig
 import pykern.util
+import queue
 import slicops.device
 import slicops.device_db
 import slicops.plot
+import slicops.sliclet
+import threading
 
 _DEVICE_TYPE = "PROF"
 
@@ -81,13 +84,13 @@ class Screen(slicops.sliclet.Base):
 
     def handle_ctx_set_single_button(self, txn, **kwargs):
         self.__single_button = True
-        self.__set_acquire(txn, 1)
+        self.__set_acquire(txn, True)
 
     def handle_ctx_set_start_button(self, txn, **kwargs):
-        self.__set_acquire(txn, 1)
+        self.__set_acquire(txn, True)
 
     def handle_ctx_set_stop_button(self, txn, **kwargs):
-        self.__set_acquire(txn, 0)
+        self.__set_acquire(txn, False)
 
     def handle_start(self, txn):
         txn.multi_set(("beam_path.constraints.choices", slicops.device_db.beam_paths()))
@@ -168,7 +171,7 @@ class Screen(slicops.sliclet.Base):
             m.destroy()
         self.__monitors = PKDict()
         try:
-            self.__set_acquire(0)
+            self.__set_acquire(False)
         except Exception:
             pass
         try:
@@ -178,28 +181,29 @@ class Screen(slicops.sliclet.Base):
         self.__device = None
 
     def __handle_acquire(self, acquire):
-        pkdp(acquire)
         with self.lock_for_update() as txn:
             n = not acquire
             # Leave plot alone
             txn.multi_set(
                 ("single_button.ui.enabled", n),
                 ("start_button.ui.enabled", n),
-                ("stop_button.ui.enabled", acquire and not self.__single_button),
+                (
+                    "stop_button.ui.enabled",
+                    acquire and not self.__single_button,
+                ),
             )
 
     def __handle_image(self, image):
         with self.lock_for_update() as txn:
             if self.__update_plot(txn) and self.__single_button:
                 self.__single_button = False
-                self.__set_acquire(txn, 0)
+                self.__set_acquire(txn, False)
 
     def __set_acquire(self, txn, acquire):
-        pkdp(acquire)
         if not self.__device:
             # buttons already disabled
             return
-        v = self.__monitors.acquire.value
+        v = self.__monitors.acquire.prev_value()
         if v is not None and v == acquire:
             # No button disable since nothing changed
             return
@@ -216,19 +220,24 @@ class Screen(slicops.sliclet.Base):
     def __update_plot(self, txn):
         if not self.__device:
             return False
-        if (i := self.__monitors.image.value) is None or not i.size:
+        if (i := self.__monitors.image.prev_value()) is None or not i.size:
             return False
-        if not txn.ui_get("plot", "enabled"):
+        if not txn.ui_get("plot", "visible"):
             txn.multi_set(_PLOT_ENABLE)
         txn.field_set(
             "plot",
-            v := slicops.plot.fit_image(i, txn.field_get("curve_fit_method")),
+            slicops.plot.fit_image(i, txn.field_get("curve_fit_method")),
         )
-        pkdp(list(v.keys()))
         return True
 
 
 CLASS = Screen
+
+
+class _Change(enum.IntEnum):
+    # sort in priority value order, lowest number is highest priority
+    destroy = 0
+    update = 1
 
 
 class _Monitor:
@@ -237,26 +246,63 @@ class _Monitor:
         self.__name = str(accessor)
         self.__destroyed = False
         self.__handler = handler
-        self.value = None
+        self.__value = None
+        self.__change_q = queue.PriorityQueue()
+        self.__lock = threading.Lock()
+        self.__thread = threading.Thread(
+            target=self.__dispatch,
+            daemon=True,
+            # Reduce the places where locking needs to occur
+            args=(self.__name, self.__change_q, self.__lock, self.__handler),
+        )
+        self.__thread.start()
 
     def destroy(self):
-        self.__destroyed = True
-        self.__handler = None
-        self.value = None
+        with self.__lock:
+            if self.__destroyed:
+                return
+            self.__destroyed = True
+            self.__change_q.put_nowait((_Change.destroy, None))
+            # cause callers to crash
+            try:
+                delattr(self, "value")
+            except Exception:
+                pass
+
+    def prev_value(self):
+        with self.__lock:
+            if self.__destroyed:
+                return
+            return self.__value
 
     def __call__(self, change):
-        if self.__destroyed:
-            return
-        if e := change.get("error"):
-            pkdlog("error={} on {}", e, change.get("accessor"))
-            return
-        if (v := change.get("value")) is None:
-            return
-        self.value = v
+        with self.__lock:
+            if self.__destroyed:
+                return
+            if e := change.get("error"):
+                pkdlog("error={} on {}", e, change.get("accessor"))
+                return
+            if (v := change.get("value")) is None:
+                return
+            self.__change_q.put_nowait((_Change.update, v))
+
+    def __dispatch(self, name, change_q, lock, handler):
         try:
-            self.__handler(v)
+            while True:
+                _, v = change_q.get()
+                with lock:
+                    if self.__destroyed:
+                        return
+                    self.__value = v
+                try:
+                    handler(v)
+                except Exception as e:
+                    # Touches self.__name which should not be modified
+                    pkdlog("handler error={} accessor={} stack={}", e, name, pkdexc())
         except Exception as e:
-            pkdlog("handler error={} accessor={} stack={}", e, self.__name, pkdexc())
+            pkdlog("error={} accessor={} stack={}", e, name, pkdexc())
+        finally:
+            self.destroy()
 
 
 def _init():

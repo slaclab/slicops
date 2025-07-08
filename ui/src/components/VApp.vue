@@ -39,6 +39,8 @@
 
  const serverAction = (field, value) => {
      errorMessage.value = '';
+     //TODO(robnagler): need "voting" between two values, one from the ui and one
+     //    from the ctx. ctx should not be updated locally, only remotely by server
      ctx.value[field].ui.enabled = false;
      apiService.call(
          'ui_ctx_write',
@@ -50,13 +52,10 @@
              },
          },
          (result) => {
-//TODO(robnagler): need "voting" between two values, one from the ui and one
-//    from the ctx. ctx should not be updated locally, only remotely by server
-             ctx.value[field].ui.enabled = true;
+             return;
          },
          (err) => {
              handleError(err);
-             ctx.value[field].ui.enabled = true;
          }
      );
  };
