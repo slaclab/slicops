@@ -52,10 +52,8 @@ class Base:
 
         self._attrs = self.__merge(_copy(), overrides)
         self._assert_attrs()
-        v = self.value_check(self._attrs.value)
-        if isinstance(v, InvalidFieldValue):
-            raise ValueError(v)
-        self._attrs.value = v
+        # Validate the value now that constaints are checked
+        self.value_set(self._attrs.value)
 
     def as_dict(self):
         return PKDict((k, copy.deepcopy(self._attrs[k])) for k in self.__TOP_ATTRS)
@@ -77,7 +75,7 @@ class Base:
                 return v
             rv = v
         rv.kwargs.field_name = self._attrs.name
-        return v
+        return rv
 
     def value_get(self):
         return self._attrs.value
@@ -110,6 +108,8 @@ class Base:
             raise ValueError(f"incorrect top level attrs={sorted(a.keys())}")
         # TODO(robnagler) verify other attrs are valid (nullable, etc.) and ui.label/widget
         _check_name(a.name)
+        if a.ui.label is None:
+            a.ui.label = a.name.replace("_", " ").title()
 
     def _check_min_max(self, value):
         if (m := self._attrs.constraints.min) is not None and value < m:

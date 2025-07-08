@@ -3,14 +3,10 @@ fields:
     prototype: Enum
     constraints:
       choices: []
-    ui:
-      label: Beam Path
   camera:
     prototype: Enum
     constraints:
       choices: []
-    ui:
-      label: Camera
   color_map:
     prototype: Enum
     constraints:
@@ -20,8 +16,6 @@ fields:
         - Inferno
         - Turbo
         - Viridis
-    ui:
-      label: Color Map
     value: Inferno
   curve_fit_method:
     prototype: Enum
@@ -29,13 +23,10 @@ fields:
       choices:
         Gaussian: gaussian
         "Super Gaussian": super_gaussian
-    ui:
-      label: Curve Fit Method
     value: gaussian
   plot:
     prototype: Dict
     ui:
-      label: Plot
       widget: heatmap_with_lineouts
       writable: false
   pv:

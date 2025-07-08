@@ -1,6 +1,6 @@
 ctx:
   density_i:
-    prototype: Complex
+    prototype: Float
     value: .27015
   density_r:
     prototype: Float

@@ -134,7 +134,7 @@ class Txn:
                     "field={} is not writable value={}", name, value
                 )
             n = self.__field_update(name, o, PKDict(value=value))
-            rv = PKDict(field=name, value=n.value_get(), old_value=o.value_get())
+            rv = PKDict(field_name=name, value=n.value_get(), old_value=o.value_get())
             # TODO(robnagler) optimize, similar to field_set
             return rv.pkupdate(changed=rv.value != rv.old_value)
         except Exception as e:

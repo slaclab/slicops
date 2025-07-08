@@ -1,4 +1,4 @@
-fields:
+ctx:
   increment:
     prototype: Integer
     constraints:
@@ -9,8 +9,6 @@ fields:
     value: 5
   divisor:
     prototype: Float
-    ui:
-      label: Divisor
   output1:
     prototype: String
     ui:

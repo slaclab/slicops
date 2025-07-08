@@ -61,7 +61,7 @@ class Base:
     def handle_destroy(self):
         pass
 
-    def handle_start(self):
+    def handle_start(self, txn):
         pass
 
     @contextlib.contextmanager
@@ -122,6 +122,7 @@ class Base:
                 self.__loop.call_soon_threadsafe(self.__ctx_update_q.put_nowait, None)
             except Exception:
                 pass
+            #TODO(robnagler) may not want all these to be None
             self.__ctx_update_q = None
             self.__work_q = None
             self.__thread = None
@@ -129,7 +130,7 @@ class Base:
 
         try:
             with self.lock_for_update(_first_time=True) as txn:
-                self.handle_start(txn)
+                self.handle_start(txn=txn)
             while True:
                 w = a = None
                 try:
@@ -139,11 +140,14 @@ class Base:
                 except Exception as e:
                     pkdlog("{}={} error={} stack={}", w, a, e, pkdexc())
                     if w == _Work.error:
-                        pkdlog("error during error handling")
+                        pkdlog("error during error handling error={}", e)
                         return
                     self.__put_work(_Work.error, f"error={e} op={w}")
         except Exception as e:
-            pkdlog("error={} stack={}", e, pkdexc())
+            try:
+                pkdlog("error={} stack={}", e, pkdexc())
+            except Exception:
+                pass
         finally:
             _destroy()
 
@@ -162,5 +166,5 @@ class Base:
         with self.lock_for_update(log_op="ctx_write") as txn:
             for c in tuple(txn.field_set_via_api(*x) for x in field_values.items()):
                 if a := self.__ctx_set_handlers.get(c.field):
-                    a(txn, **c)
+                    a(txn=txn, **c)
         return True

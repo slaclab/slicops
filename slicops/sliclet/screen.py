@@ -171,13 +171,17 @@ class Screen(slicops.sliclet.Base):
             m.destroy()
         self.__monitors = PKDict()
         try:
-            self.__set_acquire(False)
+            n = self.__device.device_name
         except Exception:
-            pass
+            n = None
+        try:
+            self.__set_acquire(False)
+        except Exception as e:
+            pkdlog("set_acquire(False) device={} error={}", n, e)
         try:
             self.__device.destroy()
-        except Exception:
-            pass
+        except Exception as e:
+            pkdlog("destroy device={} error={}", n, e)
         self.__device = None
 
     def __handle_acquire(self, acquire):
@@ -192,11 +196,12 @@ class Screen(slicops.sliclet.Base):
                     acquire and not self.__single_button,
                 ),
             )
+            if not acquire:
+                self.__single_button = False
 
     def __handle_image(self, image):
         with self.lock_for_update() as txn:
             if self.__update_plot(txn) and self.__single_button:
-                self.__single_button = False
                 self.__set_acquire(txn, False)
 
     def __set_acquire(self, txn, acquire):
