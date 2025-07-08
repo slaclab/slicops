@@ -257,15 +257,16 @@
      select('.slicops-y-axis').call(d3.axisRight(yZoomScale).ticks(5));
      select('.slicops-y-axis-grid').call(d3.axisRight(yZoomScale).ticks(5).tickSize(-(canvasWidth.value + lineoutSize.value)));
 
-     const xLineout = d.x.lineout;
-     const yLineout = d.y.lineout;
+     const xLineout = []; //d.x.lineout;
+     const yLineout = []; //d.y.lineout;
 
      yxScale
          .domain([
              d3.min(yLineout),
              Math.max(
                  d3.max(yLineout),
-                 d3.max(d.y.fit.fit_line),
+                 //d3.max(d.y.fit.fit_line),
+                 0,
              ),
          ])
          .range([lineoutSize.value - lineoutPad, 0]);
@@ -276,13 +277,15 @@
              d3.min(xLineout),
              Math.max(
                  d3.max(xLineout),
-                 d3.max(d.x.fit.fit_line),
+                 //d3.max(d.x.fit.fit_line),
+                 0,
              ),
          ])
          .range([lineoutSize.value - lineoutPad, 0]);
      select('.slicops-xy-axis').call(d3.axisLeft(xyScale).ticks(5).tickFormat(d3.format('.1e')));
 
 
+     /*
      const xd = axisDomain('x');
      // offset by half pixel width
      const xoff = (xd[1] - xd[0]) / d.raw_pixels[0].length / 2;
@@ -303,8 +306,10 @@
                      .y((d) => xyScale(d[1]));
      select('.slicops-x-overlay path.slicops-x-path').datum(xdata).attr('d', xline);
      select('.slicops-x-overlay path.slicops-x-fit-path').datum(xdata2).attr('d', xline);
+     */
 
      //TODO(pjm): consolidate with x above
+     /*
      const yd = axisDomain('y');
      const yoff = (yd[1] - yd[0]) / d.raw_pixels.length / 2;
      const ydata = yLineout.map((v, idx) => {
@@ -324,6 +329,7 @@
                      .y((d) => yZoomScale(d[0] + yoff));
      select('.slicops-y-overlay path.slicops-y-path').datum(ydata).attr('d', yline);
      select('.slicops-y-overlay path.slicops-y-fit-path').datum(ydata2).attr('d', yline);
+     */
 
      const xZoomDomain = xZoomScale.domain();
      const xDomain = xScale.domain();

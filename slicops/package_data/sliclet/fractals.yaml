@@ -43,6 +43,24 @@ fields:
       min: 10
       max: 1000
     value: 800
+  plot:
+    prototype: Dict
+    ui:
+      widget: heatmap
+      writable: false
+      visible: false
+  color_map:
+    prototype: Enum
+    constraints:
+      choices:
+        - Cividis
+        - Blues
+        - Inferno
+        - Turbo
+        - Viridis
+    value: Inferno
+    ui:
+      visible: false
 
 ui_layout:
   - cols:
@@ -59,3 +77,5 @@ ui_layout:
             - cell_group:
               - save
               - revert
+      - plot
+      - color_map
