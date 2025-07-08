@@ -64,7 +64,7 @@ fields:
 
 ui_layout:
   - cols:
-    - css: col-lg-6 offset-lg-3 col-xl-4 offset-xl-4
+    - css: col-lg-5 offset-lg-1
       rows:
       - mode
       - density_i
@@ -77,5 +77,7 @@ ui_layout:
             - cell_group:
               - save
               - revert
-      - plot
+    - css: col-lg-6 col-xxl-5
+      rows:
       - color_map
+      - plot
