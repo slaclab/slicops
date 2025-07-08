@@ -31,6 +31,7 @@ fields:
   message:
     prototype: String
     ui:
+      label: Fractal Status
       widget: static
       writable: false
   plot_file:
@@ -91,3 +92,4 @@ ui_layout:
       rows:
       - color_map
       - plot
+      - message

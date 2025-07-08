@@ -53,6 +53,7 @@ class Simple(slicops.sliclet.Base):
 
     def handle_ctx_set_revert(self, txn, **kwargs):
         # TODO(robnagler) the read and the ctx_put could happen outside the context
+        self.__db_cache = PKDict()
         self.__read_db(txn)
 
     def __db_watcher_update(self):
