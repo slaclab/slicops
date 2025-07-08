@@ -8,6 +8,7 @@ from pykern.pkdebug import pkdc, pkdlog, pkdp
 import datetime
 import numpy
 import pykern.pkcli
+import random
 import slicops.pkcli.simple
 import time
 
@@ -58,10 +59,11 @@ def _julia(c, num_iterations, size):
     iterations = numpy.zeros(Z.shape, dtype=int)
     # Mask for points that haven't diverged yet
     diverged = numpy.zeros(Z.shape, dtype=bool)
+    random_perturbation = random.random() * 1e-3
 
     for i in range(num_iterations):
         # Apply the Julia set formula only to non-diverged points
-        Z[~diverged] = Z[~diverged]**2 + c
+        Z[~diverged] = Z[~diverged]**2 + c + random_perturbation
 
         # Check for divergence (magnitude > 2)
         current_diverged = (numpy.abs(Z) > 2) & (~diverged)
@@ -86,13 +88,14 @@ def _mandelbrot(size, iterations):
 
     Z = numpy.zeros_like(C, dtype=numpy.complex128)
     M = numpy.full(C.shape, iterations, dtype=int)
+    random_perturbation = random.random() * 1e-2
 
     for i in range(iterations):
         # Find points that haven't escaped
         mask = numpy.abs(Z) <= 2.0
 
         # Update Z for non-escaped points
-        Z[mask] = Z[mask] * Z[mask] + C[mask]
+        Z[mask] = (1 + random_perturbation) * Z[mask] * Z[mask] + C[mask] + random_perturbation
 
         # Update escape times for newly escaped points
         escaped_mask = (numpy.abs(Z) > 2.0) & mask
