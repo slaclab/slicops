@@ -29,8 +29,6 @@ async def test_basic():
         r = await s.ctx_field_set(save=None)
         # save button
         await s.ctx_update()
-        # db_watcher read
-        await s.ctx_update()
         pkunit.pkeq(1.0, simple.read("simple").divisor)
         # no update client side
         simple.write("simple", "divisor=3")
