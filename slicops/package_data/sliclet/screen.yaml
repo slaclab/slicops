@@ -34,6 +34,7 @@ fields:
     ui:
       label: PV
       writable: false
+      widget: static
   single_button:
     prototype: Button
     ui:
