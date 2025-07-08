@@ -1,0 +1,49 @@
+ctx:
+  density_i:
+    prototype: Complex
+    value: .27015
+  density_r:
+    prototype: Float
+    value: -0.7
+  iterations:
+    prototype: Integer
+    constraints:
+      min: 1
+      max: 1000
+    value: 100
+  mode:
+    prototype: Enum
+    constraints:
+      choices:
+        - Julia
+        - Mandelbrot
+    value: Julia
+  revert:
+    prototype: Button
+    ui:
+      css_kind: danger
+  save:
+    prototype: Button
+    ui:
+      css_kind: primary
+  size:
+    prototype: Integer
+    constraints:
+      min: 10
+      max: 1000
+    value: 800
+
+ui_layout:
+  - cols:
+    - css: col-lg-6 offset-lg-3 col-xl-4 offset-xl-4
+      rows:
+      - mode
+      - density
+      - iterations
+      - size
+      - cols:
+        - css: col-sm-6
+          rows:
+            - cell_group:
+              - save_button
+              - revert_button
