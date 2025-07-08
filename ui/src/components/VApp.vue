@@ -85,13 +85,14 @@
          // layout is always a full update
          ui_layout.value = result.ui_layout;
      }
+     result.fields = lessReactiveCtx(result.fields)
      if (! ctx.value) {
          ctx.value = result.fields;
          ctx.value.serverAction = serverAction;
          return;
      }
      const c = ctx.value;
-     for (const [f, r] of Object.entries(lessReactiveCtx(result.fields))) {
+     for (const [f, r] of Object.entries(result.fields)) {
          Object.assign(c[f], r);
      }
  }

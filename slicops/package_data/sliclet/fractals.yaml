@@ -28,6 +28,16 @@ fields:
         - Julia
         - Mandelbrot
     value: Julia
+  message:
+    prototype: String
+    ui:
+      widget: static
+      writable: false
+  plot_file:
+    prototype: String
+    ui:
+      widget: static
+      writable: false
   #TODO(robnagler) need a "base.yaml" or something
   revert:
     prototype: Button

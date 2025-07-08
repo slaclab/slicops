@@ -9,6 +9,7 @@ from pykern.pkdebug import pkdc, pkdexc, pkdlog, pkdp
 import slicops.sliclet
 import pykern.pkio
 import slicops.pkcli.simple
+import slicops.pkcli.fractals
 import watchdog.events
 import watchdog.observers
 
@@ -36,10 +37,15 @@ class Simple(slicops.sliclet.Base):
     def handle_start(self, txn):
         # TODO(robnagler) need a separate init for the instance before start
         self.__base = self.__class__.__name__.lower()
+        self.__db_cache = PKDict()
         if not self.__read_db(txn):
             self.__write(txn)
         self.__db_watcher = _DBWatcher(
-            slicops.pkcli.simple.path(self.__base), self.__db_watcher_update
+            (
+                slicops.pkcli.simple.path(self.__base),
+                slicops.pkcli.fractals.path(),
+            ),
+            self.__db_watcher_update,
         )
 
     def handle_ctx_set_save(self, txn, **kwargs):
@@ -59,20 +65,42 @@ class Simple(slicops.sliclet.Base):
     def __read_db(self, txn):
         def _keys():
             for k in txn.field_names():
-                if txn.ui_get(k, "widget") != "button":
+                if txn.ui_get(k, "widget") not in (
+                    "button",
+                    "heatmap",
+                    "heatmap_with_lineouts",
+                ):
                     yield k
 
         if not (r := slicops.pkcli.simple.read(self.__base)):
             return False
         for k in _keys():
-            if k in r:
+            if k in r and r[k] != self.__db_cache.get(k):
                 txn.field_set(k, r[k])
+        self.__db_cache = r
+        if "plot_file" in txn.field_names() and "plot" in txn.field_names():
+            import numpy
+
+            txn.multi_set(("plot.ui.visible", False))
+            txn.field_set("plot", PKDict(raw_pixels=None))
+            try:
+                txn.field_set(
+                    "plot",
+                    PKDict(raw_pixels=numpy.load(txn.field_get("plot_file"))),
+                )
+                txn.multi_set(("plot.ui.visible", True))
+            except Exception as e:
+                pkdlog("{} {}", e, pkdexc())
         return True
 
     def __write(self, txn):
         def _keys():
             for k in txn.field_names():
-                if txn.ui_get(k, "writable") and txn.ui_get(k, "widget") != "button":
+                if txn.ui_get(k, "writable") and txn.ui_get(k, "widget") not in (
+                    "button",
+                    "heatmap",
+                    "heatmap_with_lineouts",
+                ):
                     yield k
 
         def _values():
@@ -81,24 +109,25 @@ class Simple(slicops.sliclet.Base):
 
         # TODO(robnagler) work item maybe should happen outside handle_ctx_set
         #    work_queue is a separate thing that could be queued
-        slicops.pkcli.simple.write(self.__base, PKDict(_values()))
+        self.__db_cache = PKDict(_values())
+        slicops.pkcli.simple.write(self.__base, self.__db_cache)
 
 
 CLASS = Simple
 
 
 class _DBWatcher(watchdog.events.FileSystemEventHandler):
-    def __init__(self, path, update_op):
+    def __init__(self, paths, update_op):
         super().__init__()
         self.__update_op = update_op
-        self.__path = str(path)
+        self.__paths = str(paths)
         self.__observer = watchdog.observers.Observer()
-        self.__observer.schedule(self, path.dirname, recursive=False)
+        self.__observer.schedule(self, paths[0].dirname, recursive=False)
         self.__observer.start()
 
     def on_any_event(self, event):
         if event.event_type in _EVENT_TYPES and (
-            self.__path == event.src_path or self.__path == event.dest_path
+            event.src_path in self.__paths or event.dest_path in self.__paths
         ):
             self.__update_op()
 

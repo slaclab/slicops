@@ -25,15 +25,15 @@ async def test_basic():
         r = await s.ctx_update()
         pkunit.pkeq(["divisor"], list(r.fields.keys()))
         pkunit.pkeq(1.0, r.fields.divisor.value)
-        pkunit.pkeq(None, simple.read().divisor)
+        pkunit.pkeq(None, simple.read("simple").divisor)
         r = await s.ctx_field_set(save=None)
         # save button
         await s.ctx_update()
         # db_watcher read
         await s.ctx_update()
-        pkunit.pkeq(1.0, simple.read().divisor)
+        pkunit.pkeq(1.0, simple.read("simple").divisor)
         # no update client side
-        simple.write("divisor=3")
+        simple.write("simple", "divisor=3")
         r = await s.ctx_update()
         pkunit.pkeq(3.0, r.fields.divisor.value)
         await s.ctx_field_set(run_mode="method_2")
@@ -41,4 +41,4 @@ async def test_basic():
         await s.ctx_field_set(revert=None)
         await s.ctx_update()
         # no update, bc no change
-        pkunit.pkeq("method_1", simple.read().run_mode)
+        pkunit.pkeq("method_1", simple.read("simple").run_mode)

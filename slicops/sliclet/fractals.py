@@ -23,11 +23,13 @@ class Fractals(slicops.sliclet.simple.Simple):
             ("density_r.ui.visible", j),
         )
 
-    def handle_ctx_set_save(self, txn, **kwargs):
+    def x_handle_ctx_set_save(self, txn, **kwargs):
         super().handle_ctx_set_save(txn, **kwargs)
         self.__update_plot(txn)
 
-    def __generate_mandelbrot(self, width, height, x_min, x_max, y_min, y_max, max_iterations):
+    def __generate_mandelbrot(
+        self, width, height, x_min, x_max, y_min, y_max, max_iterations
+    ):
         # Create a grid of complex numbers
         x = np.linspace(x_min, x_max, width)
         y = np.linspace(y_min, y_max, height)
@@ -55,11 +57,17 @@ class Fractals(slicops.sliclet.simple.Simple):
         y_min, y_max = -1.5, 1.5
         max_iterations = 3
         # Generate the fractal
-        image = self.__generate_mandelbrot(width, height, x_min, x_max, y_min, y_max, max_iterations)
+        image = pkdp(
+            self.__generate_mandelbrot(
+                width, height, x_min, x_max, y_min, y_max, max_iterations
+            )
+        )
         txn.field_set(
             "plot",
-            PKDict(
-                raw_pixels=image,
+            pkdp(
+                PKDict(
+                    raw_pixels=image,
+                )
             ),
         )
 
