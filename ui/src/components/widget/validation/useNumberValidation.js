@@ -7,6 +7,7 @@ import { useValidation } from '@/components/widget/validation/useValidation.js'
 export function useNumberValidation(field) {
     const NUMBER_REGEXP = /^\s*(\-|\+)?(\d+|(\d*(\.\d*)))([eE][+-]?\d+)?\s*$/;
     const { isInvalid, parsedValue, rawValue } = useValidation(field);
+    const isNumber = (value) => typeof value === 'number';
 
     watch(rawValue, () => {
         if (isInvalid.value) {
@@ -23,16 +24,18 @@ export function useNumberValidation(field) {
         if (field.widget === 'integer') {
             parsedValue.value = parseInt(parsedValue.value);
         }
-        if ('min' in field) {
-            if (parsedValue.value < field.min) {
-                isInvalid.value = true;
-                return;
+        if (field.constraints) {
+            if (isNumber(field.constraints.min)) {
+                if (parsedValue.value < field.constraints.min) {
+                    isInvalid.value = true;
+                    return;
+                }
             }
-        }
-        if ('max' in field) {
-            if (parsedValue.value > field.max) {
-                isInvalid.value = true;
-                return;
+            if (isNumber(field.constraints.max)) {
+                if (parsedValue.value > field.constraints.max) {
+                    isInvalid.value = true;
+                    return;
+                }
             }
         }
     });

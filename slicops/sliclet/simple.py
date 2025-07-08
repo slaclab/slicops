@@ -81,14 +81,14 @@ class Simple(slicops.sliclet.Base):
         if "plot_file" in txn.field_names() and "plot" in txn.field_names():
             import numpy
 
-            txn.multi_set(("plot.ui.visible", False))
+            txn.multi_set((("plot.ui.visible", False), ("color_map.ui.visible", False)))
             txn.field_set("plot", PKDict(raw_pixels=None))
             try:
                 txn.field_set(
                     "plot",
                     PKDict(raw_pixels=numpy.load(txn.field_get("plot_file"))),
                 )
-                txn.multi_set(("plot.ui.visible", True))
+                txn.multi_set((("plot.ui.visible", True), ("color_map.ui.visible", True)))
             except Exception as e:
                 pkdlog("{} {}", e, pkdexc())
         return True
