@@ -11,6 +11,7 @@
             v-model="ctx[field].value"
             class="form-control form-control-sm form-control-plaintext"
             :id="field"
+            readonly
         />
     </div>
 </template>
