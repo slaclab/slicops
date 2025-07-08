@@ -43,6 +43,9 @@ _DEVICE_ENABLE = (
     ("single_button.ui.visible", True),
     ("start_button.ui.visible", True),
     ("stop_button.ui.visible", True),
+    ("single_button.ui.enabled", True),
+    ("stop_button.ui.enabled", False),
+    ("start_button.ui.enabled", True),
 )
 
 _PLOT_ENABLE = (
@@ -175,13 +178,14 @@ class Screen(slicops.sliclet.Base):
         self.__device = None
 
     def __handle_acquire(self, acquire):
+        pkdp(acquire)
         with self.lock_for_update() as txn:
             n = not acquire
             # Leave plot alone
             txn.multi_set(
                 ("single_button.ui.enabled", n),
-                ("stop_button.ui.enabled", n),
-                ("stop_button.ui.enabled", acquire),
+                ("start_button.ui.enabled", n),
+                ("stop_button.ui.enabled", acquire and not self.__single_button),
             )
 
     def __handle_image(self, image):
@@ -191,8 +195,9 @@ class Screen(slicops.sliclet.Base):
                 self.__set_acquire(txn, 0)
 
     def __set_acquire(self, txn, acquire):
+        pkdp(acquire)
         if not self.__device:
-            txn.multi_set(_BUTTONS_DISABLE)
+            # buttons already disabled
             return
         v = self.__monitors.acquire.value
         if v is not None and v == acquire:
@@ -217,8 +222,9 @@ class Screen(slicops.sliclet.Base):
             txn.multi_set(_PLOT_ENABLE)
         txn.field_set(
             "plot",
-            slicops.plot.fit_image(i, txn.field_get("curve_fit_method")),
+            v := slicops.plot.fit_image(i, txn.field_get("curve_fit_method")),
         )
+        pkdp(list(v.keys()))
         return True
 
 

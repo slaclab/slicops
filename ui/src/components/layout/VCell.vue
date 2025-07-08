@@ -31,9 +31,9 @@
         </div>
         <div v-else-if="ctx[field].ui.widget == 'heatmap_with_lineouts'">
             <VHeatmapWithLineouts
-                v-if="ctx.image"
-                :colorMap="ctx.color_map.value"
-                :plot="ctx.image"
+                v-if="ctx[field].ui.visible"
+                :colorMap="ctx['color_map'].value"
+                :plot="ctx[field].value"
             />
         </div>
     </div>

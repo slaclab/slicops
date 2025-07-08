@@ -18,6 +18,7 @@ class Setup(pykern.api.unit_util.Setup):
     async def ctx_update(self):
         from pykern import pkunit
 
+        self.__caller()
         r = await self.__update_q.get()
         self.__update_q.task_done()
         if r is None:
@@ -28,6 +29,7 @@ class Setup(pykern.api.unit_util.Setup):
         from pykern.pkcollections import PKDict
         from pykern import pkdebug
 
+        self.__caller()
         await self.client.call_api("ui_ctx_write", PKDict(field_values=PKDict(kwargs)))
 
     async def __aenter__(self):
@@ -60,6 +62,15 @@ class Setup(pykern.api.unit_util.Setup):
 
         service.Commands().ui_api()
 
+    def __caller(self):
+        from pykern import pkdebug, pkinspect
+        import inspect, re
+
+        c = str(pkinspect.caller())
+        if m := re.search("^.*/(.+)", c):
+            c = m.group(1)
+        pkdebug.pkdlog("{} op={}", c, pkinspect.caller_func_name())
+
     async def __subscribe(self):
         from pykern import pkdebug
         from pykern.pkcollections import PKDict
@@ -79,3 +90,5 @@ class Setup(pykern.api.unit_util.Setup):
         except Exception as e:
             pkdebug.pkdlog("error={} stack={}", e, pkdebug.pkdexc())
             raise
+        finally:
+            pkdebug.pkdlog("ui_ctx_update subscription ended normally")

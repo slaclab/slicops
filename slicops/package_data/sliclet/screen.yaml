@@ -56,7 +56,7 @@ fields:
   stop_button:
     prototype: Button
     ui:
-      css_kind: dnager
+      css_kind: danger
       label: Stop
 
 ui_layout:

@@ -11,6 +11,17 @@ import pytest
 async def test_basic():
     from slicops import unit_util
 
+    async def _buttons(s, expect, msg):
+        from pykern import pkunit, pkdebug
+
+        rv = await s.ctx_update()
+        for k, a in zip(("start", "stop", "single"), expect):
+            x = f"{k}_button.ui.enabled"
+            pkunit.pkeq(
+                rv.fields.pkunchecked_nested_get(x), a, "field={} expect={}", x, msg
+            )
+        return rv
+
     async with unit_util.Setup("screen") as s:
         from pykern import pkunit, pkdebug
         import asyncio
@@ -19,12 +30,10 @@ async def test_basic():
         pkunit.pkeq("DEV_BEAM_PATH", r.fields.beam_path.value)
         pkunit.pkeq("DEV_CAMERA", r.fields.camera.value)
         await s.ctx_field_set(start_button=None)
-        # button update
-        r = await s.ctx_update()
-        pkdebug.pkdp(list(r.fields.keys()))
+        await _buttons(s, (False, False, False), "all disabled after start")
+        await _buttons(s, (False, True, False), "acquire should fire")
         # plot comes back
         r = await s.ctx_update()
-        pkdebug.pkdp(list(r.fields.keys()))
         # TODO(robnagler) need to test acquire is set around when the plot comes back
         # mock epics should handle this
         p = r.fields.plot.value
@@ -38,11 +47,10 @@ async def test_basic():
             curve_fit_method="super_gaussian",
             stop_button=None,
         )
-        r = await s.ctx_update()
-        pkdebug.pkdp(list(r.fields.keys()))
-        r = await s.ctx_update()
-        pkdebug.pkdp(list(r.fields.keys()))
+        r = await _buttons(s, (False, False, False), "all disabled after stop")
         pkunit.pkeq(None, r.fields.camera.value)
+        # there's no device so buttons on not visible
+        pkunit.pkeq(False, r.fields.start_button.ui.visible)
         with pkunit.pkexcept("unknown choice"):
             await s.ctx_field_set(camera="DEV_CAMERA")
         # TODO(robnagler) better error handling await _put(ux, "camera", "DEV_CAMERA", Exception)

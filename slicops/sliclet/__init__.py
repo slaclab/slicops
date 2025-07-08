@@ -20,10 +20,10 @@ import threading
 
 
 class _Work(enum.IntEnum):
-    # sort in value order
-    error = (1,)
-    session_end = (2,)
-    ctx_write = (3,)
+    # sort in priority value order, lowest number is highest priority
+    error = 1
+    session_end = 2
+    ctx_write = 3
 
 
 _HANDLE_CTX_SET_RE = re.compile("^handle_ctx_set_(\w+)$")
