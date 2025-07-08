@@ -175,5 +175,5 @@ class Txn:
         return self.__ctx.fields[name]
 
     def __field_update(self, name, field, overrides):
-        rv = self.__updates[name] = field.new(copy.deepcopy(overrides))
+        rv = self.__updates[name] = field.renew(copy.deepcopy(overrides))
         return rv

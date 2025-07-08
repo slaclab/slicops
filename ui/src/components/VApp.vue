@@ -41,7 +41,7 @@
      errorMessage.value = '';
      //TODO(robnagler): need "voting" between two values, one from the ui and one
      //    from the ctx. ctx should not be updated locally, only remotely by server
-     ctx.value[field].ui.enabled = false;
+     // ctx.value[field].ui.enabled = false;
      apiService.call(
          'ui_ctx_write',
          {

@@ -59,6 +59,15 @@ class Base:
         return PKDict((k, copy.deepcopy(self._attrs[k])) for k in self.__TOP_ATTRS)
 
     def new(self, overrides):
+        # New instances do not inherit labels
+        l = overrides.pkunchecked_nested_get("ui.label")
+        rv = self.__class__(self, overrides)
+        if not l:
+            rv._attrs.ui.label = rv._attrs.name.replace("_", " ").title()
+        return rv
+
+    def renew(self, overrides):
+        # Updating an instances inherit everything
         return self.__class__(self, overrides)
 
     def ui_get(self, name):
@@ -108,8 +117,6 @@ class Base:
             raise ValueError(f"incorrect top level attrs={sorted(a.keys())}")
         # TODO(robnagler) verify other attrs are valid (nullable, etc.) and ui.label/widget
         _check_name(a.name)
-        if a.ui.label is None:
-            a.ui.label = a.name.replace("_", " ").title()
 
     def _check_min_max(self, value):
         if (m := self._attrs.constraints.min) is not None and value < m:
