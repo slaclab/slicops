@@ -19,11 +19,10 @@ fields:
     prototype: output1
     ui:
       label: 'Output #2'
-  revert_button:
+  revert:
     prototype: Button
     ui:
       css_kind: danger
-      label: Revert
   run_mode:
     prototype: Enum
     constraints:
@@ -32,11 +31,10 @@ fields:
         "Method Two": method_2
         "Method Three": method_3
     value: method_1
-  save_button:
+  save:
     prototype: Button
     ui:
       css_kind: primary
-      label: Save
 
 ui_layout:
   - cols:
@@ -49,7 +47,7 @@ ui_layout:
         - css: col-sm-6
           rows:
             - cell_group:
-              - save_button
-              - revert_button
+              - save
+              - revert
       - output1
       - output2

@@ -7,6 +7,11 @@ const routes = [
         redirect: '/screen',
     },
     {
+        path: '/fractals',
+        name: 'Fractals',
+        component: () => import('@/views/Fractals.vue'),
+    },
+    {
         path: '/screen',
         name: 'Screen',
         component: () => import('@/views/Screen.vue'),

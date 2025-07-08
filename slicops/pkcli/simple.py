@@ -16,11 +16,11 @@ import slicops.ctx
 _SCHEMA = None
 
 
-def path():
-    return pykern.util.dev_run_dir(path).join("simple_db.yaml")
+def path(base):
+    return pykern.util.dev_run_dir(path).join(f"{base}_db.yaml")
 
 
-def read():
+def read(base):
     """Convert the db into PKDict.
 
     If not found, returns empty PKDict() with a warning.
@@ -28,13 +28,13 @@ def read():
     Returns:
         PKDict: values in the db
     """
-    rv = _read(path())
+    rv = _read(path(base))
     if rv is None:
         return PKDict()
     return rv
 
 
-def write(*key_value_pairs):
+def write(base, *key_value_pairs):
     """Update db with key=value arguments or single dict as arg
 
     Args:
@@ -57,10 +57,15 @@ def write(*key_value_pairs):
             return _read(new)
         return PKDict()
 
-    o = path()
+    def _validate():
+        ctx = slicops.ctx.Ctx(base)
+        for k, v in _pairs():
+            yield k, ctx.fields[k].value_set(v)
+
+    o = path(base)
     n = o.new(ext="tmp" + pykern.util.random_base62())
     try:
-        rv = _read_or_new(o, n).pkupdate(_validate(_pairs()))
+        rv = _read_or_new(o, n).pkupdate(_validate())
         pykern.pkyaml.dump_pretty(rv, n)
         n.rename(o)
     finally:
@@ -77,9 +82,3 @@ def _read(path):
             pkdlog("ignoring not found path={}", path)
             return None
         raise
-
-
-def _validate(pairs):
-    ctx = slicops.ctx.Ctx("simple")
-    for k, v in pairs:
-        yield k, ctx.fields[k].value_set(v)

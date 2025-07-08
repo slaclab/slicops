@@ -30,7 +30,7 @@ class UILayout:
             for p in self._path:
                 rv = p.op
                 if p.index is not None:
-                    rv += p.index
+                    rv += str(p.index)
                 yield rv
 
         if v := self._path[-1].value:

@@ -21,26 +21,31 @@ _EVENT_TYPES = frozenset(
 )
 
 
+# TODO(robnagler) Rename to yaml_db and Simple would inherit from it
 class Simple(slicops.sliclet.Base):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.__db_watcher = None
 
     def handle_destroy(self):
+        # TODO(robnagler) Need to make idempotent
         if self.__db_watcher:
             self.__db_watcher.destroy()
             self.__db_watcher = None
 
     def handle_start(self, txn):
+        # TODO(robnagler) need a separate init for the instance before start
+        self.__base = self.__class__.__name__.lower()
         if not self.__read_db(txn):
             self.__write(txn)
-        self.__db_watcher = _DBWatcher(self.__db_watcher_update)
+        self.__db_watcher = _DBWatcher(
+            slicops.pkcli.simple.path(self.__base), self.__db_watcher_update
+        )
 
-    # TODO(robnagler) name?
-    def handle_ctx_set_save_button(self, txn, **kwargs):
+    def handle_ctx_set_save(self, txn, **kwargs):
         self.__write(txn)
 
-    def handle_ctx_set_revert_button(self, txn, **kwargs):
+    def handle_ctx_set_revert(self, txn, **kwargs):
         # TODO(robnagler) the read and the ctx_put could happen outside the context
         self.__read_db(txn)
 
@@ -57,7 +62,7 @@ class Simple(slicops.sliclet.Base):
                 if txn.ui_get(k, "widget") != "button":
                     yield k
 
-        if not (r := slicops.pkcli.simple.read()):
+        if not (r := slicops.pkcli.simple.read(self.__base)):
             return False
         for k in _keys():
             if k in r:
@@ -76,20 +81,19 @@ class Simple(slicops.sliclet.Base):
 
         # TODO(robnagler) work item maybe should happen outside handle_ctx_set
         #    work_queue is a separate thing that could be queued
-        slicops.pkcli.simple.write(PKDict(_values()))
+        slicops.pkcli.simple.write(self.__base, PKDict(_values()))
 
 
 CLASS = Simple
 
 
 class _DBWatcher(watchdog.events.FileSystemEventHandler):
-    def __init__(self, update_op):
+    def __init__(self, path, update_op):
         super().__init__()
         self.__update_op = update_op
-        p = slicops.pkcli.simple.path()
-        self.__path = str(p)
+        self.__path = str(path)
         self.__observer = watchdog.observers.Observer()
-        self.__observer.schedule(self, p.dirname, recursive=False)
+        self.__observer.schedule(self, path.dirname, recursive=False)
         self.__observer.start()
 
     def on_any_event(self, event):

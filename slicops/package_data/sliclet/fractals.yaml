@@ -1,12 +1,20 @@
-ctx:
+fields:
   density_i:
     prototype: Float
     value: .27015
-    min/max
+    constraints:
+      min: -5
+      max: 3
+    ui:
+      label: Density i
   density_r:
     prototype: Float
     value: -0.7
-    min/max
+    constraints:
+      min: -5
+      max: 2
+    ui:
+      label: Density r
   iterations:
     prototype: Integer
     constraints:
@@ -20,6 +28,7 @@ ctx:
         - Julia
         - Mandelbrot
     value: Julia
+  #TODO(robnagler) need a "base.yaml" or something
   revert:
     prototype: Button
     ui:
@@ -40,12 +49,13 @@ ui_layout:
     - css: col-lg-6 offset-lg-3 col-xl-4 offset-xl-4
       rows:
       - mode
-      - density
+      - density_i
+      - density_r
       - iterations
       - size
       - cols:
         - css: col-sm-6
           rows:
             - cell_group:
-              - save_button
-              - revert_button
+              - save
+              - revert

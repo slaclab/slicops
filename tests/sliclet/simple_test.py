@@ -26,7 +26,7 @@ async def test_basic():
         pkunit.pkeq(["divisor"], list(r.fields.keys()))
         pkunit.pkeq(1.0, r.fields.divisor.value)
         pkunit.pkeq(None, simple.read().divisor)
-        r = await s.ctx_field_set(save_button=None)
+        r = await s.ctx_field_set(save=None)
         # save button
         await s.ctx_update()
         # db_watcher read
@@ -38,7 +38,7 @@ async def test_basic():
         pkunit.pkeq(3.0, r.fields.divisor.value)
         await s.ctx_field_set(run_mode="method_2")
         r = await s.ctx_update()
-        await s.ctx_field_set(revert_button=None)
+        await s.ctx_field_set(revert=None)
         await s.ctx_update()
         # no update, bc no change
         pkunit.pkeq("method_1", simple.read().run_mode)
