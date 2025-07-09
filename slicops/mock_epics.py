@@ -8,6 +8,7 @@ from pykern.pkcollections import PKDict
 from pykern.pkdebug import pkdc, pkdlog, pkdp
 import copy
 import numpy
+import queue
 import sys
 import threading
 import time
@@ -31,6 +32,7 @@ class PV:
         self.connection_callback = connection_callback
         self.monitor_callback = None
         self._auto_monitor = False
+        self._monitor_queue = None
 
     def disconnect(self):
         pass
@@ -47,7 +49,17 @@ class PV:
 
     @auto_monitor.setter
     def auto_monitor(self, value):
-        def _update():
+        def _acquire():
+            self.connection_callback(conn=True)
+            self._monitor_queue = queue.Queue()
+            while True:
+                v = self._monitor_queue.get()
+                if v is None:
+                    break
+                self.monitor_callback(value=v)
+            self.connection_callback(conn=False)
+
+        def _image():
             self.connection_callback(conn=True)
             for s in MONITOR_X_SIZE:
                 time.sleep(MONITOR_SLEEP)
@@ -55,18 +67,29 @@ class PV:
                 self.monitor_callback(value=_PV[self.pvname])
             self.connection_callback(conn=False)
 
+        def _which():
+            if "ArrayData" in self.pvname:
+                return _image
+            if "Acquire" in self.pvname:
+                return _acquire
+            raise ValueError(f"cannot monitor pv={self.pvname}")
+
+        if "IMAGE" in self.pvname:
+            # For screen_test which will try to monitor after setting to non-dev camera
+            pkdlog("ignoring auto_monitor pv={}", self.pvname)
+            return
         self._auto_monitor = value
         if value:
-            t = threading.Thread(target=_update)
-            t.start()
+            threading.Thread(target=_which()).start()
 
     def get(self, timeout=0):
         # TOOD(robnagler) need to be more sophisticated
-
         return _PV.get(self.pvname, None)
 
     def put(self, value):
         _PV[self.pvname] = value
+        if self._monitor_queue:
+            self._monitor_queue.put_nowait(value)
         return 1
 
     def remove_callback(self, index):

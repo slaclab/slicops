@@ -1,0 +1,98 @@
+fields:
+  density_i:
+    prototype: Float
+    value: .27015
+    constraints:
+      min: -5
+      max: 3
+    ui:
+      label: Density i
+  density_r:
+    prototype: Float
+    value: -0.7
+    constraints:
+      min: -5
+      max: 2
+    ui:
+      label: Density r
+  iterations:
+    prototype: Integer
+    constraints:
+      min: 1
+      max: 1000
+    value: 100
+  mode:
+    prototype: Enum
+    constraints:
+      choices:
+        - Julia
+        - Mandelbrot
+    value: Julia
+  message:
+    prototype: String
+    ui:
+      label: Fractal Status
+      widget: static
+      writable: false
+  plot:
+    prototype: Dict
+    links:
+      color_map: color_map
+      numpy_file: plot_file
+    ui:
+      widget: heatmap
+      writable: false
+      visible: false
+  plot_file:
+    prototype: String
+    ui:
+      widget: static
+      writable: false
+  #TODO(robnagler) need a "base.yaml" or something
+  revert:
+    prototype: Button
+    ui:
+      css_kind: danger
+  save:
+    prototype: Button
+    ui:
+      css_kind: primary
+  size:
+    prototype: Integer
+    constraints:
+      min: 10
+      max: 1000
+    value: 800
+  color_map:
+    prototype: Enum
+    constraints:
+      choices:
+        - Cividis
+        - Blues
+        - Inferno
+        - Turbo
+        - Viridis
+    value: Inferno
+    ui:
+      visible: false
+
+ui_layout:
+  - cols:
+    - css: col-lg-5 offset-lg-1
+      rows:
+      - mode
+      - density_i
+      - density_r
+      - iterations
+      - size
+      - cols:
+        - css: col-sm-6
+          rows:
+            - cell_group:
+              - save
+              - revert
+    - css: col-lg-6 col-xxl-5
+      rows:
+      - color_map
+      - plot
+      - message

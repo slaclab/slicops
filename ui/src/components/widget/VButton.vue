@@ -4,19 +4,19 @@
 <template>
     <button
         type="button"
-        :class="'btn btn-' + ui_ctx[field].html_class"
-        :disabled="! ui_ctx[field].enabled"
+        :class="'btn btn-' + ctx[field].ui.css_kind"
+        :disabled="! ctx[field].ui.enabled"
         @click="onClick()"
-    >{{ ui_ctx[field].label }}</button>
+    >{{ ctx[field].ui.label }}</button>
 </template>
 
 <script setup>
  const props = defineProps({
      field: String,
-     ui_ctx: Object,
+     ctx: Object,
  });
 
  const onClick = () => {
-     props.ui_ctx.serverAction(props.field, props.ui_ctx[props.field].value);
+     props.ctx.serverAction(props.field, props.ctx[props.field].value);
  };
 </script>

@@ -11,41 +11,37 @@ import pykern.pkio
 import pykern.pkresource
 import pykern.pkyaml
 import pykern.util
+import slicops.ctx
 
 _SCHEMA = None
 
 
-def path():
-    return pykern.util.dev_run_dir(path).join("simple.yaml")
+def path(base):
+    return pykern.util.dev_run_dir(path).join(f"{base}_db.yaml")
 
 
-def read():
-    """Convert the db into PKDict
+def read(base):
+    """Convert the db into PKDict.
+
+    If not found, returns empty PKDict() with a warning.
 
     Returns:
         PKDict: values in the db
     """
-    return pykern.pkyaml.load_file(path())
+    rv = _read(path(base))
+    if rv is None:
+        return PKDict()
+    return rv
 
 
-def schema():
-    global _SCHEMA
-
-    if not _SCHEMA:
-        _SCHEMA = pykern.pkyaml.load_file(
-            pykern.pkresource.file_path("schema/simple.yaml")
-        )
-    return _SCHEMA
-
-
-def write(*key_value_pairs):
+def write(base, *key_value_pairs):
     """Update db with key=value arguments or single dict as arg
 
     Args:
         key_value_pairs (str): list of key_value_pairs or single dict
     """
 
-    def _values():
+    def _pairs():
         if not key_value_pairs:
             pykern.command_error("pass at least one key=value pair")
         if isinstance(key_value_pairs[0], str):
@@ -54,61 +50,35 @@ def write(*key_value_pairs):
             return key_value_pairs[0].items()
         return key_value_pairs[0]
 
-    # TODO(robnagler) pkyaml needs to return dumped value
-    t = path().new(ext="tmp" + pykern.util.random_base62())
-    pykern.pkyaml.dump_pretty(read().pkupdate(_validate(_values())), t)
-    t.rename(path())
-    return read()
+    def _read_or_new(old, new):
+        # Atomic read/write
+        if old.exists():
+            old.copy(new)
+            return _read(new)
+        return PKDict()
+
+    def _validate():
+        ctx = slicops.ctx.Ctx(base)
+        for k, v in _pairs():
+            yield k, ctx.fields[k].value_set(v)
+
+    o = path(base)
+    n = o.new(ext="tmp" + pykern.util.random_base62())
+    try:
+        rv = _read_or_new(o, n).pkupdate(_validate())
+        pykern.pkyaml.dump_pretty(rv, n)
+        n.rename(o)
+    finally:
+        pykern.pkio.unchecked_remove(n)
+    return rv
 
 
-def _validate(values):
-    def _button(name, decl, value):
-        raise ValueError(f"button={name} may not be written")
-
-    def _float(name, decl, value):
-        return _number(name, decl, float(value))
-
-    def _integer(name, decl, value):
-        return _number(name, decl, int(value))
-
-    def _number(name, decl, value):
-        if (m := decl.get("min")) is not None:
-            if value < m:
-                raise ValueError(
-                    f"value={value} is less than min={m} for {decl.widget}={name}"
-                )
-        if (m := decl.get("max")) is not None:
-            if value > m:
-                raise ValueError(
-                    f"value={value} is greater than max={m} for {decl.widget}={name}"
-                )
-        return value
-
-    def _select(name, decl, value):
-        for c in decl.choices:
-            if c.code == value:
-                return value
-        raise ValueError(f"value={value} invalid for select={name}")
-
-    def _static(name, decl, value):
-        if value is None:
-            return ""
-        return value
-
-    s = schema()
-    for k, v in values:
-        if not (f := s.get(k)):
-            raise KeyError(f"name={k} not valid field")
-        if "integer" == f.widget:
-            v = _integer(k, f, v)
-        elif "float" == f.widget:
-            v = _float(k, f, v)
-        elif "select" == f.widget:
-            v = _select(k, f, v)
-        elif "static" == f.widget:
-            v = _static(k, f, v)
-        elif "button" == f.widget:
-            v = _button(k, f, v)
-        else:
-            raise AssertionError(f"widget={f.widget} not supported")
-        yield k, v
+def _read(path):
+    try:
+        # TODO(robnagler) should validate
+        return pykern.pkyaml.load_file(path)
+    except Exception as e:
+        if pykern.pkio.exception_is_not_found(e):
+            pkdlog("ignoring not found path={}", path)
+            return None
+        raise

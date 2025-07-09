@@ -1,0 +1,201 @@
+{
+    "fields": {
+        "divisor": {
+            "constraints": {
+                "max": null,
+                "min": null,
+                "nullable": true
+            },
+            "links": {},
+            "name": "divisor",
+            "ui": {
+                "clickable": false,
+                "css_kind": null,
+                "enabled": true,
+                "label": "Divisor",
+                "visible": true,
+                "widget": "float",
+                "writable": true
+            },
+            "value": null
+        },
+        "increment": {
+            "constraints": {
+                "max": null,
+                "min": 1,
+                "nullable": false
+            },
+            "links": {},
+            "name": "increment",
+            "ui": {
+                "clickable": false,
+                "css_kind": null,
+                "enabled": true,
+                "label": "Increment Amount",
+                "visible": true,
+                "widget": "integer",
+                "writable": true
+            },
+            "value": 5
+        },
+        "output1": {
+            "constraints": {
+                "max": null,
+                "min": null,
+                "nullable": true
+            },
+            "links": {},
+            "name": "output1",
+            "ui": {
+                "clickable": false,
+                "css_kind": null,
+                "enabled": true,
+                "label": "Output #1",
+                "visible": true,
+                "widget": "static",
+                "writable": false
+            },
+            "value": null
+        },
+        "output2": {
+            "constraints": {
+                "max": null,
+                "min": null,
+                "nullable": true
+            },
+            "links": {},
+            "name": "output2",
+            "ui": {
+                "clickable": false,
+                "css_kind": null,
+                "enabled": true,
+                "label": "Output #2",
+                "visible": true,
+                "widget": "static",
+                "writable": false
+            },
+            "value": null
+        },
+        "revert_button": {
+            "constraints": {
+                "max": null,
+                "min": null,
+                "nullable": true
+            },
+            "links": {},
+            "name": "revert_button",
+            "ui": {
+                "clickable": true,
+                "css_kind": "danger",
+                "enabled": true,
+                "label": "Revert",
+                "visible": true,
+                "widget": "button",
+                "writable": true
+            },
+            "value": null
+        },
+        "run_mode": {
+            "constraints": {
+                "choices": {
+                    "Method One": "method_1",
+                    "Method Three": "method_3",
+                    "Method Two": "method_2"
+                },
+                "max": null,
+                "min": null,
+                "nullable": true
+            },
+            "links": {},
+            "name": "run_mode",
+            "ui": {
+                "clickable": false,
+                "css_kind": null,
+                "enabled": true,
+                "label": "Run Mode",
+                "visible": true,
+                "widget": "select",
+                "writable": true
+            },
+            "value": "method_1"
+        },
+        "save_button": {
+            "constraints": {
+                "max": null,
+                "min": null,
+                "nullable": true
+            },
+            "links": {},
+            "name": "save_button",
+            "ui": {
+                "clickable": true,
+                "css_kind": "primary",
+                "enabled": true,
+                "label": "Save",
+                "visible": true,
+                "widget": "button",
+                "writable": true
+            },
+            "value": null
+        }
+    },
+    "ui_layout": {
+        "rows": [
+            {
+                "cols": [
+                    {
+                        "css": "col-lg-6 offset-lg-3 col-xl-4 offset-xl-4",
+                        "layout": "col",
+                        "rows": [
+                            {
+                                "field": "run_mode",
+                                "layout": "cell"
+                            },
+                            {
+                                "field": "increment",
+                                "layout": "cell"
+                            },
+                            {
+                                "field": "divisor",
+                                "layout": "cell"
+                            },
+                            {
+                                "cols": [
+                                    {
+                                        "css": "col-sm-6",
+                                        "layout": "col",
+                                        "rows": [
+                                            {
+                                                "cells": [
+                                                    {
+                                                        "field": "save_button",
+                                                        "layout": "cell"
+                                                    },
+                                                    {
+                                                        "field": "revert_button",
+                                                        "layout": "cell"
+                                                    }
+                                                ],
+                                                "layout": "cell_group"
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "layout": "cols"
+                            },
+                            {
+                                "field": "output1",
+                                "layout": "cell"
+                            },
+                            {
+                                "field": "output2",
+                                "layout": "cell"
+                            }
+                        ]
+                    }
+                ],
+                "layout": "cols"
+            }
+        ]
+    }
+}

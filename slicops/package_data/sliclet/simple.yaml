@@ -1,0 +1,57 @@
+fields:
+  increment:
+    prototype: Integer
+    constraints:
+      min: 1
+      nullable: False
+    ui:
+      label: Increment Amount
+    value: 5
+  divisor:
+    prototype: Float
+    constraints:
+      min: 1.1
+      max: 5.1
+    value: 3.14
+  output1:
+    prototype: String
+    ui:
+      label: 'Output #1'
+      writable: False
+      widget: static
+  output2:
+    prototype: output1
+    ui:
+      label: 'Output #2'
+  revert:
+    prototype: Button
+    ui:
+      css_kind: danger
+  run_mode:
+    prototype: Enum
+    constraints:
+      choices:
+        "Method One": method_1
+        "Method Two": method_2
+        "Method Three": method_3
+    value: method_1
+  save:
+    prototype: Button
+    ui:
+      css_kind: primary
+
+ui_layout:
+  - cols:
+    - css: col-lg-6 offset-lg-3 col-xl-4 offset-xl-4
+      rows:
+      - run_mode
+      - increment
+      - divisor
+      - cols:
+        - css: col-sm-6
+          rows:
+            - cell_group:
+              - save
+              - revert
+      - output1
+      - output2

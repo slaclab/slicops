@@ -4,19 +4,19 @@
 <template>
     <VLabel
         :field="field"
-        :ui_ctx="ui_ctx"
+        :ctx="ctx"
     />
     <div>
         <select
-            v-model="ui_ctx[field].value"
+            v-model="ctx[field].value"
             class="form-select form-select-sm"
             :id="field"
             @change="onChange()"
         >
             <option
-                v-for="v of ui_ctx[field].choices"
-                :key="v.code"
-                :value="v.code">{{ v.display }}
+                v-for="(value, label) of ctx[field].constraints.choices"
+                :key="value"
+                :value="value">{{ label }}
             </option>
         </select>
     </div>
@@ -27,10 +27,10 @@
 
  const props = defineProps({
      field: String,
-     ui_ctx: Object,
+     ctx: Object,
  });
 
  const onChange = () => {
-     props.ui_ctx.serverAction(props.field, props.ui_ctx[props.field].value);
+     props.ctx.serverAction(props.field, props.ctx[props.field].value);
  };
 </script>
