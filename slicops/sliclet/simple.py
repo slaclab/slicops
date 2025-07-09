@@ -6,12 +6,14 @@
 
 from pykern.pkcollections import PKDict
 from pykern.pkdebug import pkdc, pkdexc, pkdlog, pkdp
-import slicops.sliclet
+import numpy
 import pykern.pkio
-import slicops.pkcli.simple
 import slicops.pkcli.fractals
+import slicops.pkcli.simple
+import slicops.sliclet
 import watchdog.events
 import watchdog.observers
+
 
 _EVENT_TYPES = frozenset(
     (
@@ -38,6 +40,7 @@ class Simple(slicops.sliclet.Base):
         # TODO(robnagler) need a separate init for the instance before start
         self.__base = self.__class__.__name__.lower()
         self.__db_cache = PKDict()
+        self.__numpy_cache = PKDict()
         if not self.__read_db(txn):
             self.__write(txn)
         self.__db_watcher = _DBWatcher(
@@ -63,54 +66,56 @@ class Simple(slicops.sliclet.Base):
         with self.lock_for_update() as txn:
             self.__read_db(txn)
 
-    def __read_db(self, txn):
-        def _keys():
-            for k in txn.field_names():
-                if txn.ui_get(k, "widget") not in (
-                    "button",
-                    "heatmap",
-                    "heatmap_with_lineouts",
-                ):
-                    yield k
+    # TODO(robnagler) can this be encapsulated in a base prototype?
+    # field.new would need to evaluate in a particular order.
+    # Perhaps there should be "related:" color_map, numpy_file_field, etc.
+    def __numpy_file(self, txn, plot, links):
+        def _visibility(value):
+            yield (f"{plot}.ui.visible", value)
+            if x := links.get("color_map"):
+                yield (f"{x}.ui.visible", value)
 
+        if not (n := links.get("numpy_file")):
+            # Not numpy field
+            return
+        # Set plot always, and raw_pixels may get filled in below
+        p = PKDict(raw_pixels=None)
+        txn.field_set(plot, p)
+        v = False
+        try:
+            if not (l := txn.field_get(n)):
+                return
+            p.raw_pixels = numpy.load(l)
+            v = True
+        except Exception as e:
+            pkdlog("numpy.load error={} path={} link={} stack={}", e, l, n, pkdexc())
+        finally:
+            txn.multi_set(tuple(_visibility(v)))
+
+    def __read_db(self, txn):
         if not (r := slicops.pkcli.simple.read(self.__base)):
             return False
-        for k in _keys():
+        for k in txn.field_names():
+            # If cache (read/wrote last time) is unchanged,
+            # there will be no updates. Avoids churn
             if k in r and r[k] != self.__db_cache.get(k):
                 txn.field_set(k, r[k])
         self.__db_cache = r
-        if "plot_file" in txn.field_names() and "plot" in txn.field_names():
-            import numpy
-
-            txn.multi_set((("plot.ui.visible", False), ("color_map.ui.visible", False)))
-            txn.field_set("plot", PKDict(raw_pixels=None))
-            try:
-                txn.field_set(
-                    "plot",
-                    PKDict(raw_pixels=numpy.load(txn.field_get("plot_file"))),
-                )
-                txn.multi_set((("plot.ui.visible", True), ("color_map.ui.visible", True)))
-            except Exception as e:
-                pkdlog("{} {}", e, pkdexc())
+        for k in txn.field_names():
+            if l := txn.group_get(k, "links"):
+                self.__numpy_file_field(txn, k, l)
         return True
 
     def __write(self, txn):
         def _keys():
             for k in txn.field_names():
-                if txn.ui_get(k, "writable") and txn.ui_get(k, "widget") not in (
-                    "button",
-                    "heatmap",
-                    "heatmap_with_lineouts",
-                ):
-                    yield k
+                g = txn.group_get(k, "ui")
+                if g.get("clickable") or not g.get("writable"):
+                    continue
+                yield k
 
-        def _values():
-            for k in _keys():
-                yield k, txn.field_get(k)
-
-        # TODO(robnagler) work item maybe should happen outside handle_ctx_set
-        #    work_queue is a separate thing that could be queued
-        self.__db_cache = PKDict(_values())
+        # TODO(robnagler) work: maybe should happen outside lock
+        self.__db_cache = PKDict((k, txn.field_get(k)) for k in _keys())
         slicops.pkcli.simple.write(self.__base, self.__db_cache)
 
 

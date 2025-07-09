@@ -39,7 +39,8 @@ class InvalidFieldValue:
 
 class Base:
     __SIMPLE_TOP_ATTRS = frozenset(("name", "value"))
-    __TOP_ATTRS = __SIMPLE_TOP_ATTRS.union(("constraints", "ui"))
+    __GROUP_ATTRS = frozenset(("constraints", "links", "ui"))
+    __TOP_ATTRS = __SIMPLE_TOP_ATTRS.union(__GROUP_ATTRS)
     # Others that convert from yaml
     __INVALID_NAMES = frozenset(("true", "false", "null", "none"))
     __VALID_NAME = re.compile("^[a-z]\w+$")
@@ -58,6 +59,12 @@ class Base:
     def as_dict(self):
         return PKDict((k, copy.deepcopy(self._attrs[k])) for k in self.__TOP_ATTRS)
 
+    def group_get(self, group, attr=None):
+        if group not in self.__GROUP_ATTRS:
+            raise AssertionError(f"invalid group={group} must be {self.__GROUP_ATTRS}")
+        g = self._attrs[group]
+        return g.copy() if attr is None else g[attr]
+
     def new(self, overrides):
         # New instances do not inherit labels
         l = overrides.pkunchecked_nested_get("ui.label")
@@ -67,11 +74,8 @@ class Base:
         return rv
 
     def renew(self, overrides):
-        # Updating an instances inherit everything
+        # Updating an instance inherits everything
         return self.__class__(self, overrides)
-
-    def ui_get(self, name):
-        return self._attrs.ui[name]
 
     def value_check(self, value):
         if value is None or hasattr(value, "__len__") and len(value) == 0:
@@ -128,8 +132,10 @@ class Base:
     def _defaults(self, *overrides):
         rv = PKDict(
             constraints=PKDict(max=None, min=None, nullable=True),
+            links=PKDict(),
             name=None,
             ui=PKDict(
+                clickable=False,
                 css_kind=None,
                 enabled=True,
                 label=None,
@@ -185,7 +191,7 @@ class Button(Base):
         return super()._defaults(
             PKDict(
                 name="Button",
-                ui=PKDict(widget="button"),
+                ui=PKDict(widget="button", clickable=True),
                 # value is always None
                 value=None,
             ),
@@ -352,7 +358,7 @@ class List(Base):
     def _defaults(self, *overrides):
         # TODO(robnagler) need to verify attributes
         return super()._defaults(
-            PKDict(name="List"),
+            list(name="List"),
             *overrides,
         )
 

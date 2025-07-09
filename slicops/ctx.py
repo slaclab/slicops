@@ -129,7 +129,7 @@ class Txn:
     def field_set_via_api(self, name, value):
         try:
             o = self.__field(name)
-            if not o.ui_get("writable"):
+            if not o.group_get("ui", "writable"):
                 raise pykern.util.APIError(
                     "field={} is not writable value={}", name, value
                 )
@@ -141,6 +141,9 @@ class Txn:
             if isinstance(e, pykern.util.APIError):
                 raise
             raise pykern.util.APIError("invalid value for field={} error={}", name, e)
+
+    def group_get(self, field, group, attr=None):
+        return self.__ctx.fields[field].group_get(group, attr)
 
     def multi_set(self, *args):
         def _args():
@@ -165,9 +168,6 @@ class Txn:
 
     def rollback(self):
         self.__ctx = self.__updates = None
-
-    def ui_get(self, field, attr):
-        return self.__ctx.fields[field].ui_get(attr)
 
     def __field(self, name):
         if rv := self.__updates.get(name):

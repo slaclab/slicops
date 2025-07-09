@@ -228,7 +228,7 @@ class Screen(slicops.sliclet.Base):
             return False
         if (i := self.__monitors.image.prev_value()) is None or not i.size:
             return False
-        if not txn.ui_get("plot", "visible"):
+        if not txn.group_get("plot", "ui", "visible"):
             txn.multi_set(_PLOT_ENABLE)
         txn.field_set(
             "plot",

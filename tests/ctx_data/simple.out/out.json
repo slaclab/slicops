@@ -6,8 +6,10 @@
                 "min": null,
                 "nullable": true
             },
+            "links": {},
             "name": "divisor",
             "ui": {
+                "clickable": false,
                 "css_kind": null,
                 "enabled": true,
                 "label": "Divisor",
@@ -23,8 +25,10 @@
                 "min": 1,
                 "nullable": false
             },
+            "links": {},
             "name": "increment",
             "ui": {
+                "clickable": false,
                 "css_kind": null,
                 "enabled": true,
                 "label": "Increment Amount",
@@ -40,8 +44,10 @@
                 "min": null,
                 "nullable": true
             },
+            "links": {},
             "name": "output1",
             "ui": {
+                "clickable": false,
                 "css_kind": null,
                 "enabled": true,
                 "label": "Output #1",
@@ -57,8 +63,10 @@
                 "min": null,
                 "nullable": true
             },
+            "links": {},
             "name": "output2",
             "ui": {
+                "clickable": false,
                 "css_kind": null,
                 "enabled": true,
                 "label": "Output #2",
@@ -74,8 +82,10 @@
                 "min": null,
                 "nullable": true
             },
+            "links": {},
             "name": "revert_button",
             "ui": {
+                "clickable": true,
                 "css_kind": "danger",
                 "enabled": true,
                 "label": "Revert",
@@ -96,8 +106,10 @@
                 "min": null,
                 "nullable": true
             },
+            "links": {},
             "name": "run_mode",
             "ui": {
+                "clickable": false,
                 "css_kind": null,
                 "enabled": true,
                 "label": "Run Mode",
@@ -113,8 +125,10 @@
                 "min": null,
                 "nullable": true
             },
+            "links": {},
             "name": "save_button",
             "ui": {
+                "clickable": true,
                 "css_kind": "primary",
                 "enabled": true,
                 "label": "Save",
