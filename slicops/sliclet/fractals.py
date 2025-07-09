@@ -12,7 +12,7 @@ import slicops.sliclet.simple
 
 class Fractals(slicops.sliclet.simple.Simple):
 
-    def handle_ctx_set_mode(self, txn, value, **kwargs):
+    def on_change_mode(self, txn, value, **kwargs):
         j = value == "Julia"
         txn.multi_set(
             ("density_i.ui.visible", j),

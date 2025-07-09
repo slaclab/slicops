@@ -26,7 +26,7 @@ class _Work(enum.IntEnum):
     ctx_write = 3
 
 
-_HANDLE_CTX_SET_RE = re.compile("^handle_ctx_set_(\w+)$")
+_ON_METHODS_RE = re.compile("^on_(click|change)_(\w+)$")
 
 _CTX_WRITE_ARGS = frozenset(["field_values"])
 
@@ -45,7 +45,7 @@ class Base:
         self.__ctx = slicops.ctx.Ctx(self.__name)
         self.__work_q = queue.PriorityQueue()
         self.__lock = threading.RLock()
-        self.__ctx_set_handlers = PKDict(self.__inspect_ctx_set_handlers())
+        self.__on_methods = self.__inspect_on_methods()
         self.__thread = threading.Thread(target=self.__run, daemon=True)
         self.__thread.start()
 
@@ -103,10 +103,16 @@ class Base:
     def session_end(self):
         self.__put_work(_Work.session_end, None)
 
-    def __inspect_ctx_set_handlers(self):
-        for n, o in inspect.getmembers(self):
-            if (m := _HANDLE_CTX_SET_RE.search(n)) and inspect.ismethod(o):
-                yield m.group(1), o
+    def __inspect_on_methods(self):
+        rv = PKDict()
+        for k, v in inspect.getmembers(self):
+            if (m := _ON_METHODS_RE.search(k)) and inspect.ismethod(v):
+                if m.group(2) in rv:
+                    raise AssertionError(
+                        f"only one of on_click or on_change field={m.group(2)}"
+                    )
+                rv[m.group(2)] = PKDict(kind=m.group(1), func=v)
+        return rv
 
     def __put_work(self, work, arg):
         self.__work_q.put_nowait((work, arg))
@@ -163,8 +169,23 @@ class Base:
         return False
 
     def _work_ctx_write(self, field_values):
+        def _change(updates):
+            for u in updates:
+                if u.on_method.kind == "change":
+                    u.pkdel("on_method").func(**u)
+                else:
+                    yield u
+
+        def _click(updates):
+            for u in updates:
+                u.pkdel("on_method").func(**u)
+
+        def _updates():
+            m = self.__on_methods
+            for k, v in field_values.items():
+                if c := txn.field_set_via_api(k, v, m.get(k)):
+                    yield c
+
         with self.lock_for_update(log_op="ctx_write") as txn:
-            for c in tuple(txn.field_set_via_api(*x) for x in field_values.items()):
-                if a := self.__ctx_set_handlers.get(c.field_name):
-                    a(txn=txn, **c)
+            _click(tuple(_change(sorted(_updates(), key=lambda x: x.field_name))))
         return True

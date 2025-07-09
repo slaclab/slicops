@@ -126,7 +126,23 @@ class Txn:
         #   vs new with _defaults() (which should get validated first time)
         self.__field_update(name, self.__field(name), PKDict(value=value))
 
-    def field_set_via_api(self, name, value):
+    def field_set_via_api(self, name, value, on_method):
+        def _update(old, new):
+            rv = PKDict(field_name=name, on_method=on_method, txn=self)
+            if on_method.kind == "click":
+                if new.group_get("ui", "clickable"):
+                    return rv
+                pkdlog("on_click_{} exists and clickable=False", c.field_name)
+                return None
+            if on_method.kind == "change":
+                rv.pkupdate(value=n.value_get(), old_value=o.value_get())
+                if rv.value == rv.old_value:
+                    return None
+                return rv
+            raise AssertionError(
+                f"invalid no_method.kind={on_method.kind} field={name}"
+            )
+
         try:
             o = self.__field(name)
             if not o.group_get("ui", "writable"):
@@ -134,9 +150,7 @@ class Txn:
                     "field={} is not writable value={}", name, value
                 )
             n = self.__field_update(name, o, PKDict(value=value))
-            rv = PKDict(field_name=name, value=n.value_get(), old_value=o.value_get())
-            # TODO(robnagler) optimize, similar to field_set
-            return rv.pkupdate(changed=rv.value != rv.old_value)
+            return _update(o, n) if on_method else None
         except Exception as e:
             if isinstance(e, pykern.util.APIError):
                 raise

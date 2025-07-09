@@ -40,7 +40,6 @@ class Simple(slicops.sliclet.Base):
         # TODO(robnagler) need a separate init for the instance before start
         self.__base = self.__class__.__name__.lower()
         self.__db_cache = PKDict()
-        self.__numpy_cache = PKDict()
         if not self.__read_db(txn):
             self.__write(txn)
         self.__db_watcher = _DBWatcher(
@@ -51,10 +50,10 @@ class Simple(slicops.sliclet.Base):
             self.__db_watcher_update,
         )
 
-    def handle_ctx_set_save(self, txn, **kwargs):
+    def on_click_save(self, txn, **kwargs):
         self.__write(txn)
 
-    def handle_ctx_set_revert(self, txn, **kwargs):
+    def on_click_revert(self, txn, **kwargs):
         # TODO(robnagler) the read and the ctx_put could happen outside the context
         self.__db_cache = PKDict()
         self.__read_db(txn)
@@ -77,33 +76,50 @@ class Simple(slicops.sliclet.Base):
 
         if not (n := links.get("numpy_file")):
             # Not numpy field
-            return
+            return None
         # Set plot always, and raw_pixels may get filled in below
         p = PKDict(raw_pixels=None)
         v = False
         try:
             if not (l := txn.field_get(n)):
-                return
+                return None
             p.raw_pixels = numpy.load(l)
             v = True
+            return p
         except Exception as e:
             pkdlog("numpy.load error={} path={} link={} stack={}", e, l, n, pkdexc())
         finally:
             txn.field_set(plot, p)
-            txn.multi_set(pkdp(tuple(_visibility(v))))
+            txn.multi_set(tuple(_visibility(v)))
 
     def __read_db(self, txn):
+        def _numpy_files():
+            for k in txn.field_names():
+                if l := txn.group_get(k, "links"):
+                    if v := self.__numpy_file(txn, k, l):
+                        yield k, v
+
+        def _on_changes(changes):
+            # TODO(robnagler) only needed for fractals
+            # POSIT: same as sliclet.Base._work_ctx_write
+            for k in sorted(changes.keys()):
+                if f := getattr(self, f"on_change_{k}", None):
+                    # TODO(robnagler) fractals only needs these
+                    f(txn=txn, value=changes[k])
+
+        def _set(db):
+            for k in txn.field_names():
+                # If cache (read/wrote last time) is unchanged,
+                # there will be no updates. Avoids churn
+                if k in db and db[k] != self.__db_cache.get(k):
+                    txn.field_set(k, db[k])
+                    yield k, db[k]
+
         if not (r := slicops.pkcli.simple.read(self.__base)):
             return False
-        for k in txn.field_names():
-            # If cache (read/wrote last time) is unchanged,
-            # there will be no updates. Avoids churn
-            if k in r and r[k] != self.__db_cache.get(k):
-                txn.field_set(k, r[k])
+        c = PKDict(_set(r)).pkupdate(_numpy_files())
         self.__db_cache = r
-        for k in txn.field_names():
-            if l := txn.group_get(k, "links"):
-                self.__numpy_file(txn, k, l)
+        _on_changes(c)
         return True
 
     def __write(self, txn):

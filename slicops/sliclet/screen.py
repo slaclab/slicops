@@ -70,26 +70,23 @@ class Screen(slicops.sliclet.Base):
     def handle_destroy(self):
         self.__device_destroy()
 
-    def handle_ctx_set_camera(self, txn, changed, value, **kwargs):
-        if changed:
-            self.__device_change(txn, value)
+    def on_change_camera(self, txn, value, **kwargs):
+        self.__device_change(txn, value)
 
-    def handle_ctx_set_beam_path(self, txn, changed, value, **kwargs):
-        if changed:
-            self.__beam_path_change(txn, value)
+    def on_change_beam_path(self, txn, value, **kwargs):
+        self.__beam_path_change(txn, value)
 
-    def handle_ctx_set_curve_fit_method(self, txn, changed, **kwargs):
-        if changed:
-            self.__update_plot(txn)
+    def on_change_curve_fit_method(self, txn, **kwargs):
+        self.__update_plot(txn)
 
-    def handle_ctx_set_single_button(self, txn, **kwargs):
+    def on_click_single_button(self, txn, **kwargs):
         self.__single_button = True
         self.__set_acquire(txn, True)
 
-    def handle_ctx_set_start_button(self, txn, **kwargs):
+    def on_click_start_button(self, txn, **kwargs):
         self.__set_acquire(txn, True)
 
-    def handle_ctx_set_stop_button(self, txn, **kwargs):
+    def on_click_stop_button(self, txn, **kwargs):
         self.__set_acquire(txn, False)
 
     def handle_start(self, txn):
