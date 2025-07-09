@@ -80,7 +80,6 @@ class Simple(slicops.sliclet.Base):
             return
         # Set plot always, and raw_pixels may get filled in below
         p = PKDict(raw_pixels=None)
-        txn.field_set(plot, p)
         v = False
         try:
             if not (l := txn.field_get(n)):
@@ -90,7 +89,8 @@ class Simple(slicops.sliclet.Base):
         except Exception as e:
             pkdlog("numpy.load error={} path={} link={} stack={}", e, l, n, pkdexc())
         finally:
-            txn.multi_set(tuple(_visibility(v)))
+            txn.field_set(plot, p)
+            txn.multi_set(pkdp(tuple(_visibility(v))))
 
     def __read_db(self, txn):
         if not (r := slicops.pkcli.simple.read(self.__base)):
@@ -103,7 +103,7 @@ class Simple(slicops.sliclet.Base):
         self.__db_cache = r
         for k in txn.field_names():
             if l := txn.group_get(k, "links"):
-                self.__numpy_file_field(txn, k, l)
+                self.__numpy_file(txn, k, l)
         return True
 
     def __write(self, txn):
