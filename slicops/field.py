@@ -336,6 +336,14 @@ class Float(Base):
             return InvalidFieldValue("not float", exc=e)
 
 
+class Boolean(Enum):
+    # TODO(pjm): should validate that there are 2 choices and they map to true/false
+    def _defaults(self, *overrides):
+        rv = super()._defaults(*overrides)
+        rv.ui.widget = "toggle"
+        return rv
+
+
 class Integer(Base):
     def _defaults(self, *overrides):
         return super()._defaults(
@@ -393,7 +401,7 @@ def _init():
     global _PROTOTYPES, _PROTOTYPES_LOWER
 
     def _gen():
-        for c in (Button, Dict, Enum, Float, Integer, String):
+        for c in (Button, Boolean, Dict, Enum, Float, Integer, String):
             yield c.__name__, c(None, PKDict())
 
     # needed in Base.__init__

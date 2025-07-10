@@ -39,12 +39,20 @@ fields:
     prototype: Button
     ui:
       css_kind: primary
+  optimize:
+    prototype: Boolean
+    constraints:
+      choices:
+        "Yes": true
+        "No": false
+    value: false
 
 ui_layout:
   - cols:
     - css: col-lg-6 offset-lg-3 col-xl-4 offset-xl-4
       rows:
       - run_mode
+      - optimize
       - increment
       - divisor
       - cols:
