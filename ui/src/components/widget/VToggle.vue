@@ -33,18 +33,10 @@
  };
 
  onMounted(() => {
-     const findChoice = (value) => {
-         const c = props.ctx[props.field].constraints.choices;
-         for (const k in c) {
-             if (c[k] === value) {
-                 return k;
-             }
-         }
-         throw new Error(`Missing value: ${value} in Boolean choices for field: ${props.field}`);
-     };
+     const l = props.ctx[props.field].ui.toggle_labels;
      toggleElement.value.bootstrapToggle({
-         onlabel: findChoice(true),
-         offlabel: findChoice(false),
+         offlabel: l[0],
+         onlabel: l[1],
      });
  });
 </script>

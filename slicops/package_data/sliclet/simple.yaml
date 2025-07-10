@@ -41,10 +41,10 @@ fields:
       css_kind: primary
   optimize:
     prototype: Boolean
-    constraints:
-      choices:
-        "Yes": true
-        "No": false
+    ui:
+      toggle_labels:
+        - No
+        - Yes
     value: false
 
 ui_layout:

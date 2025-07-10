@@ -336,14 +336,6 @@ class Float(Base):
             return InvalidFieldValue("not float", exc=e)
 
 
-class Boolean(Enum):
-    # TODO(pjm): should validate that there are 2 choices and they map to true/false
-    def _defaults(self, *overrides):
-        rv = super()._defaults(*overrides)
-        rv.ui.widget = "toggle"
-        return rv
-
-
 class Integer(Base):
     def _defaults(self, *overrides):
         return super()._defaults(
@@ -359,6 +351,26 @@ class Integer(Base):
             return self._check_min_max(int(value))
         except Exception as e:
             return InvalidFieldValue("not integer", exc=e)
+
+
+class Boolean(Integer):
+    def _defaults(self, *overrides):
+        return super()._defaults(
+            PKDict(
+                name="Boolean",
+                ui=PKDict(
+                    widget="toggle",
+                    toggle_labels=["Off", "On"],
+                ),
+            ),
+            *overrides,
+        )
+
+    def _from_literal(self, value):
+        try:
+            return bool(value)
+        except Exception as e:
+            return InvalidFieldValue("not boolean", exc=e)
 
 
 class List(Base):
