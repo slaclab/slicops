@@ -186,6 +186,26 @@ class Base:
         return super().__str__()
 
 
+class Boolean(Base):
+    def _defaults(self, *overrides):
+        return super()._defaults(
+            PKDict(
+                name="Boolean",
+                ui=PKDict(
+                    widget="toggle",
+                    toggle_labels=["Off", "On"],
+                ),
+            ),
+            *overrides,
+        )
+
+    def _from_literal(self, value):
+        try:
+            return bool(value)
+        except Exception as e:
+            return InvalidFieldValue("not boolean", exc=e)
+
+
 class Button(Base):
     def _defaults(self, *overrides):
         return super()._defaults(
@@ -351,26 +371,6 @@ class Integer(Base):
             return self._check_min_max(int(value))
         except Exception as e:
             return InvalidFieldValue("not integer", exc=e)
-
-
-class Boolean(Integer):
-    def _defaults(self, *overrides):
-        return super()._defaults(
-            PKDict(
-                name="Boolean",
-                ui=PKDict(
-                    widget="toggle",
-                    toggle_labels=["Off", "On"],
-                ),
-            ),
-            *overrides,
-        )
-
-    def _from_literal(self, value):
-        try:
-            return bool(value)
-        except Exception as e:
-            return InvalidFieldValue("not boolean", exc=e)
 
 
 class List(Base):
