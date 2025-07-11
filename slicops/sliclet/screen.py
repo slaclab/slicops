@@ -86,6 +86,12 @@ class Screen(slicops.sliclet.Base):
     def on_click_start_button(self, txn, **kwargs):
         self.__set_acquire(txn, True)
 
+    def on_click_filter_in(self, txn, **kwargs):
+        pass
+
+    def on_click_filter_out(self, txn, **kwargs):
+        pass
+
     def on_click_stop_button(self, txn, **kwargs):
         self.__set_acquire(txn, False)
 
@@ -106,7 +112,7 @@ class Screen(slicops.sliclet.Base):
         def _choices():
             if value is None:
                 return ()
-            return slicops.device_db.device_names(value, _DEVICE_TYPE)
+            return slicops.device_db.device_names(_DEVICE_TYPE, value)
 
         txn.multi_set(
             ("camera.constraints.choices", _choices()),

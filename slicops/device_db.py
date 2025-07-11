@@ -194,18 +194,18 @@ def beam_paths():
     return rv
 
 
-def device_names(beam_path, device_type):
+def device_names(device_type, beam_path):
     """Query devices for device_type and beam_path
 
     Args:
-        beam_path (str): which beam path
         device_type (str): type of device to filter by
+        beam_path (str): which beam path
     Returns:
         tuple: sorted device names
     """
-    if device_type not in slicops.const.DEVICE_TYPES:
-        raise DeviceDbError(f"no such device_type={device_type}")
-    if rv := slicops.device_sql_db.device_names(beam_path, device_type):
+    if rv := slicops.device_sql_db.device_names(
+        _assert_device_type(device_type), beam_path
+    ):
         return rv
     # TODO(robnagler) refine because beam_path could exist, just not for device
     raise DeviceDbError(f"no devices for beam_path={beam_path}")
@@ -236,3 +236,18 @@ def meta_for_device(device_name):
     for r in rv.accessor.values():
         _static(rv, r)
     return rv
+
+
+def upstream_devices(device_type, beam_path, device_name):
+    """returns in z order"""
+    return slicops.device_sql_db.upstream_devices(
+        _assert_device_type(device_type),
+        beam_path,
+        device_name,
+    )
+
+
+def _assert_device_type(value):
+    if value not in slicops.const.DEVICE_TYPES:
+        raise DeviceDbError(f"no such device_type={value}")
+    return value
