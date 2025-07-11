@@ -43,7 +43,7 @@ class Base:
     __TOP_ATTRS = __SIMPLE_TOP_ATTRS.union(__GROUP_ATTRS)
     # Others that convert from yaml
     __INVALID_NAMES = frozenset(("true", "false", "null", "none"))
-    __VALID_NAME = re.compile("^[a-z]\w+$")
+    __VALID_NAME = re.compile(r"^[a-z]\w+$")
 
     def __init__(self, prototype, overrides):
         def _copy():
