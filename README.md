@@ -12,6 +12,7 @@ Documentation: https://slicops.readthedocs.io
 
 
 ### Setup Development
+Note, these instructions are intended for use on dev-srv09.
 
 #### Install Conda
 
@@ -81,6 +82,8 @@ In development, SlicOps uses three servers:
 - api - [slicops.pkcli.service.ui_api](https://github.com/slaclab/slicops/blob/main/slicops/pkcli/service.py) is the web server to connect to, which serves APIs, communicates with ADSimDetector, and proxies vite.
 
 #### First Time Install
+NOTE: following the steps below will create a slicops conda env, and your own sif file.
+Creating a sif file can take up to 45 minutes. These commands do not recognize if you want to use Rob's sif file (export command in previous section). 
 
 The first time run this command:
 
