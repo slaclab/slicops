@@ -148,25 +148,27 @@ class Screen(slicops.sliclet.Base):
 
         def _setup():
             try:
+                # If there's an epics issues, we have to clear the device
                 self.__device = self.__device = slicops.device.Device(camera)
                 _monitors()
             except slicops.device.DeviceError as e:
                 pkdlog(
                     "error={} setting up {}, clearing; stack={}", e, camera, pkdexc()
                 )
-                self.__device_destroy()
-                # TODO(robnagler) not clear this is right
-                raise pykern.util.APIError(e)
-
-        self.__device_destroy()
-        txn.multi_set(_DEVICE_DISABLE)
-        if camera:
-            _setup()
+                self.__device_destroy(txn)
+                self.__user_alert(
+                    txn, "unable to connect to camera={} error={}", camera, e
+                )
             txn.multi_set(
                 _DEVICE_ENABLE + (("pv.value", self.__device.meta.pv_prefix),)
             )
 
-    def __device_destroy(self):
+        self.__device_destroy(txn)
+        txn.multi_set(_DEVICE_DISABLE)
+        if camera:
+            _setup()
+
+    def __device_destroy(self, txn=None):
         if not self.__device:
             return
         self.__single_button = False
@@ -178,7 +180,7 @@ class Screen(slicops.sliclet.Base):
         except Exception:
             n = None
         try:
-            self.__set_acquire(False)
+            self.__set_acquire(txn, False)
         except Exception as e:
             pkdlog("set_acquire(False) device={} error={}", n, e)
         try:
@@ -217,7 +219,8 @@ class Screen(slicops.sliclet.Base):
             # No button disable since nothing changed
             return
         # No presses until we get a response from device
-        txn.multi_set(_BUTTONS_DISABLE)
+        if txn:
+            txn.multi_set(_BUTTONS_DISABLE)
         try:
             self.__device.put("acquire", acquire)
         except slicops.device.DeviceError as e:
@@ -238,6 +241,11 @@ class Screen(slicops.sliclet.Base):
             slicops.plot.fit_image(i, txn.field_get("curve_fit_method")),
         )
         return True
+
+    def __user_alert(txn, fmt, *args):
+        pkdp(txn)
+        pkdp(fmt)
+        pkdlog("TODO: USER ALERT: " + fmt, *args)
 
 
 CLASS = Screen

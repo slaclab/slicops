@@ -113,9 +113,6 @@ _env_check() {
 _env_conda_activate() {
     # Quick check for conda or pyenv environment setup so
     # we can use this with either.
-    if type -t slicops &> /dev/null; then
-        return
-    fi
     if ! type -t conda &> /dev/null; then
         _err 'conda not installed; please install and rerun'
     fi
