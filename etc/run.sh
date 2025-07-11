@@ -26,7 +26,7 @@ declare -A _port_map=(
     [vue]=1
 )
 _bashrc=$_run_dir/bashrc.sh
-_python_version=3.12.10
+_python_version=3.12.11
 _sif=${SLICOPS_APPTAINER_SIF:-$_run_dir/slicops.sif}
 _sim_dir=/home/vagrant/.local/epics/extensions/synApps/support/areaDetector-R3-12-1/ADSimDetector/iocs/simDetectorIOC/iocBoot/iocSimDetector
 _vue_dir=$_root_dir/ui
