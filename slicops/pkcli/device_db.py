@@ -44,7 +44,7 @@ screens:
 
 
 _KNOWN_KEYS = PKDict(
-    controls_information=frozenset(("PVs", "control_name")),
+    controls_information=frozenset(("PVs", "control_name", "pv_cache")),
     metadata=frozenset(
         (
             "area",
@@ -53,6 +53,7 @@ _KNOWN_KEYS = PKDict(
             "bpms_before_wire",
             "l_eff",
             "lblms",
+            "hardware",
             "rf_freq",
             "sum_l_meters",
             "type",
@@ -161,12 +162,15 @@ class _Parser(PKDict):
                 rec.controls_information.PVs.pksetdefault(
                     "acquire", f"{rec.controls_information.control_name}:Acquire"
                 )
+            # TODO(robnagler) parse pv_cache
             return rec
 
         def _meta(name, raw):
             # TODO validation
             c = raw.controls_information
             m = raw.metadata
+            # TODO ignore for now
+            raw.metadata.pkdel("hardware")
             self.meta_keys.update(m.keys())
             self.ctl_keys.update(c.keys())
             rv = PKDict(
@@ -194,7 +198,7 @@ class _Parser(PKDict):
                 raise AssertionError(f"unknown type={raw.metadata.type} expect={t}")
             if x := set(raw.keys()) - _TOP_LEVEL_KEYS:
                 raise AssertionError(f"unknown top level keys={s}")
-            for x in ("controls_information", "metadata"):
+            for x in _TOP_LEVEL_KEYS:
                 if y := set(raw[x].keys()) - _KNOWN_KEYS[x]:
                     raise AssertionError(f"unknown {x} keys={y}")
             if not raw.controls_information.PVs:

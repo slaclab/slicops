@@ -159,6 +159,7 @@ class Screen(slicops.sliclet.Base):
                 self.__user_alert(
                     txn, "unable to connect to camera={} error={}", camera, e
                 )
+                return
             txn.multi_set(
                 _DEVICE_ENABLE + (("pv.value", self.__device.meta.pv_prefix),)
             )
@@ -182,7 +183,7 @@ class Screen(slicops.sliclet.Base):
         try:
             self.__set_acquire(txn, False)
         except Exception as e:
-            pkdlog("set_acquire(False) device={} error={}", n, e)
+            pkdlog("PROBABLY ignore: set_acquire(False) device={} error={}", n, e)
         try:
             self.__device.destroy()
         except Exception as e:
@@ -242,9 +243,7 @@ class Screen(slicops.sliclet.Base):
         )
         return True
 
-    def __user_alert(txn, fmt, *args):
-        pkdp(txn)
-        pkdp(fmt)
+    def __user_alert(self, txn, fmt, *args):
         pkdlog("TODO: USER ALERT: " + fmt, *args)
 
 
