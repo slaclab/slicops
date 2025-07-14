@@ -26,6 +26,8 @@ _ACCESSOR_META = PKDict(
     n_bits=PKDict(py_type=int, pv_writable=False),
     n_col=PKDict(py_type=int, pv_writable=False),
     n_row=PKDict(py_type=int, pv_writable=False),
+    target_control=PKDict(py_type=int, pv_writable=True),
+    target_status=PKDict(py_type=int, pv_writable=False),
 )
 
 

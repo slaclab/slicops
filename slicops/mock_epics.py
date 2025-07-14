@@ -20,6 +20,8 @@ MONITOR_SLEEP = 0.1
 _X_SIZE = 50
 _Y_FACTOR = 1.3
 
+_PV_VALUE = None
+
 _PV = None
 
 
@@ -27,15 +29,20 @@ class PV:
     _CB_INDEX = 1
 
     def __init__(self, name, connection_timeout=0, connection_callback=None):
+        if name in _PV:
+            raise AssertionError(f"already exists PV={name}")
         self.pvname = name
         self.connected = True
         self.connection_callback = connection_callback
         self.monitor_callback = None
         self._auto_monitor = False
         self._monitor_queue = None
+        _PV[name] = self
 
     def disconnect(self):
-        pass
+        self._auto_monitor = False
+        if self._monitor_queue:
+            self._monitor_queue.put_nowait(None)
 
     def add_callback(self, callback):
         if self.monitor_callback:
@@ -49,9 +56,8 @@ class PV:
 
     @auto_monitor.setter
     def auto_monitor(self, value):
-        def _acquire():
+        def _simple():
             self.connection_callback(conn=True)
-            self._monitor_queue = queue.Queue()
             while True:
                 v = self._monitor_queue.get()
                 if v is None:
@@ -62,16 +68,21 @@ class PV:
         def _image():
             self.connection_callback(conn=True)
             for s in MONITOR_X_SIZE:
+                if not self._auto_monitor:
+                    break
                 time.sleep(MONITOR_SLEEP)
-                _PV.pkupdate(_pv_image(s))
-                self.monitor_callback(value=_PV[self.pvname])
+                _PV_VALUE.pkupdate(_pv_image(s))
+                self.monitor_callback(value=_PV_VALUE[self.pvname])
             self.connection_callback(conn=False)
 
         def _which():
             if "ArrayData" in self.pvname:
                 return _image
-            if "Acquire" in self.pvname:
-                return _acquire
+            if "Acquire" in self.pvname or "TGT_STS" in self.pvname:
+                self._monitor_queue = queue.Queue()
+                if (v := _PV_VALUE.get(self.pvname)) is not None:
+                    self._monitor_queue.put_nowait(v)
+                return _simple
             raise ValueError(f"cannot monitor pv={self.pvname}")
 
         if "IMAGE" in self.pvname:
@@ -80,14 +91,21 @@ class PV:
             return
         self._auto_monitor = value
         if value:
+            # we don't care the thread gets killed since this is a mock for unit
             threading.Thread(target=_which()).start()
 
     def get(self, timeout=0):
         # TOOD(robnagler) need to be more sophisticated
-        return _PV.get(self.pvname, None)
+        return _PV_VALUE.get(self.pvname, None)
 
     def put(self, value):
-        _PV[self.pvname] = value
+        n = self.pvname
+        if "PNEUMATIC" in self.pvname:
+            # TODO(robnagler) set to MOVING (0?) for a few ms
+            n = self.pvname.replace("PNEUMATIC", "TGT_STS")
+            value = 1 if value == 0 else 2
+            self = _PV[n]
+        _PV_VALUE[n] = value
         if self._monitor_queue:
             self._monitor_queue.put_nowait(value)
         return 1
@@ -99,16 +117,19 @@ class PV:
 
 
 def reset_state():
-    global _PV
+    global _PV_VALUE, _PV
 
-    _PV = PKDict(
+    _PV_VALUE = PKDict(
         {
             "13SIM1:cam1:Acquire": 0,
             "13SIM1:cam1:N_OF_BITS": 8,
             "YAGS:IN20:211:N_OF_COL": 100,
             "YAGS:IN20:211:N_OF_ROW": 100,
+            "OTRS:DIAG0:525:TGT_STS": 1,
+            "OTRS:DIAG0:525:Acquire": 0,
         }
     ).pkupdate(_pv_image(_X_SIZE))
+    _PV = PKDict()
 
 
 def _gaussian(x_size):

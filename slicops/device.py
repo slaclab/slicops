@@ -98,7 +98,7 @@ class _Accessor:
         self.device = device
         self.meta = device.meta.accessor[accessor_name]
         self._callback = None
-        self._mutex = threading.Lock()
+        self._lock = threading.Lock()
         # TODO(pjm): connection and PV timeouts need to be configurable?
         self._pv = epics.PV(
             self.meta.pv_name,
@@ -147,7 +147,7 @@ class _Accessor:
         Args:
             callback (callable): accepts a single `PKDict` as ag
         """
-        with self._mutex:
+        with self._lock:
             if self._callback:
                 raise ValueError(f"already monitoring {self}")
             # should lock
@@ -157,7 +157,7 @@ class _Accessor:
 
     def monitor_stop(self):
         """Stops monitoring PV"""
-        with self._mutex:
+        with self._lock:
             if not self._callback:
                 return
             self._callback = None
@@ -226,7 +226,7 @@ class _Accessor:
 
     def _run_callback(self, **kwargs):
         k = PKDict(accessor=self, **kwargs)
-        with self._mutex:
+        with self._lock:
             c = self._callback
         if c:
             c(k)

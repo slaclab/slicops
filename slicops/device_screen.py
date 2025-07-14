@@ -6,17 +6,101 @@
 
 from pykern.pkcollections import PKDict
 from pykern.pkdebug import pkdc, pkdlog, pkdp
-import slicops.device_db
+import slicops.device
+import enum
+import queue
+import threading
+
+_INSERT = 1
+_IN = 2
+_OUT = 1
 
 
-def insert_prof_target(device_name):
-    if _already_in(device_name):
-        raise ValueError(f"device={device_name} already in")
-    _assert_upstream_in(device_name)
+class Screen(slicops.device.Device):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.__destroyed = False
+        self.__value = None
+        self.__work_q = queue.PriorityQueue()
+        self.__lock = threading.Lock()
+        self.__status = self.accessor("target_status")
+        self.__control = self.accessor("target_control")
+        self.__target_in = threading.Event()
+        self.__worker = threading.Thread(
+            target=self.__work,
+            args=(self.device_name, self.__work_q, self.__lock),
+        )
+        self.__worker.start()
+        self.__status.monitor(self.__handle_status)
+
+    def destroy(self):
+        try:
+            with self.__lock:
+                if self.__destroyed:
+                    return
+                self.__destroyed = True
+                self.__work_q.put_nowait((_Work.destroy, None))
+                self.__work_q = None
+                self.__target_in.set()
+                # cause callers to crash
+                try:
+                    delattr(self, "value")
+                except Exception:
+                    pass
+        finally:
+            super().destroy()
+
+    def insert_target(self):
+        with self.__lock:
+            if self.__target_in.is_set():
+                return
+            self.__work_q.put_nowait((_Work.control, _INSERT))
+            t = self.__target_in
+        t.wait()
+        with self.__lock:
+            if self.__destroyed:
+                raise ValueError(f"destroyed device={self.device_name}")
+
+    def __work(self, name, work_q, lock):
+        try:
+            while True:
+                w, v = work_q.get()
+                with lock:
+                    if self.__destroyed:
+                        return
+                    if _Work.control == w:
+                        self.__control.put(v)
+                        continue
+                    if _Work.status == w:
+                        if v == _IN:
+                            self.__target_in.set()
+                        elif v == _OUT:
+                            self.__target_in.clear()
+                        continue
+                    raise AssertionError(f"unknown work={w}")
+        except Exception as e:
+            pkdlog("error={} accessor={} stack={}", e, name, pkdexc())
+        finally:
+            self.destroy()
+
+    def __handle_status(self, work):
+        with self.__lock:
+            if self.__destroyed:
+                return
+            if e := work.get("error"):
+                pkdlog("error={} on {}", e, work.get("accessor"))
+                return
+            if (v := work.get("value")) is None:
+                return
+            self.__work_q.put_nowait((_Work.status, v))
 
 
-def _already_in(device):
+class _Work(enum.IntEnum):
+    # sort in priority value order, lowest number is highest priority
+    destroy = 0
+    status = 1
+    control = 2
 
-    pass
 
 #    = slicops.device_db.upstream_devices(device_name)
