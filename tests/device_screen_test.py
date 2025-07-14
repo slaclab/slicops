@@ -28,16 +28,6 @@ def test_target():
         pkunit.pkeq(1, d.accessor("target_status").get())
         d.insert_target()
         pkunit.pkeq(2, d.accessor("target_status").get())
-        return
-        pkunit.pkeq(False, d.get("acquire"))
-        s = d.accessor("target_status")
-        s.monitor(_status)
-        time.sleep(0.1)
-        pkunit.pkeq(1, status)
-        c = d.accessor("target_control")
-        c.put(1)
-        time.sleep(0.1)
-        pkunit.pkeq(2, status)
     finally:
         if d:
             d.destroy()
