@@ -12,7 +12,8 @@ Documentation: https://slicops.readthedocs.io
 
 
 ### Setup Development
-Note, these instructions are intended for use on dev-srv09.
+
+Note: these instructions are intended for use on dev-srv09.
 
 #### Install Conda
 
@@ -83,7 +84,7 @@ In development, SlicOps uses three servers:
 
 #### First Time Install
 NOTE: following the steps below will create a slicops conda env, and your own sif file, if they are not found on your path.
-Creating a sif file can take up to 45 minutes.  
+Creating a sif file can take up to 45 minutes.
 
 The first time run this command:
 
