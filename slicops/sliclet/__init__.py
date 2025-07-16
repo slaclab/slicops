@@ -39,13 +39,13 @@ def instance(name, queue):
 
 class Base:
     def __init__(self, name, ctx_update_q):
-        self.__name = name
-        self.__title = self.__class__.__name__
+        self.name = name
+        self.title = self.__class__.__name__
         self.__loop = asyncio.get_event_loop()
         self.__ctx_update_q = ctx_update_q
         # This might fail due to errors in the yaml
         self.__locked = False
-        self.__ctx = slicops.ctx.Ctx(self.__name, self.__title)
+        self.__ctx = slicops.ctx.Ctx(self.name, self.title)
         self.__work_q = queue.PriorityQueue()
         self.__lock = threading.RLock()
         self.__on_methods = self.__inspect_on_methods()
