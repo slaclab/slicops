@@ -58,7 +58,7 @@ def write(base, *key_value_pairs):
         return PKDict()
 
     def _validate():
-        ctx = slicops.ctx.Ctx(base)
+        ctx = slicops.ctx.Ctx(base, base)
         for k, v in _pairs():
             yield k, ctx.fields[k].value_set(v)
 

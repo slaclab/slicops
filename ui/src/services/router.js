@@ -1,27 +1,24 @@
 
 import { createRouter, createWebHistory } from 'vue-router'
+import VApp from '@/components/VApp.vue';
 
 const routes = [
     {
         path: '/',
-        redirect: '/screen',
+        component: VApp,
+        props: { sliclet: '' },
     },
     {
         path: '/:sliclet(\\w+)',
-        name: 'Sliclet',
-        component: () => import('@/components/VApp.vue'),
+        component: VApp,
+        props: true,
     },
-]
+];
 
 const router = createRouter({
     history: createWebHistory(),
     routes,
     linkActiveClass: 'active'
-});
-
-router.beforeEach((to, from, next) => {
-    document.title = to.name;
-    next();
 });
 
 export default router;

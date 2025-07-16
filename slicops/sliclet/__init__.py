@@ -32,17 +32,20 @@ _CTX_WRITE_ARGS = frozenset(["field_values"])
 
 
 def instance(name, queue):
+    if not name:
+        name = _cfg.default
     return importlib.import_module(f"slicops.sliclet.{name}").CLASS(name, queue)
 
 
 class Base:
     def __init__(self, name, ctx_update_q):
         self.__name = name
+        self.__title = self.__class__.__name__
         self.__loop = asyncio.get_event_loop()
         self.__ctx_update_q = ctx_update_q
         # This might fail due to errors in the yaml
         self.__locked = False
-        self.__ctx = slicops.ctx.Ctx(self.__name)
+        self.__ctx = slicops.ctx.Ctx(self.__name, self.__title)
         self.__work_q = queue.PriorityQueue()
         self.__lock = threading.RLock()
         self.__on_methods = self.__inspect_on_methods()
@@ -189,3 +192,15 @@ class Base:
         with self.lock_for_update(log_op="ctx_write") as txn:
             _click(tuple(_change(sorted(_updates(), key=lambda x: x.field_name))))
         return True
+
+
+def _init():
+    global _cfg
+    from pykern import pkconfig
+
+    _cfg = pkconfig.init(
+        default=("screen", str, "default sliclet"),
+    )
+
+
+_init()

@@ -20,13 +20,17 @@
 
 <script setup>
  import { onUnmounted, ref, reactive, watch } from 'vue';
- import { useRoute } from 'vue-router';
+ import { useRoute, useRouter } from 'vue-router';
  import { apiService, websocketConnectedRef } from '@/services/api.js';
  import { logService } from '@/services/log.js';
  import VRows from '@/components/layout/VRows.vue';
 
- const props = defineProps();
+ const props = defineProps({
+     sliclet: String,
+ });
 
+ const router = useRouter();
+ const route = useRoute();
  const errorMessage = ref('');
  const ui_layout = reactive({});
  const ctx = reactive({});
@@ -84,6 +88,16 @@
          // layout is always a full update
          ui_layout.value = result.ui_layout;
      }
+     if (result.sliclet_name) {
+         document.title = result.sliclet_title;
+         if (! props.sliclet) {
+             const u = '/' + result.sliclet_name;
+             if (route.path !== u) {
+                 // avoid a possible redirect loop
+                 router.replace(u);
+             }
+         }
+     }
      result.fields = lessReactiveCtx(result.fields)
      if (! ctx.value) {
          ctx.value = result.fields;
@@ -105,7 +119,7 @@
 
  watch(websocketConnectedRef, () => {
      if (websocketConnectedRef.value) {
-         apiConnection = apiService.subscribe(`ui_ctx_update`, {sliclet:  useRoute().params.appname}, uiUpdate, handleError);
+         apiConnection = apiService.subscribe(`ui_ctx_update`, {sliclet:  props.sliclet}, uiUpdate, handleError);
      }
  });
 

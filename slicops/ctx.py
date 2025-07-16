@@ -17,7 +17,7 @@ import slicops.ui_layout
 class Ctx:
     __TOP_KEYS = frozenset(("fields", "ui_layout"))
 
-    def __init__(self, name, path=None):
+    def __init__(self, name, title, path=None):
         def _check_raw(got):
             if not isinstance(got, dict):
                 raise ValueError(f"expecting a dict, not type={type(got)}")
@@ -26,6 +26,9 @@ class Ctx:
                 raise ValueError(f"unexpected keys={x}")
             if x := self.__TOP_KEYS - g:
                 raise ValueError(f"missing keys={x}")
+
+        self.name = name
+        self.title = title
 
         step = "yaml"
         try:
@@ -103,6 +106,8 @@ class Txn:
             u = PKDict(fields=PKDict(_pairs(u)))
         if self.__first_time:
             u = c.as_dict()
+            u.sliclet_title = c.title
+            u.sliclet_name = c.name
         # TODO(robnagler) only send changes and protect large data being sent
         # screen protects against this by clearing plot when irrelevant
         if u:
