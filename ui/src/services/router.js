@@ -7,19 +7,9 @@ const routes = [
         redirect: '/screen',
     },
     {
-        path: '/fractals',
-        name: 'Fractals',
-        component: () => import('@/views/Fractals.vue'),
-    },
-    {
-        path: '/screen',
-        name: 'Screen',
-        component: () => import('@/views/Screen.vue'),
-    },
-    {
-        path: '/simple',
-        name: 'Simple',
-        component: () => import('@/views/Simple.vue'),
+        path: '/:sliclet(\\w+)',
+        name: 'Sliclet',
+        component: () => import('@/components/VApp.vue'),
     },
 ]
 

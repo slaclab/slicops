@@ -20,13 +20,12 @@
 
 <script setup>
  import { onUnmounted, ref, reactive, watch } from 'vue';
+ import { useRoute } from 'vue-router';
  import { apiService, websocketConnectedRef } from '@/services/api.js';
  import { logService } from '@/services/log.js';
  import VRows from '@/components/layout/VRows.vue';
 
- const props = defineProps({
-     prefix: String,
- });
+ const props = defineProps();
 
  const errorMessage = ref('');
  const ui_layout = reactive({});
@@ -106,7 +105,7 @@
 
  watch(websocketConnectedRef, () => {
      if (websocketConnectedRef.value) {
-         apiConnection = apiService.subscribe(`ui_ctx_update`, {sliclet: props.prefix}, uiUpdate, handleError);
+         apiConnection = apiService.subscribe(`ui_ctx_update`, {sliclet:  useRoute().params.appname}, uiUpdate, handleError);
      }
  });
 
