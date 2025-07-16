@@ -38,7 +38,7 @@ def test_upstream():
     from pykern import pkdebug, pkunit
     from slicops import device_db
 
-    a = device_db.upstream_devices("PROF", "CU_HXR", "YAGH2")
-    pkunit.pkeq(9, len(a))
+    a = device_db.upstream_devices("PROF", "CU_HXR", "OTR11")
+    pkunit.pkeq(10, len(a))
     pkunit.pkok("VCC", a[0])
     pkunit.pkok("OTR4", a[-1])

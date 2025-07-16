@@ -61,6 +61,7 @@ def upstream_devices(device_type, beam_path, device_name):
     with _session() as s:
         # select device.device_name from device_meta_float, device where device_meta_name = 'sum_l_meters' and device_meta_value < 33 and device.device_type = 'PROF' and device.device_name = device_meta_float.device_name;
         c = s.t.device_meta_float.c.device_name
+        _assert_on_beampath(device_name, beam_path, s)
         return tuple(
             r.device_name
             for r in s.select(
@@ -85,6 +86,23 @@ def upstream_devices(device_type, beam_path, device_name):
             )
         )
 
+def _assert_on_beampath(device, beam_path, s):
+    c = s.t.device.c.device_name
+    v = s.select_one_or_none(
+        sqlalchemy.select(c)
+        .select_from(
+            s.t.device.join(
+                s.t.beam_path,
+                s.t.beam_path.c.beam_area == s.t.device.c.beam_area,
+            )
+        ).where(
+            s.t.device.c.device_name == device,
+            s.t.beam_path.c.beam_path == beam_path,
+        ),
+        None
+    )
+    if v is None:
+        raise ValueError(f"device={device} is not in beam_path={beam_path}")
 
 def _device_meta(device, meta, s):
     return s.select_one(
