@@ -25,15 +25,14 @@ _EVENT_TYPES = frozenset(
 
 
 class YAMLDb(slicops.sliclet.Base):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.__db_watcher = None
-
     def handle_destroy(self):
         # TODO(robnagler) Need to make idempotent
         if self.__db_watcher:
             self.__db_watcher.destroy()
             self.__db_watcher = None
+
+    def handle_init(self, txn):
+        self.__db_watcher = None
 
     def handle_start(self, txn):
         # TODO(robnagler) need a separate init for the instance before start

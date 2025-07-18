@@ -54,6 +54,12 @@ class Ctx:
             ui_layout=PKDict(rows=copy.deepcopy(self.ui_layout.rows)),
         )
 
+    def first_time(self):
+        u = self.as_dict()
+        u.sliclet_title = self.title
+        u.sliclet_name = self.name
+        return u
+
     def __parse(self, raw, fields, prototypes):
 
         def _one(name, attrs, prototype):
@@ -86,10 +92,9 @@ class Ctx:
 
 
 class Txn:
-    def __init__(self, ctx, first_time=False):
+    def __init__(self, ctx):
         self.__ctx = ctx
         self.__updates = PKDict()
-        self.__first_time = first_time
 
     def commit(self, update):
 
@@ -100,18 +105,14 @@ class Txn:
         c = self.__ctx
         u = self.__updates
         self.__ctx = self.__updates = None
-        if u:
-            # could technically do collision checking on the update
-            c.fields.update(u)
-            u = PKDict(fields=PKDict(_pairs(u)))
-        if self.__first_time:
-            u = c.as_dict()
-            u.sliclet_title = c.title
-            u.sliclet_name = c.name
+        if not u:
+            return
+        # could technically do collision checking on the update
+        c.fields.update(u)
         # TODO(robnagler) only send changes and protect large data being sent
         # screen protects against this by clearing plot when irrelevant
-        if u:
-            update(u)
+        if update:
+            update(PKDict(fields=PKDict(_pairs(u))))
 
     def is_field_value_valid(self, name, value):
         return not isinstance(
