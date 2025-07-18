@@ -11,7 +11,7 @@
             type="checkbox"
             data-toggle="toggle"
             data-onstyle="secondary"
-            v-model="ctx[field].value"
+            v-model="checkboxModel"
             v-on:change="onChanged"
             ref="toggleElement"
         />
@@ -26,10 +26,16 @@
      field: String,
      ctx: Object,
  });
+ const checkboxModel = ref(null);
  const toggleElement = ref(null);
 
+ const hasChanged = () => checkboxModel.value !== props.ctx[props.field].value;
+
  const onChanged = () => {
-     props.ctx.serverAction(props.field, props.ctx[props.field].value);
+     if (hasChanged()) {
+         props.ctx[props.field].value = checkboxModel.value;
+         props.ctx.serverAction(props.field, props.ctx[props.field].value);
+     }
  };
 
  onBeforeUnmount(() => {
@@ -45,8 +51,11 @@
  });
 
  watch(() => props.ctx[props.field].value, () => {
-     // work-around for missing render on revert changes
-     toggleElement.value.bootstrapToggle(
-         props.ctx[props.field].value ? 'on' : 'off');
+     if (hasChanged()) {
+         checkboxModel.value = props.ctx[props.field].value;
+         // work-around for missing render on revert changes
+         toggleElement.value.bootstrapToggle(
+             props.ctx[props.field].value ? 'on' : 'off');
+     }
  });
 </script>

@@ -20,10 +20,10 @@ import threading
 
 
 class _Work(enum.IntEnum):
-    # sort in priority value order, lowest number is highest priority
     error = 1
     session_end = 2
     ctx_write = 3
+    start = 4
 
 
 _ON_METHODS_RE = re.compile("^on_(click|change)_(\w+)$")
@@ -32,20 +32,28 @@ _CTX_WRITE_ARGS = frozenset(["field_values"])
 
 
 def instance(name, queue):
+    if not name:
+        name = _cfg.default
     return importlib.import_module(f"slicops.sliclet.{name}").CLASS(name, queue)
 
 
 class Base:
     def __init__(self, name, ctx_update_q):
-        self.__name = name
+        self.name = name
+        self.title = self.__class__.__name__
         self.__loop = asyncio.get_event_loop()
         self.__ctx_update_q = ctx_update_q
         # This might fail due to errors in the yaml
         self.__locked = False
-        self.__ctx = slicops.ctx.Ctx(self.__name)
-        self.__work_q = queue.PriorityQueue()
+        self.__ctx = slicops.ctx.Ctx(self.name, self.title)
+        self.__work_q = queue.Queue()
         self.__lock = threading.RLock()
         self.__on_methods = self.__inspect_on_methods()
+        txn = slicops.ctx.Txn(self.__ctx)
+        self.handle_init(txn)
+        txn.commit(None)
+        self.__ctx_update(self.__ctx.first_time())
+        self.__put_work(_Work.start, None)
         self.__thread = threading.Thread(target=self.__run, daemon=True)
         self.__thread.start()
 
@@ -61,11 +69,14 @@ class Base:
     def handle_destroy(self):
         pass
 
+    def handle_init(self, txn):
+        pass
+
     def handle_start(self, txn):
         pass
 
     @contextlib.contextmanager
-    def lock_for_update(self, log_op=None, _first_time=False):
+    def lock_for_update(self, log_op=None):
         ok = True
         try:
             with self.__lock:
@@ -75,7 +86,7 @@ class Base:
                 txn = None
                 try:
                     self.__locked = True
-                    txn = slicops.ctx.Txn(self.__ctx, first_time=_first_time)
+                    txn = slicops.ctx.Txn(self.__ctx)
                     yield txn
                 except Exception:
                     if txn:
@@ -88,11 +99,12 @@ class Base:
         except Exception as e:
             if not ok:
                 raise
-            d = f"error={e}"
+            if not (d := str(e)):
+                d = str(type(e))
+            d = f"error={d}"
             try:
-                if not log_op:
-                    log_op = pykern.pkinspect.caller()
-                d += f" op={log_op}"
+                if log_op:
+                    d += f" op={log_op}"
             except Exception as e2:
                 pkdlog("error={} during exception stack={}", e2, pkdexc())
             if not isinstance(e, pykern.util.APIError):
@@ -128,19 +140,13 @@ class Base:
                 self.__loop.call_soon_threadsafe(self.__ctx_update_q.put_nowait, None)
             except Exception:
                 pass
-            # TODO(robnagler) may not want all these to be None
-            self.__ctx_update_q = None
-            self.__work_q = None
-            self.__thread = None
-            self.__lock = None
 
         try:
-            with self.lock_for_update(_first_time=True) as txn:
-                self.handle_start(txn=txn)
             while True:
                 w = a = None
                 try:
                     w, a = self.__work_q.get()
+                    self.__work_q.task_done()
                     if not getattr(self, f"_work_{w._name_}")(a):
                         return
                 except Exception as e:
@@ -152,6 +158,7 @@ class Base:
         except Exception as e:
             try:
                 pkdlog("error={} stack={}", e, pkdexc())
+                self._work_error(e)
             except Exception:
                 pass
         finally:
@@ -161,11 +168,11 @@ class Base:
         self.__loop.call_soon_threadsafe(self.__ctx_update_q.put_nowait, result)
 
     def _work_error(self, msg):
-        self.__ctx_update(pykern.util.APIError("{}", msg))
-        return False
-
-    def _work_session_end(self, unused):
-        # TODO(robnagler) maybe if there are too many errors fail or stop logging?
+        self.__ctx_update(
+            msg
+            if isinstance(msg, pykern.util.APIError)
+            else pykern.util.APIError("{}", msg)
+        )
         return False
 
     def _work_ctx_write(self, field_values):
@@ -189,3 +196,24 @@ class Base:
         with self.lock_for_update(log_op="ctx_write") as txn:
             _click(tuple(_change(sorted(_updates(), key=lambda x: x.field_name))))
         return True
+
+    def _work_session_end(self, unused):
+        # TODO(robnagler) maybe if there are too many errors fail or stop logging?
+        return False
+
+    def _work_start(self, unused):
+        with self.lock_for_update(log_op="start") as txn:
+            self.handle_start(txn=txn)
+        return True
+
+
+def _init():
+    global _cfg
+    from pykern import pkconfig
+
+    _cfg = pkconfig.init(
+        default=("screen", str, "default sliclet"),
+    )
+
+
+_init()

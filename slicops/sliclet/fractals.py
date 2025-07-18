@@ -7,10 +7,10 @@
 from pykern.pkcollections import PKDict
 from pykern.pkdebug import pkdc, pkdexc, pkdlog, pkdp
 import numpy as np
-import slicops.sliclet.simple
+import slicops.sliclet.yaml_db
 
 
-class Fractals(slicops.sliclet.simple.Simple):
+class Fractals(slicops.sliclet.yaml_db.YAMLDb):
 
     def on_change_mode(self, txn, value, **kwargs):
         j = value == "Julia"

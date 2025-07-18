@@ -1,4 +1,4 @@
-"""Generate fractals controlled by a simple db
+"""Generate fractals controlled by a yaml_db
 
 :copyright: Copyright (c) 2024 The Board of Trustees of the Leland Stanford Junior University, through SLAC National Accelerator Laboratory (subject to receipt of any required approvals from the U.S. Dept. of Energy).  All Rights Reserved.
 :license: http://github.com/slaclab/slicops/LICENSE
@@ -10,7 +10,7 @@ import datetime
 import numpy
 import pykern.pkcli
 import random
-import slicops.pkcli.simple
+import slicops.pkcli.yaml_db
 import time
 
 _SLICLET = "fractals"
@@ -29,7 +29,7 @@ def forever(period):
 
 
 def once():
-    p = slicops.pkcli.simple.read(_SLICLET)
+    p = slicops.pkcli.yaml_db.read(_SLICLET)
     g = _compute(p)
     rv = PKDict(plot_file=str(path()))
     if g is None:
@@ -40,11 +40,11 @@ def once():
         rv.message = "Finished: " + datetime.datetime.utcnow().isoformat(
             timespec="seconds"
         )
-    slicops.pkcli.simple.write(_SLICLET, rv)
+    slicops.pkcli.yaml_db.write(_SLICLET, rv)
 
 
 def path():
-    return slicops.pkcli.simple.path(_SLICLET).new(basename="fractals.npy")
+    return slicops.pkcli.yaml_db.path(_SLICLET).new(basename="fractals.npy")
 
 
 def _compute(params):

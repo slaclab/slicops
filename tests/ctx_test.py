@@ -12,7 +12,7 @@ def test_cases():
 
     for d in pkunit.case_dirs():
         try:
-            r = ctx.Ctx("input", path=d).as_dict()
+            r = ctx.Ctx("input", "Input", path=d).as_dict()
         except Exception as e:
             pkdebug.pkdlog("{}", pkdebug.pkdexc())
             r = PKDict(error=e)
@@ -24,7 +24,7 @@ def test_txn():
     from pykern.pkcollections import PKDict
     from slicops import ctx
 
-    c = ctx.Ctx("input", path=pkunit.data_dir().join("simple.in"))
+    c = ctx.Ctx("input", "Input", path=pkunit.data_dir().join("simple.in"))
     txn = ctx.Txn(c)
     with pkunit.pkexcept(ValueError):
         txn.field_set("increment", 0)

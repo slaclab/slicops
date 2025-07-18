@@ -17,7 +17,7 @@ import slicops.ui_layout
 class Ctx:
     __TOP_KEYS = frozenset(("fields", "ui_layout"))
 
-    def __init__(self, name, path=None):
+    def __init__(self, name, title, path=None):
         def _check_raw(got):
             if not isinstance(got, dict):
                 raise ValueError(f"expecting a dict, not type={type(got)}")
@@ -26,6 +26,9 @@ class Ctx:
                 raise ValueError(f"unexpected keys={x}")
             if x := self.__TOP_KEYS - g:
                 raise ValueError(f"missing keys={x}")
+
+        self.name = name
+        self.title = title
 
         step = "yaml"
         try:
@@ -50,6 +53,12 @@ class Ctx:
             fields=PKDict((k, v.as_dict()) for k, v in self.fields.items()),
             ui_layout=PKDict(rows=copy.deepcopy(self.ui_layout.rows)),
         )
+
+    def first_time(self):
+        u = self.as_dict()
+        u.sliclet_title = self.title
+        u.sliclet_name = self.name
+        return u
 
     def __parse(self, raw, fields, prototypes):
 
@@ -83,10 +92,9 @@ class Ctx:
 
 
 class Txn:
-    def __init__(self, ctx, first_time=False):
+    def __init__(self, ctx):
         self.__ctx = ctx
         self.__updates = PKDict()
-        self.__first_time = first_time
 
     def commit(self, update):
 
@@ -97,16 +105,14 @@ class Txn:
         c = self.__ctx
         u = self.__updates
         self.__ctx = self.__updates = None
-        if u:
-            # could technically do collision checking on the update
-            c.fields.update(u)
-            u = PKDict(fields=PKDict(_pairs(u)))
-        if self.__first_time:
-            u = c.as_dict()
+        if not u:
+            return
+        # could technically do collision checking on the update
+        c.fields.update(u)
         # TODO(robnagler) only send changes and protect large data being sent
         # screen protects against this by clearing plot when irrelevant
-        if u:
-            update(u)
+        if update:
+            update(PKDict(fields=PKDict(_pairs(u))))
 
     def is_field_value_valid(self, name, value):
         return not isinstance(

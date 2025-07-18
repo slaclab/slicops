@@ -39,7 +39,7 @@ class Commands(slicops.pkcli.CommandsBase):
                 return [
                     (
                         # very specific so we control the name space
-                        r"^(?:/(?:screen|simple)/?|/)(assets/[^/.]+\.(?:css|js)|favicon.png|)$",
+                        r"^/(assets/[^/.]+\.(?:css|js)|favicon.png|index.html|)$",
                         web.StaticFileHandler,
                         PKDict(
                             path=str(pkresource.file_path("vue")),
