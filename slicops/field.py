@@ -201,6 +201,20 @@ class Boolean(Base):
 
     def _from_literal(self, value):
         try:
+            if isinstance(value, bool):
+                return value
+            if isinstance(value, int):
+                return bool(value)
+            if isinstance(value, str):
+                if value.lower() in ("true", "t", "1", "on", "yes", "y"):
+                    return True
+                if value.lower() in ("false", "f", "0", "off", "no", "n"):
+                    return False
+                try:
+                    # try to convert to an int (maybe 0000, etc.)
+                    value = int(value)
+                except Exception:
+                    pass
             return bool(value)
         except Exception as e:
             return InvalidFieldValue("not boolean", exc=e)
