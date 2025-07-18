@@ -201,6 +201,10 @@ class Screen(slicops.sliclet.Base):
             if self.__update_plot(txn) and self.__single_button:
                 # self.__single_button = False
                 self.__set_acquire(txn, False)
+                txn.multi_set(
+                    ("single_button.ui.enabled", True),
+                    ("start_button.ui.enabled", True),
+                )
 
     def __set_acquire(self, txn, acquire):
         if not self.__device:
