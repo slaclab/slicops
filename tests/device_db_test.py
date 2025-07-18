@@ -38,7 +38,7 @@ def test_upstream():
     from pykern import pkdebug, pkunit
     from slicops import device_db
 
-    a = device_db.upstream_devices("PROF", "CU_HXR", "OTR11")
-    pkunit.pkeq(10, len(a))
-    pkunit.pkok("VCC", a[0])
-    pkunit.pkok("OTR4", a[-1])
+    a = device_db.upstream_devices("PROF", "target_control","CU_HXR", "OTR11")
+    pkunit.pkeq(9, len(a))
+    pkunit.pkok("YAG01" == a[0], "Expected first device=YAG01, got={}", a[0])
+    pkunit.pkok("OTR4" == a[-1], "Expected last device=OTR4, got={}", a[-1])

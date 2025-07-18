@@ -57,7 +57,7 @@ def device_names(device_type, beam_path):
         )
 
 
-def upstream_devices(device_type, beam_path, device_name):
+def upstream_devices(device_type, accessor_name, beam_path, device_name):
     with _session() as s:
         # select device.device_name from device_meta_float, device where device_meta_name = 'sum_l_meters' and device_meta_value < 33 and device.device_type = 'PROF' and device.device_name = device_meta_float.device_name;
         c = s.t.device_meta_float.c.device_name
@@ -73,6 +73,9 @@ def upstream_devices(device_type, beam_path, device_name):
                     ).join(
                         s.t.beam_path,
                         s.t.beam_path.c.beam_area == s.t.device.c.beam_area,
+                    ).join(
+                        s.t.device_pv,
+                        s.t.device_pv.c.device_name == c,
                     )
                 )
                 .where(
@@ -81,6 +84,7 @@ def upstream_devices(device_type, beam_path, device_name):
                     s.t.device_meta_float.c.device_meta_value
                     < _device_meta(device_name, "sum_l_meters", s),
                     s.t.device.c.device_type == device_type,
+                    s.t.device_pv.c.accessor_name == accessor_name,
                 )
                 .order_by(s.t.device_meta_float.c.device_meta_value)
             )

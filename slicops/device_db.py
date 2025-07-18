@@ -240,10 +240,11 @@ def meta_for_device(device_name):
     return rv
 
 
-def upstream_devices(device_type, beam_path, device_name):
+def upstream_devices(device_type, accessor_name, beam_path, device_name):
     """returns in z order"""
     return slicops.device_sql_db.upstream_devices(
         _assert_device_type(device_type),
+        accessor_name,
         beam_path,
         device_name,
     )

@@ -102,5 +102,4 @@ class _Work(enum.IntEnum):
     status = 1
     control = 2
 
-
 #    = slicops.device_db.upstream_devices(device_name)
