@@ -7,10 +7,12 @@
 from pykern.pkcollections import PKDict
 from pykern.pkdebug import pkdc, pkdlog, pkdp
 import slicops.device
+import slicops.device_db
 import enum
 import queue
 import threading
 
+_REMOVE = 0
 _INSERT = 1
 _IN = 2
 _OUT = 1
@@ -20,6 +22,7 @@ class Screen(slicops.device.Device):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.__beamline = beamline
         self.__destroyed = False
         self.__value = None
         self.__work_q = queue.PriorityQueue()
@@ -27,6 +30,7 @@ class Screen(slicops.device.Device):
         self.__status = self.accessor("target_status")
         self.__control = self.accessor("target_control")
         self.__target_in = threading.Event()
+        self.__target_out = threading.Event()
         self.__worker = threading.Thread(
             target=self.__work,
             args=(self.device_name, self.__work_q, self.__lock),
@@ -62,6 +66,17 @@ class Screen(slicops.device.Device):
             if self.__destroyed:
                 raise ValueError(f"destroyed device={self.device_name}")
 
+    def remove_target(self):
+        with self.__lock:
+            if self.__target_out.is_set():
+                return
+            self.__work_q.put_nowait((_Work.control, _REMOVE))
+            t = self.__target_out
+        t.wait()
+        with self.__lock:
+            if self.__destroyed:
+                raise ValueError(f"destroyed device={self.device_name}")
+
     def __work(self, name, work_q, lock):
         try:
             while True:
@@ -75,8 +90,10 @@ class Screen(slicops.device.Device):
                     if _Work.status == w:
                         if v == _IN:
                             self.__target_in.set()
+                            self.__target_out.clear()
                         elif v == _OUT:
                             self.__target_in.clear()
+                            self.__target_out.set()
                         continue
                     raise AssertionError(f"unknown work={w}")
         except Exception as e:

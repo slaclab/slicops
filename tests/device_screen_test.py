@@ -28,6 +28,8 @@ def test_target():
         pkunit.pkeq(1, d.accessor("target_status").get())
         d.insert_target()
         pkunit.pkeq(2, d.accessor("target_status").get())
+        d.remove_target()
+        pkunit.pkeq(1, d.accessor("target_status").get())
     finally:
         if d:
-            d.destroy()
+            d.destroy()    
