@@ -20,7 +20,7 @@ _OUT = 1
 
 class Screen(slicops.device.Device):
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, beamline=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.__beamline = beamline
         self.__destroyed = False
@@ -88,7 +88,7 @@ class Screen(slicops.device.Device):
         t.wait()
         with self.__lock:
             if self.__destroyed:
-                raise ValueError(f"destroyed device={self.device_name}")
+p                raise ValueError(f"destroyed device={self.device_name}")
 
     def __work(self, name, work_q, lock):
         try:
