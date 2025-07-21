@@ -1,37 +1,24 @@
 
 import { createRouter, createWebHistory } from 'vue-router'
+import VApp from '@/components/VApp.vue';
 
 const routes = [
     {
         path: '/',
-        redirect: '/screen',
+        component: VApp,
+        props: { sliclet: '' },
     },
     {
-        path: '/fractals',
-        name: 'Fractals',
-        component: () => import('@/views/Fractals.vue'),
+        path: '/:sliclet(\\w+)',
+        component: VApp,
+        props: true,
     },
-    {
-        path: '/screen',
-        name: 'Screen',
-        component: () => import('@/views/Screen.vue'),
-    },
-    {
-        path: '/simple',
-        name: 'Simple',
-        component: () => import('@/views/Simple.vue'),
-    },
-]
+];
 
 const router = createRouter({
     history: createWebHistory(),
     routes,
     linkActiveClass: 'active'
-});
-
-router.beforeEach((to, from, next) => {
-    document.title = to.name;
-    next();
 });
 
 export default router;

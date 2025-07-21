@@ -24,8 +24,10 @@ async def test_basic():
 
     async with unit_util.Setup("screen") as s:
         from pykern import pkunit, pkdebug
+        from pykern.pkdebug import pkdc, pkdexc, pkdlog, pkdp
         import asyncio
 
+        r = await s.ctx_update()
         r = await s.ctx_update()
         pkunit.pkeq("DEV_BEAM_PATH", r.fields.beam_path.value)
         pkunit.pkeq("DEV_CAMERA", r.fields.camera.value)
