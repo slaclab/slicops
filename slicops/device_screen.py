@@ -55,6 +55,19 @@ class Screen(slicops.device.Device):
         finally:
             super().destroy()
 
+    def _get_upstream(self):
+        if self.beam_line is None:
+            return None
+        upstream_names = slicops.device_db.upstream_devices(
+            "PROF",
+            "target_control",
+            self.beam_path,
+            self.device_name
+        )
+        return {
+            name: slicops.device.Device(name) for n in upstream_names
+        }
+
     def insert_target(self):
         with self.__lock:
             if self.__target_in.is_set():
