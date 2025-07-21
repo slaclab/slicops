@@ -20,9 +20,9 @@ _OUT = 1
 
 class Screen(slicops.device.Device):
 
-    def __init__(self, beamline=None, *args, **kwargs):
+    def __init__(self, beam_path, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.__beamline = beamline
+        self.__beam_path = beam_path
         self.__destroyed = False
         self.__value = None
         self.__work_q = queue.PriorityQueue()
@@ -56,8 +56,6 @@ class Screen(slicops.device.Device):
             super().destroy()
 
     def _get_upstream(self):
-        if self.beam_line is None:
-            return None
         upstream_names = slicops.device_db.upstream_devices(
             "PROF",
             "target_control",
