@@ -7,7 +7,7 @@
 #
 # This installs conda environment "slicops", where it installs nodejs,
 # python, and slicops. Also builds apptainer image (slicops.sif) if it
-# can't $SLICOPS_APPTAINER_SIF.
+# can't find $SLICOPS_APPTAINER_SIF.
 #
 # When developing, start three servers:
 #   bash etc/run.sh sim
@@ -100,8 +100,9 @@ You can also put this value in your ~/.bashrc.
 
 _env_check() {
     if [[ ! -d $_run_dir ]]; then
-        mkdir "$_run_dir"
+        mkdir -p "$_run_dir"
     fi
+    _env_base
     _env_conda_activate
     _env_vue
     # Longest so last so people can get a coffee
@@ -110,11 +111,32 @@ _env_check() {
     _env_base_port
 }
 
-_env_conda_activate() {
-    if ! type -t conda &> /dev/null; then
-        _err 'conda not installed; please install and rerun'
+_env_base() {
+    if ! type -t apptainer &> /dev/null; then
+        _err 'apptainer not installed; please install:
+
+curl -s https://raw.githubusercontent.com/apptainer/apptainer/main/tools/install-unprivileged.sh | \
+    bash -s - ~/apptainer
+cat >> ~/.bashrc <<'"'EOF'"'
+if [[ ! :$PATH: =~ :$HOME/apptainer/bin: ]]; then
+    PATH=$HOME/apptainer/bin/apptainer:$PATH
+fi
+EOF
+source ~/.bashrc
+'
     fi
-    # conda init
+    if ! type -t conda &> /dev/null; then
+        _err 'conda not installed; please install:
+
+wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O x.sh
+bash x.sh
+rm x.sh
+source ~/.bashrc
+'
+    fi
+}
+
+_env_conda_activate() {
     _source_bashrc
     if ! conda activate slicops &> /dev/null; then
         _msg 'Creating conda environment slicops'
@@ -124,12 +146,13 @@ _env_conda_activate() {
         fi
     fi
     _env_conda_package python "$_python_version"
+    # Just in case
+    _env_conda_package pip
     _env_conda_package nodejs
-    if ! type -t slicops &> /dev/null; then
-        _msg 'Installing slicops'
-        cd "$_root_dir"
-        pip install --quiet --editable .
-    fi
+    declare -a x=( $(conda info | grep 'active env location') )
+    _conda_dir=${x[-1]}
+    _env_pip_package pykern
+    _env_pip_package slicops
 }
 
 _env_conda_package() {
@@ -140,6 +163,54 @@ _env_conda_package() {
         _msg "Installing $p"
         conda install --quiet --yes "$p"
     fi
+}
+
+_env_pip_not_ok() {
+    declare name=$1
+    declare -a f=( $(pip show "$name" | grep ^Location: 2>/dev/null) )
+    if [[ $f && ${f[-1]} =~ ^$_conda_dir ]]; then
+        return
+    fi
+    # For error msg
+    echo "${f[-1]}"
+}
+
+_env_pip_package() {
+    declare name=$1
+    if [[ ! $(_env_pip_not_ok "$name") ]]; then
+        return
+    fi
+    _msg "Installing $name"
+    case $name  in
+        slicops)
+            pip install --quiet --yes -e .
+            ;;
+        pykern)
+            _env_pip_package_rs "$name"
+            ;;
+        *)
+            _err "_env_pip_location: pkg=$name unsupported"
+            ;;
+    esac
+    declare l=$(_env_pip_not_ok "$name")
+    if [[ $l ]]; then
+        _err "pip installed pkg=$name in wrong location=$l"
+    fi
+}
+
+_env_pip_package_rs() {
+    declare name=$1
+    declare p=$PWD
+    cd ..
+    if [[ -d $name ]]; then
+        cd $name
+        git pull --quiet
+    else
+        git clone --quiet https://github.com/radiasoft/$name
+        cd $name
+    fi
+    pip install --quiet --yes -e .
+    cd "$p" &> /dev/null
 }
 
 _env_sif() {
