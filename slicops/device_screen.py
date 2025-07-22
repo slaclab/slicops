@@ -5,7 +5,7 @@
 """
 
 from pykern.pkcollections import PKDict
-from pykern.pkdebug import pkdc, pkdlog, pkdp
+from pykern.pkdebug import pkdc, pkdexc, pkdlog, pkdp
 import slicops.device
 import slicops.device_db
 import enum
@@ -20,9 +20,8 @@ _OUT = 1
 
 class Screen(slicops.device.Device):
 
-    def __init__(self, beam_path, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.__beam_path = beam_path
         self.__destroyed = False
         self.__value = None
         self.__work_q = queue.PriorityQueue()
@@ -31,6 +30,8 @@ class Screen(slicops.device.Device):
         self.__control = self.accessor("target_control")
         self.__target_in = threading.Event()
         self.__target_out = threading.Event()
+        self.__get_complete = threading.Event()
+        self.__last_status = None
         self.__worker = threading.Thread(
             target=self.__work,
             args=(self.device_name, self.__work_q, self.__lock),
@@ -55,16 +56,21 @@ class Screen(slicops.device.Device):
         finally:
             super().destroy()
 
-    def _get_upstream(self):
-        upstream_names = slicops.device_db.upstream_devices(
-            "PROF",
-            "target_control",
-            self.beam_path,
-            self.device_name
-        )
-        return {
-            name: slicops.device.Device(name) for n in upstream_names
-        }
+    def get_status_async(self):
+        with self.__lock:
+            self.__work_q.put_nowait((_Work.get, None))
+
+    def get_status_complete(self):
+        with self.__lock:
+            if self.__destroyed:
+                raise ValueError(f"destroyed device={self.device_name}")
+            c = self.__get_complete
+        c.wait()
+        with self.__lock:
+            if self.__last_status is None:
+                raise ValueError(f"device={self.device_name} got no status.")
+            self.__get_complete.clear()
+        return self.__last_status
 
     def insert_target(self):
         with self.__lock:
@@ -86,7 +92,7 @@ class Screen(slicops.device.Device):
         t.wait()
         with self.__lock:
             if self.__destroyed:
-p                raise ValueError(f"destroyed device={self.device_name}")
+                raise ValueError(f"destroyed device={self.device_name}")
 
     def __work(self, name, work_q, lock):
         try:
@@ -97,6 +103,10 @@ p                raise ValueError(f"destroyed device={self.device_name}")
                         return
                     if _Work.control == w:
                         self.__control.put(v)
+                        continue
+                    if _Work.get == w:
+                        self.__last_status = self.__control.get(v)
+                        self.__get_complete.set()
                         continue
                     if _Work.status == w:
                         if v == _IN:
@@ -128,6 +138,7 @@ class _Work(enum.IntEnum):
     # sort in priority value order, lowest number is highest priority
     destroy = 0
     status = 1
-    control = 2
+    get = 2
+    control = 3
 
 #    = slicops.device_db.upstream_devices(device_name)
