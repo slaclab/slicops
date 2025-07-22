@@ -40,5 +40,5 @@ def test_upstream():
 
     a = device_db.upstream_devices("PROF", "target_control","CU_HXR", "OTR11")
     pkunit.pkeq(9, len(a))
-    pkunit.pkok("YAG01" == a[0], "Expected first device=YAG01, got={}", a[0])
-    pkunit.pkok("OTR4" == a[-1], "Expected last device=OTR4, got={}", a[-1])
+    pkunit.pkeq("YAG01", a[0], "Lowest Z Prof")
+    pkunit.pkeq("OTR4", a[-1], "Closest Z Prof")
