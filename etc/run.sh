@@ -7,7 +7,7 @@
 #
 # This installs conda environment "slicops", where it installs nodejs,
 # python, and slicops. Also builds apptainer image (slicops.sif) if it
-# can't $SLICOPS_APPTAINER_SIF.
+# can't find $SLICOPS_APPTAINER_SIF.
 #
 # When developing, start three servers:
 #   bash etc/run.sh sim
@@ -26,7 +26,7 @@ declare -A _port_map=(
     [vue]=1
 )
 _bashrc=$_run_dir/bashrc.sh
-_python_version=3.12.10
+_python_version=3.12.11
 _sif=${SLICOPS_APPTAINER_SIF:-$_run_dir/slicops.sif}
 _sim_dir=/home/vagrant/.local/epics/extensions/synApps/support/areaDetector-R3-12-1/ADSimDetector/iocs/simDetectorIOC/iocBoot/iocSimDetector
 _vue_dir=$_root_dir/ui
@@ -100,26 +100,43 @@ You can also put this value in your ~/.bashrc.
 
 _env_check() {
     if [[ ! -d $_run_dir ]]; then
-        mkdir "$_run_dir"
+        mkdir -p "$_run_dir"
     fi
+    _msg 'Checking conda environment'
+    _env_base
     _env_conda_activate
-    _env_vue
     # Longest so last so people can get a coffee
     _env_sif
     cd "$_run_dir"
     _env_base_port
 }
 
-_env_conda_activate() {
-    # Quick check for conda or pyenv environment setup so
-    # we can use this with either.
-    if type -t slicops &> /dev/null; then
-        return
+_env_base() {
+    if ! type -t apptainer &> /dev/null; then
+        _err 'apptainer not installed; please install:
+
+curl -s https://raw.githubusercontent.com/apptainer/apptainer/main/tools/install-unprivileged.sh | \
+    bash -s - ~/apptainer
+cat >> ~/.bashrc <<'"'EOF'"'
+if [[ ! :$PATH: =~ :$HOME/apptainer/bin: ]]; then
+    PATH=$HOME/apptainer/bin/apptainer:$PATH
+fi
+EOF
+source ~/.bashrc
+'
     fi
     if ! type -t conda &> /dev/null; then
-        _err 'conda not installed; please install and rerun'
+        _err 'conda not installed; please install:
+
+wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O x.sh
+bash x.sh
+rm x.sh
+source ~/.bashrc
+'
     fi
-    # conda init
+}
+
+_env_conda_activate() {
     _source_bashrc
     if ! conda activate slicops &> /dev/null; then
         _msg 'Creating conda environment slicops'
@@ -129,22 +146,78 @@ _env_conda_activate() {
         fi
     fi
     _env_conda_package python "$_python_version"
+    # Just in case pip doesn't get installed in our environment
+    _env_conda_package pip
     _env_conda_package nodejs
-    if ! type -t slicops &> /dev/null; then
-        _msg 'Installing slicops'
-        cd "$_root_dir"
-        pip install --quiet --editable .
-    fi
+    declare -a x=( $(conda info | grep 'active env location') )
+    _conda_dir=${x[-1]}
+    _env_pip_package pykern
+    _env_pip_package slicops
 }
 
 _env_conda_package() {
     declare name=$1
     declare version=${2:-}
-    if ! conda list | grep -q "^$name "; then
+    if [[ ! ${_conda_list:-} ]]; then
+        # very slow so cache
+        _conda_list=$(conda list)
+    fi
+    if ! grep -q "^$name " <<<"$_conda_list"; then
         declare p=$name${version:+=$version}
         _msg "Installing $p"
         conda install --quiet --yes "$p"
     fi
+}
+
+_env_pip_location() {
+    declare name=$1
+    declare -a f=( $(pip show "$name" 2>/dev/null | grep ^Location: 2>/dev/null) )
+    if [[ ! ${f:-} ]]; then
+        echo "pkg=$name not installed"
+    elif [[ ${f[-1]} =~ ^$_conda_dir ]]; then
+        echo ok
+    else
+        # For error msg
+        echo "pip installed pkg=$name in wrong location=${f[-1]}"
+    fi
+}
+
+_env_pip_package() {
+    declare name=$1
+    if [[ $(_env_pip_location "$name") == ok ]]; then
+        return
+    fi
+    _msg "Installing $name"
+    case $name  in
+        slicops)
+            pip install --quiet -e .
+            ;;
+        pykern)
+            _env_pip_package_rs "$name"
+            ;;
+        *)
+            _err "_env_pip_location: pkg=$name unsupported"
+            ;;
+    esac
+    declare e=$(_env_pip_location "$name")
+    if [[ $e != ok ]]; then
+        _err "$e"
+    fi
+}
+
+_env_pip_package_rs() {
+    declare name=$1
+    declare p=$PWD
+    cd ..
+    if [[ -d $name ]]; then
+        cd "$name"
+        git pull --quiet
+    else
+        git clone --quiet https://github.com/radiasoft/"$name"
+        cd "$name"
+    fi
+    pip install --quiet -e .
+    cd "$p" &> /dev/null
 }
 
 _env_sif() {
@@ -158,15 +231,6 @@ _env_sif() {
         _err "build image=$_sif failed. Full log: $f"
     fi
     rm -f "$f"
-}
-
-_env_vue() {
-    if [[ -d $_vue_dir/node_modules/vite ]]; then
-        return
-    fi
-    _msg 'Installing ui/node_modules'
-    cd "$_vue_dir"
-    npm install --quiet
 }
 
 _epics_env() {
@@ -232,6 +296,9 @@ _op_sim() {
 
 _op_vue() {
     cd "$_vue_dir"
+    # Need to do every time if code has changed
+    _msg 'Updating ui/node_modules'
+    npm install --quiet
     declare v=$(_port vue assert)
     if [[ ! $v ]]; then
         return 1
