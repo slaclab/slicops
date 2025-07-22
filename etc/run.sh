@@ -203,11 +203,11 @@ _env_pip_package_rs() {
     declare p=$PWD
     cd ..
     if [[ -d $name ]]; then
-        cd $name
+        cd "$name"
         git pull --quiet
     else
-        git clone --quiet https://github.com/radiasoft/$name
-        cd $name
+        git clone --quiet https://github.com/radiasoft/"$name"
+        cd "$name"
     fi
     pip install --quiet --yes -e .
     cd "$p" &> /dev/null
