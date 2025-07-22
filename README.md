@@ -31,17 +31,10 @@ work elsewhere. Non-SLAC developers may need to
 If you are at SLAC, add this to your `~/.bashrc`:
 
 ```sh
-
-
-/sdf/group/ad/org/lfd/hla
-move sif
-
-
-
 export SLICOPS_APPTAINER_SIF=~nagler/slicops.sif
 ```
 
-If you are not at SLAC, slicops.sif will get built when you start the servers.
+If you are not at SLAC, slicops.sif will get built when you install (below).
 
 #### Clone Repo
 
