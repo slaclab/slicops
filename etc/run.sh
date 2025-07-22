@@ -102,9 +102,9 @@ _env_check() {
     if [[ ! -d $_run_dir ]]; then
         mkdir -p "$_run_dir"
     fi
+    _msg 'Checking conda environment'
     _env_base
     _env_conda_activate
-    _env_vue
     # Longest so last so people can get a coffee
     _env_sif
     cd "$_run_dir"
@@ -146,7 +146,7 @@ _env_conda_activate() {
         fi
     fi
     _env_conda_package python "$_python_version"
-    # Just in case
+    # Just in case pip doesn't get installed in our environment
     _env_conda_package pip
     _env_conda_package nodejs
     declare -a x=( $(conda info | grep 'active env location') )
@@ -158,32 +158,39 @@ _env_conda_activate() {
 _env_conda_package() {
     declare name=$1
     declare version=${2:-}
-    if ! conda list | grep -q "^$name "; then
+    if [[ ! ${_conda_list:-} ]]; then
+        # very slow so cache
+        _conda_list=$(conda list)
+    fi
+    if ! grep -q "^$name " <<<"$_conda_list"; then
         declare p=$name${version:+=$version}
         _msg "Installing $p"
         conda install --quiet --yes "$p"
     fi
 }
 
-_env_pip_not_ok() {
+_env_pip_location() {
     declare name=$1
-    declare -a f=( $(pip show "$name" | grep ^Location: 2>/dev/null) )
-    if [[ $f && ${f[-1]} =~ ^$_conda_dir ]]; then
-        return
+    declare -a f=( $(pip show "$name" 2>/dev/null | grep ^Location: 2>/dev/null) )
+    if [[ ! ${f:-} ]]; then
+        echo "pkg=$name not installed"
+    elif [[ ${f[-1]} =~ ^$_conda_dir ]]; then
+        echo ok
+    else
+        # For error msg
+        echo "pip installed pkg=$name in wrong location=${f[-1]}"
     fi
-    # For error msg
-    echo "${f[-1]}"
 }
 
 _env_pip_package() {
     declare name=$1
-    if [[ ! $(_env_pip_not_ok "$name") ]]; then
+    if [[ $(_env_pip_location "$name") == ok ]]; then
         return
     fi
     _msg "Installing $name"
     case $name  in
         slicops)
-            pip install --quiet --yes -e .
+            pip install --quiet -e .
             ;;
         pykern)
             _env_pip_package_rs "$name"
@@ -192,9 +199,9 @@ _env_pip_package() {
             _err "_env_pip_location: pkg=$name unsupported"
             ;;
     esac
-    declare l=$(_env_pip_not_ok "$name")
-    if [[ $l ]]; then
-        _err "pip installed pkg=$name in wrong location=$l"
+    declare e=$(_env_pip_location "$name")
+    if [[ $e != ok ]]; then
+        _err "$e"
     fi
 }
 
@@ -209,7 +216,7 @@ _env_pip_package_rs() {
         git clone --quiet https://github.com/radiasoft/"$name"
         cd "$name"
     fi
-    pip install --quiet --yes -e .
+    pip install --quiet -e .
     cd "$p" &> /dev/null
 }
 
@@ -224,15 +231,6 @@ _env_sif() {
         _err "build image=$_sif failed. Full log: $f"
     fi
     rm -f "$f"
-}
-
-_env_vue() {
-    if [[ -d $_vue_dir/node_modules/vite ]]; then
-        return
-    fi
-    _msg 'Installing ui/node_modules'
-    cd "$_vue_dir"
-    npm install --quiet
 }
 
 _epics_env() {
@@ -298,6 +296,9 @@ _op_sim() {
 
 _op_vue() {
     cd "$_vue_dir"
+    # Need to do every time if code has changed
+    _msg 'Updating ui/node_modules'
+    npm install --quiet
     declare v=$(_port vue assert)
     if [[ ! $v ]]; then
         return 1

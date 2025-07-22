@@ -26,7 +26,7 @@ class _Work(enum.IntEnum):
     start = 4
 
 
-_ON_METHODS_RE = re.compile("^on_(click|change)_(\w+)$")
+_ON_METHODS_RE = re.compile(r"^on_(click|change)_(\w+)$")
 
 _CTX_WRITE_ARGS = frozenset(["field_values"])
 

@@ -4,10 +4,10 @@
 :license: http://github.com/slaclab/slicops/LICENSE
 """
 
-import pkg_resources
+import importlib.metadata
 
 try:
     # We only have a version once the package is installed.
-    __version__ = pkg_resources.get_distribution("slicops").version
-except pkg_resources.DistributionNotFound:
+    __version__ = importlib.metadata.version("slicops")
+except importlib.metadata.PackageNotFoundError:
     pass
