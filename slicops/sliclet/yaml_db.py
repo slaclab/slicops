@@ -1,4 +1,4 @@
-"""Simple file based Sliclet
+"""YAML Db Sliclet
 
 :copyright: Copyright (c) 2025 The Board of Trustees of the Leland Stanford Junior University, through SLAC National Accelerator Laboratory (subject to receipt of any required approvals from the U.S. Dept. of Energy).  All Rights Reserved.
 :license: http://github.com/slaclab/slicops/LICENSE
@@ -9,7 +9,7 @@ from pykern.pkdebug import pkdc, pkdexc, pkdlog, pkdp
 import numpy
 import pykern.pkio
 import slicops.pkcli.fractals
-import slicops.pkcli.simple
+import slicops.pkcli.yaml_db
 import slicops.sliclet
 import watchdog.events
 import watchdog.observers
@@ -24,27 +24,24 @@ _EVENT_TYPES = frozenset(
 )
 
 
-# TODO(robnagler) Rename to yaml_db and Simple would inherit from it
-class Simple(slicops.sliclet.Base):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.__db_watcher = None
-
+class YAMLDb(slicops.sliclet.Base):
     def handle_destroy(self):
         # TODO(robnagler) Need to make idempotent
         if self.__db_watcher:
             self.__db_watcher.destroy()
             self.__db_watcher = None
 
+    def handle_init(self, txn):
+        self.__db_watcher = None
+
     def handle_start(self, txn):
         # TODO(robnagler) need a separate init for the instance before start
-        self.__base = self.__class__.__name__.lower()
         self.__db_cache = PKDict()
         if not self.__read_db(txn):
             self.__write(txn)
         self.__db_watcher = _DBWatcher(
             (
-                slicops.pkcli.simple.path(self.__base),
+                slicops.pkcli.yaml_db.path(self.name),
                 slicops.pkcli.fractals.path(),
             ),
             self.__db_watcher_update,
@@ -115,7 +112,7 @@ class Simple(slicops.sliclet.Base):
                     txn.field_set(k, db[k])
                     yield k, db[k]
 
-        if not (r := slicops.pkcli.simple.read(self.__base)):
+        if not (r := slicops.pkcli.yaml_db.read(self.name)):
             return False
         c = PKDict(_set(r)).pkupdate(_numpy_files())
         self.__db_cache = r
@@ -132,10 +129,10 @@ class Simple(slicops.sliclet.Base):
 
         # TODO(robnagler) work: maybe should happen outside lock
         self.__db_cache = PKDict((k, txn.field_get(k)) for k in _keys())
-        slicops.pkcli.simple.write(self.__base, self.__db_cache)
+        slicops.pkcli.yaml_db.write(self.name, self.__db_cache)
 
 
-CLASS = Simple
+CLASS = YAMLDb
 
 
 class _DBWatcher(watchdog.events.FileSystemEventHandler):

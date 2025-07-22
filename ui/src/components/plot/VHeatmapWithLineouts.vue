@@ -215,7 +215,7 @@
 
  const refresh = () => {
      const w = parseInt(select().style('width'));
-     if (isNaN(w)) {
+     if (isNaN(w) || ! props.plot) {
          return;
      }
      const d = props.plot();

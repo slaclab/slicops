@@ -11,9 +11,9 @@ import pytest
 async def test_basic():
     from slicops import unit_util
 
-    async with unit_util.Setup("simple") as s:
+    async with unit_util.Setup("yaml_db") as s:
         from pykern import pkunit, pkdebug
-        from slicops.pkcli import simple
+        from slicops.pkcli import yaml_db
         import asyncio
 
         r = await s.ctx_update()
@@ -25,13 +25,13 @@ async def test_basic():
         r = await s.ctx_update()
         pkunit.pkeq(["divisor"], list(r.fields.keys()))
         pkunit.pkeq(1.1, r.fields.divisor.value)
-        pkunit.pkeq(3.14, simple.read("simple").divisor)
+        pkunit.pkeq(3.14, yaml_db.read("yaml_db").divisor)
         r = await s.ctx_field_set(save=None)
         # save button
         await s.ctx_update()
-        pkunit.pkeq(1.1, simple.read("simple").divisor)
+        pkunit.pkeq(1.1, yaml_db.read("yaml_db").divisor)
         # no update client side
-        simple.write("simple", "divisor=3")
+        yaml_db.write("yaml_db", "divisor=3")
         r = await s.ctx_update()
         pkunit.pkeq(3.0, r.fields.divisor.value)
         await s.ctx_field_set(run_mode="method_2")
@@ -39,4 +39,4 @@ async def test_basic():
         await s.ctx_field_set(revert=None)
         await s.ctx_update()
         # no update, bc no change
-        pkunit.pkeq("method_1", simple.read("simple").run_mode)
+        pkunit.pkeq("method_1", yaml_db.read("yaml_db").run_mode)

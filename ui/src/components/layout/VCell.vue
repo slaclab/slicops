@@ -12,6 +12,12 @@
                 :ctx="ctx"
             />
         </div>
+        <div v-else-if="ctx[field].ui.widget == 'toggle'">
+            <VToggle
+                :field="field"
+                :ctx="ctx"
+            />
+        </div>
         <div v-else-if="['text', 'float', 'integer'].includes(ctx[field].ui.widget)">
             <VText
                 :field="field"
@@ -55,6 +61,7 @@
  import VSelect from '@/components/widget/VSelect.vue';
  import VStatic from '@/components/widget/VStatic.vue';
  import VText from '@/components/widget/VText.vue';
+ import VToggle from '@/components/widget/VToggle.vue';
 
  const props = defineProps({
      field: String,
