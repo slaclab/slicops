@@ -31,7 +31,7 @@ work elsewhere. Non-SLAC developers may need to
 If you are at SLAC, add this to your `~/.bashrc`:
 
 ```sh
-export SLICOPS_APPTAINER_SIF=~nagler/slicops.sif
+export SLICOPS_APPTAINER_SIF=/sdf/group/ad/org/lfd/hla/apptainer/slicops.sif
 ```
 
 If you are not at SLAC, slicops.sif will get built when you install (below).
@@ -128,10 +128,13 @@ If everything is set up and tunneling is working, you can visit
 If `conda` is not installed, run:
 
 ```sh
-wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O x.sh
+curl -L https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh > x.sh
 bash x.sh
 rm x.sh
 source ~/.bashrc
+# Accept their license agreements
+conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/main
+conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/r
 ```
 
 #### Install Apptainer
@@ -139,7 +142,7 @@ source ~/.bashrc
 SLAC developers will not needs this. If `apptainer` command is not found, install:
 
 ```sh
-curl -s https://raw.githubusercontent.com/apptainer/apptainer/main/tools/install-unprivileged.sh | \
+curl -L https://raw.githubusercontent.com/apptainer/apptainer/main/tools/install-unprivileged.sh | \
     bash -s - ~/apptainer
 cat >> ~/.bashrc <<'EOF'
 if [[ ! :$PATH: =~ :$HOME/apptainer/bin: ]]; then
