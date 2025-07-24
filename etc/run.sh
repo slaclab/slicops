@@ -115,7 +115,7 @@ _env_base() {
     if ! type -t apptainer &> /dev/null; then
         _err 'apptainer not installed; please install:
 
-curl -s https://raw.githubusercontent.com/apptainer/apptainer/main/tools/install-unprivileged.sh | \
+curl -L https://raw.githubusercontent.com/apptainer/apptainer/main/tools/install-unprivileged.sh | \
     bash -s - ~/apptainer
 cat >> ~/.bashrc <<'"'EOF'"'
 if [[ ! :$PATH: =~ :$HOME/apptainer/bin: ]]; then
@@ -128,10 +128,12 @@ source ~/.bashrc
     if ! type -t conda &> /dev/null; then
         _err 'conda not installed; please install:
 
-wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O x.sh
+curl -L https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh > x.sh
 bash x.sh
 rm x.sh
 source ~/.bashrc
+conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/main
+conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/r
 '
     fi
 }
