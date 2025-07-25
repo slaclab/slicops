@@ -86,6 +86,9 @@ class Screen(slicops.sliclet.Base):
     def on_click_start_button(self, txn, **kwargs):
         self.__set_acquire(txn, True)
 
+    def on_change_target(self, txn, value, **kwargs):
+        self.__device.target_move(want_in=value, self.__target_moved)
+
     def on_click_filter_in(self, txn, **kwargs):
         pass
 
@@ -229,6 +232,14 @@ class Screen(slicops.sliclet.Base):
                 "error={} on {}, clearing camera; stack={}", e, self.__device, pkdexc()
             )
             raise pykern.util.APIError(e)
+
+    def __target_moved(self, status):
+        if status is failed:
+            display error
+        if status is out:
+            disable buttons
+        if status is in:
+            enable buttons
 
     def __update_plot(self, txn):
         if not self.__device:
