@@ -186,6 +186,40 @@ class Base:
         return super().__str__()
 
 
+class Boolean(Base):
+    def _defaults(self, *overrides):
+        return super()._defaults(
+            PKDict(
+                name="Boolean",
+                ui=PKDict(
+                    widget="toggle",
+                    toggle_labels=["Off", "On"],
+                ),
+            ),
+            *overrides,
+        )
+
+    def _from_literal(self, value):
+        try:
+            if isinstance(value, bool):
+                return value
+            if isinstance(value, int):
+                return bool(value)
+            if isinstance(value, str):
+                if value.lower() in ("true", "t", "1", "on", "yes", "y"):
+                    return True
+                if value.lower() in ("false", "f", "0", "off", "no", "n"):
+                    return False
+                try:
+                    # try to convert to an int (maybe 0000, etc.)
+                    value = int(value)
+                except Exception:
+                    pass
+            return bool(value)
+        except Exception as e:
+            return InvalidFieldValue("not boolean", exc=e)
+
+
 class Button(Base):
     def _defaults(self, *overrides):
         return super()._defaults(
@@ -393,7 +427,7 @@ def _init():
     global _PROTOTYPES, _PROTOTYPES_LOWER
 
     def _gen():
-        for c in (Button, Dict, Enum, Float, Integer, String):
+        for c in (Button, Boolean, Dict, Enum, Float, Integer, String):
             yield c.__name__, c(None, PKDict())
 
     # needed in Base.__init__

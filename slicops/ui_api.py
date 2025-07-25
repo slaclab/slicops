@@ -57,5 +57,7 @@ class API(slicops.quest.API):
         v = api_args.field_values
         if not (isinstance(v, dict) and v):
             raise pykern.util.APIError("invalid field_values={}", v)
+        if _SLICLET_KEY not in self.session:
+            raise pykern.util.APIError("no subscription")
         self.session[_SLICLET_KEY].ctx_write(v)
         return PKDict()

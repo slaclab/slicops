@@ -61,12 +61,6 @@ _PLOT_ENABLE = (
 
 
 class Screen(slicops.sliclet.Base):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.__device = None
-        self.__monitors = PKDict()
-        self.__single_button = False
-
     def handle_destroy(self):
         self.__device_destroy()
 
@@ -98,8 +92,15 @@ class Screen(slicops.sliclet.Base):
     def on_click_stop_button(self, txn, **kwargs):
         self.__set_acquire(txn, False)
 
-    def handle_start(self, txn):
+    def handle_init(self, txn):
+        self.__device = None
+        self.__monitors = PKDict()
+        self.__single_button = False
         txn.multi_set(("beam_path.constraints.choices", slicops.device_db.beam_paths()))
+        self.__beam_path_change(txn, None)
+        self.__device_change(txn, None)
+
+    def handle_start(self, txn):
         b = c = None
         if pykern.pkconfig.in_dev_mode():
             b = _cfg.dev.beam_path
@@ -184,10 +185,6 @@ class Screen(slicops.sliclet.Base):
         except Exception:
             n = None
         try:
-            self.__set_acquire(txn, False)
-        except Exception as e:
-            pkdlog("PROBABLY ignore: set_acquire(False) device={} error={}", n, e)
-        try:
             self.__device.destroy()
         except Exception as e:
             pkdlog("destroy device={} error={}", n, e)
@@ -213,6 +210,10 @@ class Screen(slicops.sliclet.Base):
             if self.__update_plot(txn) and self.__single_button:
                 # self.__single_button = False
                 self.__set_acquire(txn, False)
+                txn.multi_set(
+                    ("single_button.ui.enabled", True),
+                    ("start_button.ui.enabled", True),
+                )
 
     def __set_acquire(self, txn, acquire):
         if not self.__device:
@@ -222,8 +223,8 @@ class Screen(slicops.sliclet.Base):
         if v is not None and v == acquire:
             # No button disable since nothing changed
             return
-        # No presses until we get a response from device
         if txn:
+            # No presses until we get a response from device
             txn.multi_set(_BUTTONS_DISABLE)
         try:
             self.__device.put("acquire", acquire)
@@ -261,12 +262,6 @@ class Screen(slicops.sliclet.Base):
 CLASS = Screen
 
 
-class _Change(enum.IntEnum):
-    # sort in priority value order, lowest number is highest priority
-    destroy = 0
-    update = 1
-
-
 class _Monitor:
     # TODO(robnagler) handle more values besides plot
     def __init__(self, accessor, handler):
@@ -274,7 +269,7 @@ class _Monitor:
         self.__destroyed = False
         self.__handler = handler
         self.__value = None
-        self.__change_q = queue.PriorityQueue()
+        self.__change_q = queue.Queue(1)
         self.__lock = threading.Lock()
         self.__thread = threading.Thread(
             target=self.__dispatch,
@@ -289,7 +284,11 @@ class _Monitor:
             if self.__destroyed:
                 return
             self.__destroyed = True
-            self.__change_q.put_nowait((_Change.destroy, None))
+            try:
+                # if there is an exception, ignore it because the queue already has an item for wakeup dispatch
+                self.__change_q.put_nowait(False)
+            except Exception:
+                pass
             # cause callers to crash
             try:
                 delattr(self, "value")
@@ -311,12 +310,19 @@ class _Monitor:
                 return
             if (v := change.get("value")) is None:
                 return
-            self.__change_q.put_nowait((_Change.update, v))
+            try:
+                self.__change_q.put_nowait(v)
+            except queue.Full:
+                if self.__change_q.get_nowait() is not None:
+                    self.__change_q.task_done()
+                # puts are locked
+                self.__change_q.put_nowait(v)
 
     def __dispatch(self, name, change_q, lock, handler):
         try:
             while True:
-                _, v = change_q.get()
+                v = change_q.get()
+                change_q.task_done()
                 with lock:
                     if self.__destroyed:
                         return
