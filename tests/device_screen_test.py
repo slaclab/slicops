@@ -24,12 +24,18 @@ def test_target():
     mock_epics.reset_state()
     d = None
     try:
-        d = device_screen.Screen("OTRDG04")
+        d = device_screen.Screen("CU_HXR", "YAG03")
         pkunit.pkeq(1, d.accessor("target_status").get())
         d.insert_target()
         pkunit.pkeq(2, d.accessor("target_status").get())
         d.remove_target()
         pkunit.pkeq(1, d.accessor("target_status").get())
+        u = d.upstream_devices()
+        pkunit.pkeq(list(u.keys()), ["YAG01", "YAG02"])
+        pkunit.pkeq(d.blocking_devices(), {"YAG01"})
+        d.unblock_upstream()
+        a = u.get("YAG01").device.accessor("target_status")
+        pkunit.pkeq(1, a.get())
     finally:
         if d:
-            d.destroy()    
+            d.destroy()

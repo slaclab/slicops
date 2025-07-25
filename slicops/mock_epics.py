@@ -125,7 +125,9 @@ def reset_state():
             "13SIM1:cam1:N_OF_BITS": 8,
             "YAGS:IN20:211:N_OF_COL": 100,
             "YAGS:IN20:211:N_OF_ROW": 100,
-            "OTRS:DIAG0:525:TGT_STS": 1,
+            "YAGS:IN20:351:TGT_STS": 1,
+            "YAGS:IN20:241:TGT_STS": 1,
+            "YAGS:IN20:211:TGT_STS": 2,
             "OTRS:DIAG0:525:Acquire": 0,
         }
     ).pkupdate(_pv_image(_X_SIZE))
