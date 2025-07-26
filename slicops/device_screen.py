@@ -20,36 +20,17 @@ _CONTROL_INSERT = 1
 _STATUS_IN = 2
 _STATUS_OUT = 1
 
+_BLOCKING = "blocking"
+
 
 class Screen(slicops.device.Device):
 
     def __init__(self, beam_path, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.beam_path = beam_path
-        # rjn there are a lot of values here, which indicates a problem: too much scope for one object?
         self.__destroyed = False
-        self.__value = None
-        self.__work_q = queue.Queue()
-        self.__lock = threading.Lock()
-        self.__control_lock = False
+        self.__control_in_work = False
         self.__status_accessor = None
-        self.__worker = threading.Thread(
-            target=self.__work,
-            args=(self.device_name, self.__work_q, self.__lock),
-        )
-        n = self._upstream_names()
-        # The following line has to come before __status.monitor. Why?
-        # rjn you always need to initialize an object before starting threads
-        self.__worker.start()
-        # rjn if the target is already in, then we don't need to check monitors
-        # rjn so let's defer this operation until we need it.
-
-    # rjn refrain from getters. unit tests are not blackbox so they can reach inside
-    def blocking_devices(self):
-        return self.__blocking_devices
-
-    def upstream_devices(self):
-        return self.__upstream_devices
 
     def destroy(self):
         try:
@@ -72,77 +53,31 @@ class Screen(slicops.device.Device):
         finally:
             super().destroy()
 
-    # rjn i think this would be embedded in a single function since get_complete blocks anyway
-    # rjn however, at this point, i think we want to integrate in sliclet/screen so we can
-    # rjn have a driver for the api we are creating. i suspect we'll want it to work a lot
-    # rjn like image and acquire
-#rjn don't need
-    def get_status_async(self):
-        with self.__lock:
-            self.__work_q.put_nowait((_Work.get, None))
-
-#rjn don't need
-    def get_status_complete(self):
-        with self.__lock:
-            if self.__destroyed:
-                raise ValueError(f"destroyed device={self.device_name}")
-            c = self.__get_complete
-        c.wait()
-        with self.__lock:
-            if self.__last_status is None:
-                raise ValueError(f"device={self.device_name} got no status.")
-            self.__get_complete.clear()
-        return self.__last_status
-
     def move_target(self, want_in, callback):
-        """Check beam, unblock upstream, move target
-        """
+        """Check beam, unblock upstream, move target"""
         with self.__lock:
-            self._assert_control_unlock()
-            # rjn this is when we lock so we make sure the caller doesn't call this twice
-            self.__control_lock = True
-            self.__work_q.put_nowait(
-                PKDict(op=self.__work_control, want_in=want_in, callback=callback),
-            )
+            self.__fsm.event("move_target", PKDict(want_in=want_in, callback=callback))
 
-    def unblock_upstream(self):
-        # rjn i think this is where we want to do work in the thread
-        # rjn there's a user interface question here:
-        # rjn  do we want to just have the user try to move the target
-        # rjn  and present a popup when there are blocking upstream devicesb
-        # rjn  then the user would get to respond abort/retry/ignore and
-        # rjn  sliclet/screen would handle appropriately. there are times
-        # rjn  when it's ok for the target to get moved (beam off) without checking targets
-        # rjn  in fact we may want that in here too, that is we check beam on/off
-        # rjn  first, because that's the most critical operation. if the beam is on
-        # rjn  i don't think we allow them to move the target without an are you sure at least
-        # rjn  popups are a thing we have to add to vue, but that should be easy
-        with self.__lock:
-            self._assert_control_unlock()
-            # rjn there's a race condition here. we need to consider the
-            # rjn owner of the lock. i think what should be done is this
-#            self.__work_q.put_nowait((_Work.upstream_out, q := queue.Queue()))
-#        who owns the lock here
 
-        # rjn            self.__control_lock = False
-        # rjn what if we could not unblock the upstream. this probably wants a result
-        # rjn we want a timeout i think
-        v = q.wait(timeout=N)
+class _Worker:
+    def __init__(self, device):
+        self.device = device
+        self.__queue = queue.Queue()
+        self.__lock = threading.Lock()
+        self.__thread = threading.Thread(
+            target=self.__do,
+            args=(self.device.device_name, self.__work_q, self.__lock),
+        )
+        self.__thread.start()
+
+    def __handle_upstream_status(self, problems):
         with self.__lock:
             if self.__destroyed:
-                raise ValueError(f"destroyed device={self.device_name}")
-
-    # rjn this should be done as soon as control_done is set
-    #            self.__control_lock = False
-    #            self.__control_done.clear()
-
-
-    def _assert_control_unlock(self):
-        if self.__control_lock:
-            raise DeviceError(f"command already issued with device={self.device_name}")
-        # rjn not sure this is right here.
-        if self.__control_done.is_set():
-            raise DeviceError(f"control did not complete on device={self.device_name}")
+                return
+            if not problems:
+                self.__state.event("upstream_clear", None)
+            else:
+                self.__state.event("upstream_problems", problems)
 
     def __work(self, name, work_q, lock):
         try:
@@ -158,192 +93,89 @@ class Screen(slicops.device.Device):
         finally:
             self.destroy()
 
-    def _state_target_out(self, event):
-        event.arg.callback(TARGET_OUT)
 
-    def _state_target_status_unknown(self, event):
-        self.__status_accessor = self.accessor("target_status")
-        self.__control_accessor = self.accessor("target_control")
-        self.__last_status = None
-        self.__status_accessor.monitor(self.__handle_status)
-        self.__state.event("monitoring_status", event.arg)
+class _FSM:
+    __SIMPLE = PKDict(
+        target_in=PKDict(target=True),
+        target_out=PKDict(target=False),
+        upstream_clear=PKDict(upstream=True),
+        upstream_problems=PKDict(upstream=False),
+    )
 
-    def _state_target():
-        # check status
-        if self.__status_accessor is None:
-            self.__init_status()
-#            self.__work_q.put_nowait(PKDict(op=self.__
-        # check beam
-        if work.want_in:
-            pass # check upstream
-        self.__control.put(_IN if work.want_in else _OUT)
+    def __init__(self):
+        self.curr = PKDict(
+            beam=None, target=None, upstream=None, acquire=None, want_in=False
+        )
+        self.prev = self.curr.copy()
 
+    def event(self, name, arg):
+        self.prev = self.curr.copy()
+        if t := self.___SIMPLE.get(name):
+            self.curr.update(t)
+        if t := getattr(self, f"_event_{name}"):
+            t(arg)
 
-    def __work_move_target(self, work):
-        if target status unknown:
-            wait status was known
-
-
-        self.__state.event("move_target_in" if work.want_in "move_target_out", work)
-
-
-    def __work_control(self, work):
-        # Do epics
-        self.__control.put(v)
-        self.__control_lock = True
-
-    def __work_get(self):
-        self.__last_status = self.__control.get(v)
-        self.__get_complete.set()
-
-    def __work_status(self, value):
-        if value == _IN:
-            if self.__control_lock:
-                self.__control_done.set()
-        elif value == _OUT:
-            if self.__control_lock:
-                self.__control_done.set()
+    def _event_move_target(self, arg):
+        if self.curr.move_target is not None:
+            raise AssertionError("already moving target")
+        if self.curr.target_in == arg.want_in:
+            return
+        self.curr.move_target = arg
+        if self.curr.target_in is None:
+            self.event("check_target", None)
+        elif arg.want_in:
+            self.event("check_upstream", None)
         else:
-            pkdlog("WARNING: unexpected value={}", value)
-    def __work_handle_status(self, value):
-        with self.__lock:
-            if self.__destroyed:
-                return
-            c = self.__client.handle_screen_status
-        c(value)
+            self.event("move_target_out", None)
 
-    def __work_upstream(self):
-        if len(self.__blocking_devices) == 0:
-            if self.__control_lock:
-            self.__control_done.set()
+    def _event_target_in(self, arg):
+        self.curr.target = True
+        if not (m := self.curr.move_target):
+            return
+        self.curr.move_target = None
+        if m.want_in:
+            self.curr.move_target = None
+            m.callback(True)
+        else:
+            self.event("move_target", m)
 
-    def __work_upstream(self):
-        # rjn since you are pulling out the screen here, it seems
-        # rjn that this logic could be in _Upstream.handle_status
-        # We want a threaded solution instead?
-        for n in self.__blocking_devices:
-            # rjn definitely needs to be async
-            u = self.__upstream_devices.get(n)
-            u.target_out()
-        self.__control_lock = True
 
-    def __handle_status(self, value):
-        with self.__lock:
-            if self.__destroyed:
-                return
-            self.__work_q.put_nowait(PKDict(op=self.__work_handle_status, value=value))
-
-    def _handle_upstream_status(self, upstream, value):
-        with self.__lock:
-            if self.__destroyed:
-                return
-            # rjn i think "is" incorrect. "value" is coming from epics
-            # rjn and _IN is defined internally so _IN only works here
-            # rjn if _IN is an int or bool. If it were an enum, i don't think it would work.
-            if value == _IN:
-                self.__blocking_devices.add(upstream)
-            if value is _OUT:
-                # rjn self.__blocking_devices.discard(upstream)
-                self.__blocking_devices.discard(upstream)
-            self.__work_q.put_nowait((_Work.upstream, None))
-
-    def __init_upstream(self):
-        def _upstream_names():
+class _Upstream:
+    def __init__(self, parent):
+        def _names():
             return slicops.device_db.upstream_devices(
-                "PROF", "target_control", self.beam_path, self.device_name
+                "PROF", "target_control", parent.beam_path, parent.device_name
             )
 
-        self.__blocking_devices = set()
-        self.__upstream_devices = PKDict({u: _UpstreamScreen(self, u) for u in _upstream_names()})
-
-    def _upstream_monitor(self):
-
-        for n, s in self.__upstream_devices.items():
-            s.start_monitor()
-
-
-class _Event:
-    def __init__(self, event, arg):
-        self.event = self.__assert_event(event)
-        self.arg = arg
-        self.old_state = _state
-        self.new_state = self._next_state()
-
-    def __assert_event(self, value):
-        if value in self._EVENTS:
-            return value;
-        raise AssertionError(f"invalid event={value}")
-
-    def __assert_state(self, value):
-        if value in self._STATES:
-            return value;
-        raise AssertionError(f"invalid state={value}")
-
-    def _next_state(self):
-        if rv := self._TRANSITIONS[self._oldState][self._event]:
-            return rv;
-        raise AssertionError(f"invalid transition oldState={self._old_state} event={self._event}")
-
-class _State:
-    def __init__(self):
-        self.beam = None
-        self.target = None
-        self.upstream = None
-        self.acquire = None
-        self.event = None
-
-    def on_change_target(self, value):
-        if value == _IN:
-            self.target = True
-            how does callback work
-        elif value == _OUT:
-            self.target = False
-    def _event(self, name):
-        if name == "target_status":
-            if self.target is None:
-                self.event_target_status()
-
-
-    def event(self, event_name, work):
-        e = _Event(self._state, event_name, work)
-        self._state = e.new_state
-        if h := getattr(self._device, f"_state_{self._new_state}", None):
-            h(e)
-
-
-
-
-class _Work(enum.IntEnum):
-    # sort in priority value order, lowest number is highest priority
-    # This is getting unwieldy. How to make functions w/ priority?
-    destroy = 0
-    status = 1
-    upstream = 2
-    get = 3
-    control = 4
-    upstream_out = 5
-
-
-class _UpstreamScreen:
-    def __init__(self, parent, device_name):
-        self.device = slicops.device.Device(device_name)
-        self.parent = parent
-        self.status = self.device.accessor("target_status")
+        self.__parent = parent
+        self.__destroyed = False
+        # Allows calling destroy in __handle_status
         self.__lock = threading.Lock()
+        self.__problems = PKDict()
+        self.__devices = PKDict({u: slicops.device.Device(u) for u in _names()})
 
-    def start_monitor(self):
-        # _UpstreamScreen must exist before monitor so it can be destroyed.
-        self.status.monitor(self.__handle_status)
-
-    def target_out(self):
-        with self.__lock:
-            a = self.device.accessor("target_control")
-            a.put(_REMOVE)
-
-    def __handle_status(self, value, **kwargs):
-        v = value.get("value")
-        self.parent._handle_upstream_status(self.device.device_name, v)
+    def check(self):
+        for n, d in self.__devices.items():
+            d.accessor("target_status").monitor(self.__handle_status)
 
     def destroy(self):
         with self.__lock:
-            self.device.destroy()
+            if self.__destroyed:
+                return
+            self.__destroyed = True
+            for d in self.__devices.values():
+                d.destroy()
+
+    def __handle_status(self, **kwargs):
+        with self.__lock:
+            n = kwargs["accessor"].device.device_name
+            self.__devices.pkdel(n).destroy()
+            if e := kwargs.get("error"):
+                pkdlog("device={} error={}", n, e)
+                self.__problems[n] = e
+            elif kwargs["value"] == "_IN":
+                self.__problems[n] = _BLOCKING
+            if not self.__devices:
+                self.__parent._handle_upstream_status(self.__problems)
+                # no devices so destroyed
+                self.__destroyed = True
