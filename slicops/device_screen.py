@@ -15,8 +15,7 @@ import queue
 import threading
 
 # rjn these should be reused for both cases
-_CONTROL_REMOVE = 0
-_CONTROL_INSERT = 1
+_MOVE_TARGET_IN = PKDict(False=0, True=1)
 _STATUS_IN = 2
 _STATUS_OUT = 1
 
@@ -36,10 +35,8 @@ class DeviceScreen(slicops.device.Device):
         self.__worker.destroy()
         super().destroy()
 
-    def move_target(self, want_in, callback):
-        self.__worker.req_action(
-            self.action_req_move_target, PKDict(want_in=want_in, callback=callback)
-        )
+    def move_target(self, want_in):
+        self.__worker.req_action(self.action_req_move_target, PKDict(want_in=want_in))
 
 
 class _FSM:
@@ -48,6 +45,7 @@ class _FSM:
         self.curr = PKDict(
             check_target=False,
             check_upstream=False,
+            move_target=False,
             target_is_in=None,
             upstream_problems=None,
         )
@@ -63,23 +61,23 @@ class _FSM:
             return " ".join(f"{k}={curr[k]}" for k in sorted(curr.keys()))
 
         return f"<_FSM {_states(self.curr)}>"
-
-    def _event_req_upstream_status(self, arg, check_upstream, upstream_problems, **kwargs):
-        if upstream_problems is not None:
-            arg.callback(PKDict(upstream_problems=upstream_problems))
+    def _event_move_target(self, arg, move_target, check_upstream, upstream_problems, **kwargs):
+        if move_target:
+            self.worker.handler.on_screen_fsm_error("target already moving")
             return
-        if check_upstream:
-            # TODO(robnagler) don't crash here, but how to force callback to crash?
-            arg.callback(PKDict(error="Already in check_upstream"))
-            return
-        self.worker.action(self.worker.action_check_upstream, arg)
-        return PKDict(check_upstream=True)
+        #TODO(robnagler) allow moving without checking upstream
+        rv = PKDict(move_target=True)
+        if arg.want_in and upstream_problems is None or upstream_problems:
+            self.worker.action(self.worker.action_check_upstream, None)
+            rv.check_upstream = True
+        return rv
 
     def _event_upstream_status_done(self, arg, check_upstream, **kwargs):
-        if not check_upstream:
-            raise AssertionError("not in check_upstream")
-        self.worker.handler.screen_cb_upstream(problems=arg.problems)
-        return PKDict(upstream_problems=arg.problems, check_upstream=False)
+        if arg.problems:
+            self.worker.handler.on_screen_upstream_problems(problems=arg.problems)
+            return PKDict(check_upstream=False, move_target=None)
+        self.worker.action(self.worker.action_move_target, None)
+        return PKDict(check_upstream=False)
 
 
 class _Thread:
@@ -201,25 +199,36 @@ class _Worker(_Thread):
         self._loop_timeout_secs = 0
         super().__init__()
 
+    def action_monitor_acquire(self, arg):
+        self.__handler.on_screen_acquire(is_acquiring=arg.value)
+        self.__fsm.event("monitor_acquire", arg.value)
+        return None
+
+    def action_monitor_error(self, arg):
+        self.__handler.on_screen_monitor_error(accessor=arg.accessor, error=arg.error)
+        return None
+
+    def action_monitor_image(self, arg):
+        self.__handler.on_screen_image(image=arg.value)
+        return None
+
+    def action_monitor_target_status(self, arg):
+        v = _STATUS_IN == arg.value
+        self.__handler.on_screen_target_status(target_is_in=v)
+        self.__fsm.event("monitor_target_status", v)
+        return None
+
     def action_check_upstream(self, arg):
         self.__upstream = _Upstream(self, arg)
         return None
 
-    def action_check_target(self, arg):
-        if not self.__status:
-            self.__status = self.accessor("target_status")
-        self.__status_accessor.monitor(self.__handle_status)
-        return None
+    def action_move_target(self, arg):
+        if self.__target_control:
+            self.__target_control = self.accessor("target_control")
+        self.__target_control.put(_MOVE_TARGET_IN[arg.want_in])
 
     def action_req_move_target(self, arg):
-        return None
-
-    def action_req_target_status(self, arg):
-        self.__fsm.event("req_target_status", arg)
-        return None
-
-    def action_upstream_status(self, arg):
-        self.__fsm.event("upstream_status", arg)
+        self.__fsm.event("move_target", arg)
         return None
 
     def req_action(self, method, arg):
@@ -236,32 +245,15 @@ class _Worker(_Thread):
     def __handle_monitor(self, **kwargs):
         a = PKDict(kwargs)
         if "error" in arg:
-            self.action(self.action_monitor_error,, arg)
+            self.action(self.action_monitor_error, arg)
         elif "connected" in arg:
             pass
         else:
             self.action(getattr(self, f"action_monitor_{a.accessor.accessor_name}"), a)
 
-    def action_monitor_acquire(self, arg):
-        self.__handler.on_screen_acquire(is_acquiring=arg.value)
-        self.__fsm.event("monitor_acquire", arg.value)
-        return None
-
-    def action_monitor_image(self, arg):
-        self.__handler.on_screen_image(image=arg.value)
-        return None
-
-    def action_monitor_target_status(self, arg):
-        v = _STATUS_IN == arg.value
-        self.__handler.on_screen_target_status(target_is_in=v)
-        self.__fsm.event("monitor_target_status", v)
-        return None
-
     def _loop(self, *args, **kwargs):
         for a in "acquire", "image", "target_status":
             self.accessor(a).monitor(self.__handle_monitor)
-        self.accessor("image").monitor(self.__handle_image)
-        self.accessor("target_status").monitor(self.__handle_target_status)
         super()._loop(*args, **kwargs)
 
     def _repr(self):
