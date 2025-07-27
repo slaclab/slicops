@@ -22,14 +22,15 @@ _STATUS_OUT = 1
 
 _BLOCKING_MSG = "upstream target is in"
 _TIMEOUT_MSG = "upstream target status accessor timed out"
+_ERROR_PREFIX_MSG = "upstream target error: "
 
 
 class DeviceScreen(slicops.device.Device):
     """Augment Device with screen specific operations"""
 
-    def __init__(self, beam_path, *args, **kwargs):
+    def __init__(self, beam_path, handler, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.__worker = _Worker(self, beam_path)
+        self.__worker = _Worker(beam_path, handler, self)
 
     def destroy(self):
         self.__worker.destroy()
@@ -40,16 +41,15 @@ class DeviceScreen(slicops.device.Device):
             self.action_req_move_target, PKDict(want_in=want_in, callback=callback)
         )
 
-    def target_status(self, callback):
-        self.__worker.req_action(self.work_req_target_status, PKDict(callback=callback))
-
 
 class _FSM:
     def __init__(self, worker):
         self.worker = worker
         self.curr = PKDict(
-            checking_target=False,
+            check_target=False,
+            check_upstream=False,
             target_is_in=None,
+            upstream_problems=None,
         )
         self.prev = self.curr.copy()
 
@@ -64,43 +64,27 @@ class _FSM:
 
         return f"<_FSM {_states(self.curr)}>"
 
-    def _event_move_target(self, arg):
-        if self.curr.move_target is not None:
-            raise AssertionError("already moving target")
-        if self.curr.target_in == arg.want_in:
+    def _event_req_upstream_status(self, arg, check_upstream, upstream_problems, **kwargs):
+        if upstream_problems is not None:
+            arg.callback(PKDict(upstream_problems=upstream_problems))
             return
-        self.curr.move_target = arg
-        if self.curr.target_in is None:
-            self.event("check_target", None)
-        elif arg.want_in:
-            self.event("check_upstream", None)
-        else:
-            self.event("move_target_out", None)
-
-    def _event_target_in(self, arg):
-        curr.target = True
-        if not (m := curr.move_target):
-            return
-        curr.move_target = None
-        if m.want_in:
-            self.curr.move_target = None
-            m.callback(True)
-        else:
-            self.event("move_target", m)
-
-    def _event_req_target_status(self, arg, checking_target, target_is_in, **kwargs):
-        if target_is_in is not None:
-            arg.callback(PKDict(target_is_in=self.curr.target))
-            return
-        if checking_target:
+        if check_upstream:
             # TODO(robnagler) don't crash here, but how to force callback to crash?
-            arg.callback(PKDict(error="Already checking target"))
+            arg.callback(PKDict(error="Already in check_upstream"))
             return
-        self.worker.action("check_target", arg)
-        return PKDict(checking_target=True)
+        self.worker.action(self.worker.action_check_upstream, arg)
+        return PKDict(check_upstream=True)
+
+    def _event_upstream_status_done(self, arg, check_upstream, **kwargs):
+        if not check_upstream:
+            raise AssertionError("not in check_upstream")
+        self.worker.handler.screen_cb_upstream(problems=arg.problems)
+        return PKDict(upstream_problems=arg.problems, check_upstream=False)
 
 
 class _Thread:
+    _LOOP_END = object()
+
     def __init__(self):
         self.destroyed = False
         self.__lock = threading.Lock()
@@ -130,13 +114,15 @@ class _Thread:
     def _loop(self):
         try:
             while True:
-                m, a = self.__actions.get(timeout=self._loop_timeout_secs)
+                try:
+                    m, a = self.__actions.get(timeout=self._loop_timeout_secs)
+                except queue.Empty:
+                    m, a = self.action_loop_timeout(), None
                 with self.__lock:
                     if self.destroyed:
                         return
-                    m(a)
-        except queue.Empty:
-            self.action_loop_timeout()
+                    if m(a) is self._LOOP_END:
+                        return
         except Exception as e:
             pkdlog("error={} {} stack={}", e, self, pkdexc(simplify=True))
         finally:
@@ -168,19 +154,17 @@ class _Upstream(_Thread):
         self.__devices.pkdel(n).destroy()
         if e := arg.get("error"):
             pkdlog("device={} error={}", n, e)
-            # TODO(robnagler) prefix with something?
-            self.__problems[n] = e
+            self.__problems[n] = f"{_ERROR_PREFIX_MSG}{e}"
         elif arg.value == _STATUS_IN:
             self.__problems[n] = _BLOCKING_MSG
         if not self.__devices:
-            self.__done()
+            return self.__done()
+        return None
 
     def action_loop_timeout(self):
         for n in self.__devices:
             self.__problems[n] = _TIMEOUT_MSG
-        # clear all devices but not destroying object itself
-        self._destroy()
-        self.__done()
+        return self.__done()
 
     def _destroy(self):
         (d, self.__devices) = (self.__devices, PKDict())
@@ -188,12 +172,9 @@ class _Upstream(_Thread):
             x.destroy()
 
     def __done(self):
-        self.__worker.action(
-            self.work_upstream_status,
-            PKDict(req_arg=self.__req_arg, problems=self.__problems)
-        )
-        # no devices so destroyed implicitly
-        self.__destroyed = True
+        self.req_arg.problems = self.__problems
+        self.__worker.action(self.__worker.action_upstream_status, self.__req_arg)
+        return self._LOOP_END
 
     def __handle_status(self, **kwargs):
         self.action(self.action_handle_status, PKDict(kwargs))
@@ -210,24 +191,36 @@ class _Upstream(_Thread):
 class _Worker(_Thread):
     """Implements actions of DeviceScreen"""
 
-    def __init__(self, device, beam_path):
-        self.__device = device
+    def __init__(self, beam_path, handler, device):
         self.__beam_path = beam_path
+        self.__handler = handler
+        self.__device = device
         self.__upstream = None
+        self.__status = None
         self.__fsm = __FSM(self)
         self._loop_timeout_secs = 0
         super().__init__()
 
-    def action_check_target(self, arg):
-        if self.__upstream:
-            raise AssertionError("already have upstream {} {}", self.__fsm, self.device)
+    def action_check_upstream(self, arg):
         self.__upstream = _Upstream(self, arg)
+        return None
+
+    def action_check_target(self, arg):
+        if not self.__status:
+            self.__status = self.accessor("target_status")
+        self.__status_accessor.monitor(self.__handle_status)
+        return None
 
     def action_req_move_target(self, arg):
-        pass
+        return None
 
     def action_req_target_status(self, arg):
         self.__fsm.event("req_target_status", arg)
+        return None
+
+    def action_upstream_status(self, arg):
+        self.__fsm.event("upstream_status", arg)
+        return None
 
     def req_action(self, method, arg):
         """Called by DeviceScreen which has separate life cycle"""
@@ -239,6 +232,37 @@ class _Worker(_Thread):
         if self.__upstream:
             (u, self.__upstream) = (self.__upstream, None)
             u.destroy()
+
+    def __handle_monitor(self, **kwargs):
+        a = PKDict(kwargs)
+        if "error" in arg:
+            self.action(self.action_monitor_error,, arg)
+        elif "connected" in arg:
+            pass
+        else:
+            self.action(getattr(self, f"action_monitor_{a.accessor.accessor_name}"), a)
+
+    def action_monitor_acquire(self, arg):
+        self.__handler.on_screen_acquire(is_acquiring=arg.value)
+        self.__fsm.event("monitor_acquire", arg.value)
+        return None
+
+    def action_monitor_image(self, arg):
+        self.__handler.on_screen_image(image=arg.value)
+        return None
+
+    def action_monitor_target_status(self, arg):
+        v = _STATUS_IN == arg.value
+        self.__handler.on_screen_target_status(target_is_in=v)
+        self.__fsm.event("monitor_target_status", v)
+        return None
+
+    def _loop(self, *args, **kwargs):
+        for a in "acquire", "image", "target_status":
+            self.accessor(a).monitor(self.__handle_monitor)
+        self.accessor("image").monitor(self.__handle_image)
+        self.accessor("target_status").monitor(self.__handle_target_status)
+        super()._loop(*args, **kwargs)
 
     def _repr(self):
         return f"device={self.__device.device_name}"

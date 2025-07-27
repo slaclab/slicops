@@ -99,6 +99,7 @@ class _Accessor:
 
     def __init__(self, device, accessor_name):
         self.device = device
+        self.accessor_name = accessor_name
         self.meta = device.meta.accessor[accessor_name]
         self._callback = None
         self._lock = threading.Lock()
