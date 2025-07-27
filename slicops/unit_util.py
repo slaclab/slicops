@@ -11,9 +11,12 @@ import pykern.api.unit_util
 
 class Setup(pykern.api.unit_util.Setup):
     def __init__(self, sliclet, *args, **kwargs):
+        if c := kwargs.get("caproto"):
+            del kwargs["caproto"]
         super().__init__(*args, **kwargs)
         self.__sliclet = sliclet
         self.__update_q = asyncio.Queue()
+        self.__caproto = c
 
     async def ctx_update(self):
         from pykern import pkunit
@@ -51,10 +54,12 @@ class Setup(pykern.api.unit_util.Setup):
         return config.cfg().ui_api.copy()
 
     def _server_config(self, *args, **kwargs):
-        from slicops import mock_epics
+        if self.__caproto:
+            self.__start_caproto()
+        else:
+            from slicops import mock_epics
 
-        mock_epics.reset_state()
-
+            mock_epics.reset_state()
         return super()._server_config(*args, **kwargs)
 
     def _server_start(self, *args, **kwargs):
@@ -70,6 +75,9 @@ class Setup(pykern.api.unit_util.Setup):
         if m := re.search("^.*/(.+)", c):
             c = m.group(1)
         pkdebug.pkdlog("{} op={}", c, pkinspect.caller_func_name())
+
+    def __start_caproto(self):
+        pass
 
     async def __subscribe(self):
         from pykern import pkdebug
