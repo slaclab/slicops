@@ -85,6 +85,9 @@ class Device:
         """
         return self.accessor(accessor_name).put(value)
 
+    def __repr__(self):
+        return f"<Device {self.device_name}>"
+
 
 class _Accessor:
     """Container for a PV, metadata, and dynamic state
