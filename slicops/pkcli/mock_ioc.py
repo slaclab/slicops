@@ -16,9 +16,8 @@ def run(config_dir):
     def _normalize(raw):
         for k, v in raw.items():
             if not isinstance(v, dict):
-                v = PKDict(values=[v], delay=0, read_only=False)
-            v.pksetdefault(delay=1)
-            v.pksetdefault(values=[None])
+                v = PKDict(values=[v])
+            v.pksetdefault(delay=1, values=[None])
             for t in v.get("triggers", []):
                 t.pksetdefault(delay=1)
             yield k, v
@@ -27,9 +26,9 @@ def run(config_dir):
         return PKDict(
             # Need to hardwire the defaults, because ioc_arg_parser uses
             # argparse globally which causes a mess with argh (which uses argparse)
-            pvdb=_PVGroup(config, macros={}, prefix='').pvdb,
-            interfaces=['0.0.0.0'],
-            module_name='caproto.asyncio.server',
+            pvdb=_PVGroup(config, macros={}, prefix="").pvdb,
+            interfaces=["0.0.0.0"],
+            module_name="caproto.asyncio.server",
             log_pv_names=False,
         )
 
@@ -62,6 +61,11 @@ class _PVGroup(caproto.server.PVGroup):
         pass
 
     async def __publish(self, pv):
+        # TODO(robnagler) should values be triggered on each _read()
+        # event? there's caching in caproto so that makes it difficult.
+        # acquire triggers images which would come back with a delay of
+        # say .1 so we could check the results. Delay has to be slow enough
+        # so that we don't lose updates in testing
         pkdp("{}", pv.name)
         for _ in range(10):
             await asyncio.sleep(pv.value)
