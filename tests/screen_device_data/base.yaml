@@ -1,16 +1,17 @@
+---
 "OTRS:HTR:330:Image:ArrayData":
-  monitor_secs: 2
-  value: []
-"OTRS:HTR:330:Image:ArraySize1_RBV":
-  value: 64
-"OTRS:HTR:330:Image:ArraySize0_RBV":
-  value: 64
+  delay: 2
+  values:
+    - 1
+    - 2
+"OTRS:HTR:330:Image:ArraySize1_RBV": 64
+"OTRS:HTR:330:Image:ArraySize0_RBV": 64
 "OTRS:HTR:330:PNEUMATIC":
-  updates:
-    "OTRS:HTR:330:TGT_STS":
-      1: 2
-      2: 0
-"OTRS:HTR:330:TGT_STS":
-  value: 0
-"OTRS:HTR:330:Acquire":
-  value: 0
+  triggers:
+    - pv: "OTRS:HTR:330:TGT_STS"
+      delay: 2
+      value_map:
+        1: 2
+        2: 0
+"OTRS:HTR:330:TGT_STS": 0
+"OTRS:HTR:330:Acquire": 0
