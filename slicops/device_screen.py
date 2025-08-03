@@ -156,7 +156,9 @@ class _Thread:
         self.destroyed = False
         self.__lock = threading.Lock()
         self.__actions = queue.Queue()
-        self.__thread = threading.Thread(target=self._loop, daemon=True)
+        from epics import ca
+
+        self.__thread = ca.CAThread(target=self._loop, daemon=True)
         if self._loop_timeout_secs > 0 and not hasattr(self, "action_loop_timeout"):
             raise AssertionError(
                 f"_loop_timeout_secs={self._loop_timeout_secs} and not action_loop_timeout"
