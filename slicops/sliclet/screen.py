@@ -6,7 +6,6 @@
 
 from pykern.pkcollections import PKDict
 from pykern.pkdebug import pkdc, pkdexc, pkdlog, pkdp
-import enum
 import pykern.pkconfig
 import pykern.util
 import queue

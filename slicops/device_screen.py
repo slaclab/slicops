@@ -6,16 +6,18 @@
 
 from pykern.pkcollections import PKDict
 from pykern.pkdebug import pkdc, pkdexc, pkdlog, pkdp
-import logging
 from slicops.device import DeviceError
+import abc
+import enum
+import logging
+import pykern.pkconfig
+import queue
 import slicops.device
 import slicops.device_db
-import enum
-import queue
 import threading
 
-# rjn these should be reused for both cases
-_MOVE_TARGET_IN = PKDict(False=0, True=1)
+# TODO(robnagler) these should be reused for both cases
+_MOVE_TARGET_IN = PKDict({False: 0, True: 1})
 _STATUS_IN = 2
 _STATUS_OUT = 1
 
@@ -27,8 +29,12 @@ _ERROR_PREFIX_MSG = "upstream target error: "
 class DeviceScreen(slicops.device.Device):
     """Augment Device with screen specific operations"""
 
-    def __init__(self, beam_path, handler, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, beam_path, device_name, handler, *args, **kwargs):
+        super().__init__(device_name, *args, **kwargs)
+        if not isinstance(handler, EventHandler):
+            raise AssertionError(
+                f"handler is not subclass EventHandler type={type(handler)}"
+            )
         self.__worker = _Worker(beam_path, handler, self)
 
     def destroy(self):
@@ -37,6 +43,23 @@ class DeviceScreen(slicops.device.Device):
 
     def move_target(self, want_in):
         self.__worker.req_action(self.action_req_move_target, PKDict(want_in=want_in))
+
+
+class ErrorKind(enum.Enum):
+    fsm = enum.auto()
+    monitor = enum.auto()
+    upstream = enum.auto()
+
+
+class EventHandler:
+
+    @abc.abstractmethod
+    def on_screen_device_error(self, accessor_name, error_kind, error_msg):
+        pass
+
+    @abc.abstractmethod
+    def on_screen_device_update(self, accessor_name, value):
+        pass
 
 
 class _FSM:
@@ -60,34 +83,46 @@ class _FSM:
     def _event_handle_monitor(self, arg):
         n = arg.accessor.accessor_name
         if "error" in arg:
-            self.handler.on_screen_device_error(kind="monitor", accessor_name=n, error=arg.error)
+            self.handler.on_screen_device_error(
+                error_kind=ErrorKind.monitor, accessor_name=n, error_msg=arg.error
+            )
             if n == "target_status":
-                #TODO(robnagler) is resetting move_target_arg right?
+                # TODO(robnagler) is resetting move_target_arg right?
                 return PKDict(target_status=None, move_target_arg=None)
             return
         if "connected" in arg:
             return
         if n == "image":
-            self.handler.on_screen_device_update(kind=n, value=arg.value)
+            self.handler.on_screen_device_update(value=arg.value)
             return
         if n == "acquire":
-            self.handler.on_screen_device_update(kind=n, value=arg.value)
+            self.handler.on_screen_device_update(accessor_name=n, value=arg.value)
             return PKDict(acquire=arg.value)
         if n == "target_status":
             v = _STATUS_IN == arg.value
-            self.handler.on_screen_device_update(kind=n, value=v)
+            self.handler.on_screen_device_update(accessor_name=n, value=v)
             return PKDict(move_target_arg=None, target_status=v)
         raise AssertionError(f"unsupported accessor={n} {self}")
 
-    def _event_move_target(self, arg, check_upstream, move_target_arg, target_status, upstream_problems, **kwargs):
+    def _event_move_target(
+        self,
+        arg,
+        check_upstream,
+        move_target_arg,
+        target_status,
+        upstream_problems,
+        **kwargs,
+    ):
         if move_target_arg:
-            self.handler.on_screen_device_error(kind="fsm", error="target already moving")
+            self.handler.on_screen_device_error(
+                error_kind="fsm", error_msg="target already moving"
+            )
             return
         if target_status is not None:
             if self.want_in == target_status:
                 # TODO(robnagler) could be a race condition so probably fine to do nothing
                 return
-        #TODO(robnagler) allow moving without checking upstream
+        # TODO(robnagler) allow moving without checking upstream
         rv = PKDict(move_target_arg=arg.want_in)
         if arg.want_in and upstream_problems is None or upstream_problems:
             # Recheck the upstream
@@ -98,7 +133,9 @@ class _FSM:
     def _event_upstream_status(self, arg, **kwargs):
         rv = PKDict(check_upstream=False, upstream_problems=arg.problems)
         if arg.problems:
-            self.handler.on_screen_device_error(kind="upstream", error=arg.problems)
+            self.handler.on_screen_device_error(
+                error_kind="upstream", error_msg=arg.problems
+            )
             return rv.pkupdate(move_target_arg=None)
         self.worker.action(self.worker.action_move_target, move_target_arg)
         return rv
@@ -117,9 +154,11 @@ class _Thread:
         self.destroyed = False
         self.__lock = threading.Lock()
         self.__actions = queue.Queue()
-        self.__thread = threading.Thread(target=self._loop)
+        self.__thread = threading.Thread(target=self._loop, daemon=True)
         if self._loop_timeout_secs > 0 and not hasattr(self, "action_loop_timeout"):
-            raise AssertionError(f"_loop_timeout_secs={self._loop_timeout_secs} and not action_loop_timeout")
+            raise AssertionError(
+                f"_loop_timeout_secs={self._loop_timeout_secs} and not action_loop_timeout"
+            )
         self.__thread.start()
 
     def action(self, method, arg):
@@ -131,7 +170,7 @@ class _Thread:
                 if self.destroyed:
                     return
                 self.destroyed = True
-                self.__actions.put_nowait(None, None)
+                self.__actions.put_nowait((None, None))
                 self._destroy()
         except Exception as e:
             pkdlog("error={} {} stack={}", e, self, pkdexc(simplify=True))
@@ -160,7 +199,7 @@ class _Thread:
         def _destroyed():
             return " DESTROYED" if self.destroyed else ""
 
-        return f"<{self.__class__.__name}{_destroyed()} self._repr()>"
+        return f"<{self.__class__.__name__}{_destroyed()} self._repr()>"
 
 
 class _Upstream(_Thread):
@@ -224,10 +263,9 @@ class _Worker(_Thread):
         self.__device = device
         self.__upstream = None
         self.__status = None
-        self.__fsm = __FSM(self, handler)
+        self.__fsm = _FSM(self, handler)
         self._loop_timeout_secs = 0
         super().__init__()
-
 
     def action_check_upstream(self, arg):
         self.__upstream = _Upstream(self, arg)
@@ -264,11 +302,11 @@ class _Worker(_Thread):
             u.destroy()
 
     def __handle_monitor(self, **kwargs):
-        self.action(self.action_handle_monitor, PKDict(kwargs)
+        self.action(self.action_handle_monitor, PKDict(kwargs))
 
     def _loop(self, *args, **kwargs):
         for a in "acquire", "image", "target_status":
-            self.accessor(a).monitor(self.__handle_monitor)
+            self.__device.accessor(a).monitor(self.__handle_monitor)
         super()._loop(*args, **kwargs)
 
     def _repr(self):
@@ -276,5 +314,9 @@ class _Worker(_Thread):
 
 
 _cfg = pykern.pkconfig.init(
-    upstream_timeout_secs=(15, pykern.pkconfig.parse_seconds, "how long to wait for updates from devices"),
+    upstream_timeout_secs=(
+        15,
+        pykern.pkconfig.parse_seconds,
+        "how long to wait for updates from devices",
+    ),
 )

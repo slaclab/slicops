@@ -34,7 +34,7 @@ def run(config_dir):
 
     caproto.server.run(
         **_pvgroup(
-            PKDict(_normalize(pykern.fconf.parse_all(pykern.pkio.py_path()))),
+            PKDict(_normalize(pykern.fconf.parse_all(pykern.pkio.py_path(config_dir)))),
         ),
     )
 

@@ -22,7 +22,7 @@ async def test_basic():
             )
         return rv
 
-    async with unit_util.Setup("screen") as s:
+    async with unit_util.SlicletSetup("screen") as s:
         from pykern import pkunit, pkdebug
         from pykern.pkdebug import pkdc, pkdexc, pkdlog, pkdp
         import asyncio

@@ -7,9 +7,33 @@
 # limit imports that might touch config
 import asyncio
 import pykern.api.unit_util
+import contextlib
 
 
-class Setup(pykern.api.unit_util.Setup):
+@contextlib.contextmanager
+def start_mock_ioc(config_dir):
+    from pykern import pkdebug
+    from pykern.pkcollections import PKDict
+    import os, signal, time
+
+    p = os.fork()
+    if p == 0:
+        try:
+            from slicops.pkcli import mock_ioc
+
+            mock_ioc.run(config_dir)
+        except Exception as e:
+            pkdebug.pkdlog("server exception={} stack={}", e, pkdebug.pkdexc())
+        finally:
+            os._exit(0)
+    try:
+        time.sleep(1)
+        yield None
+    finally:
+        os.kill(p, signal.SIGKILL)
+
+
+class SlicletSetup(pykern.api.unit_util.Setup):
     def __init__(self, sliclet, *args, **kwargs):
         if c := kwargs.get("caproto"):
             del kwargs["caproto"]
