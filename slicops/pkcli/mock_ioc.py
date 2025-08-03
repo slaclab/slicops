@@ -16,8 +16,8 @@ def run(config_dir):
     def _normalize(raw):
         for k, v in raw.items():
             if not isinstance(v, dict):
-                v = PKDict(values=[v])
-            v.pksetdefault(delay=1, values=[None])
+                v = PKDict(value=v)
+            v.pksetdefault(delay=1, value=None)
             for t in v.get("triggers", []):
                 t.pksetdefault(delay=1)
             yield k, v
@@ -45,13 +45,15 @@ class _PVGroup(caproto.server.PVGroup):
         self.__config = config
         for k, v in self.__config.items():
             self._pvs_[k] = p = caproto.server.pvproperty(
-                value=v["values"][0],
                 startup=self.__startup,
+                value=v.value,
             )
             p.__set_name__(self, k)
         super().__init__(*args, **kwargs)
 
-    # async def group_write(self, instance, value):
+    async def xgroup_write(self, instance, value):
+        pkdp((instance, value))
+        return
 
     async def __startup(self, _ignore_self, pv, async_lib):
         # async_lib doesn't have create taxsk
@@ -61,13 +63,4 @@ class _PVGroup(caproto.server.PVGroup):
         pass
 
     async def __publish(self, pv):
-        # TODO(robnagler) should values be triggered on each _read()
-        # event? there's caching in caproto so that makes it difficult.
-        # acquire triggers images which would come back with a delay of
-        # say .1 so we could check the results. Delay has to be slow enough
-        # so that we don't lose updates in testing
-        pkdp("{}", pv.name)
-        for _ in range(10):
-            await asyncio.sleep(pv.value)
-            await pv.write(2 * pv.value)
-            pkdp("value={}", pv.value)
+        pass

@@ -6,6 +6,7 @@
 
 
 def test_target():
+    from pykern.pkcollections import PKDict
     from pykern import pkdebug, pkunit
     from slicops import device_screen, unit_util
     import queue, time
@@ -27,7 +28,11 @@ def test_target():
         h = _Handler()
         try:
             d = device_screen.DeviceScreen("CU_HXR", "YAG03", h)
-            v = h.event_q.get(timeout=0.5)
+            v = h.event_q.get(timeout=1)
+            pkdebug.pkdp(v)
+            v = h.event_q.get(timeout=1)
+            pkdebug.pkdp(v)
+            v = h.event_q.get(timeout=1)
             pkdebug.pkdp(v)
             # pkunit.pkeq(1, d.accessor("target_status").get())
             # d.move_target(want_in=True)
@@ -42,6 +47,7 @@ def test_target():
             # pkunit.pkeq(1, a.get())
             return
         except queue.Empty:
+            pkdebug.pkdp(time.time())
             pass
         finally:
             if d:

@@ -73,11 +73,6 @@ _AREAS_MISSING_BEAM_PATH = frozenset(
 )
 
 
-def yaml_to_sql():
-    """Convert device yaml file to db"""
-    return slicops.device_sql_db.recreate(_Parser())
-
-
 def parse():
     from pykern import pkjson
 
@@ -91,6 +86,25 @@ def parse():
                 r.join(d.metadata.type, d.metadata.area)
             ).join(d.name + ".json"),
         )
+
+
+def query(func_name, *args):
+    """Call func_name in `slicops.device_db`
+
+    Args:
+        func_name (str): valid function
+        args (str): passed verbatim to function
+    Returns:
+        object: result of function
+    """
+    from slicops import device_db
+
+    return getattr(device_db, func_name)(*args)
+
+
+def yaml_to_sql():
+    """Convert device yaml file to db"""
+    return slicops.device_sql_db.recreate(_Parser())
 
 
 class _Ignore(Exception):

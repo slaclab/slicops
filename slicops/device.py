@@ -34,6 +34,7 @@ class Device:
     def __init__(self, device_name):
         self.device_name = device_name
         self.meta = slicops.device_db.meta_for_device(device_name)
+        self._destroyed = False
         self._accessor = PKDict()
         self.connected = False
 
@@ -45,16 +46,21 @@ class Device:
         Returns:
             _Accessor: object holding PV state
         """
+        if self._destroyed:
+            raise AssertionError(f"destroyed {self}")
         return self._accessor.pksetdefault(
             accessor_name, lambda: _Accessor(self, accessor_name)
         )[accessor_name]
 
     def destroy(self):
         """Disconnect from PV's and remove state about device"""
+        if self._destroyed:
+            return
+        self._destroyed = True
         x = list(self._accessor.values())
         self._accessor = PKDict()
         for a in x:
-            a.disconnect()
+            a.destroy()
 
     def get(self, accessor_name):
         """Read from PV
@@ -102,6 +108,7 @@ class _Accessor:
         self.accessor_name = accessor_name
         self.meta = device.meta.accessor[accessor_name]
         self._callback = None
+        self._destroyed = False
         self._lock = threading.Lock()
         # TODO(pjm): connection and PV timeouts need to be configurable?
         self._pv = epics.PV(
@@ -114,12 +121,19 @@ class _Accessor:
             # from within a monitor callback
             self._image_shape = (self.device.get("n_row"), self.device.get("n_col"))
 
-    def disconnect(self):
+    def destroy(self):
         """Stop all monitoring and disconnect from PV"""
-        self._callback = None
+        if self._destroyed:
+            return
+        with self._lock:
+            if self._destroyed:
+                return
+            self._destroyed = True
+            p = self._pv
+            self._callback = None
         try:
             # Clears all callbacks
-            self._pv.disconnect()
+            p.disconnect()
         except Exception as e:
             pkdlog("error={} {} stack={}", e, self, pkdexc())
 
@@ -129,7 +143,7 @@ class _Accessor:
         Returns:
             object: the value from the PV converted to a Python type
         """
-
+        self._assert_destroyed()
         # TODO(pjm): connection and PV timeouts need to be configurable?
         if (rv := self._pv.get(timeout=5.0)) is None:
             raise DeviceError(f"unable to get {self}")
@@ -152,22 +166,36 @@ class _Accessor:
             callback (callable): accepts a single `PKDict` as ag
         """
         with self._lock:
+            self._assert_destroyed()
             if self._callback:
                 raise ValueError(f"already monitoring {self}")
-            # should lock
-            self._callback_index = self._pv.add_callback(self._on_value)
-            self._pv.auto_monitor = True
-            self._callback = callback
+            v = self._on_value
+            p = self._pv
+            # Sanity check below. Callers should protect against race conditions
+            c = self._callback = PKDict(op=callback)
+        # These calls may block so can't call _lock
+        i = p.add_callback(v)
+        p.auto_monitor = True
+        with self._lock:
+            if self._destroyed or self._callback is None:
+                # destroy/monitor_stop inside the callback caused by add_callback
+                return
+            if c is not self._callback:
+                # Otherwise the index will be wrong.
+                raise AssertionError(f"overlapping calls monitor {self}")
+            self._callback_index = i
 
     def monitor_stop(self):
         """Stops monitoring PV"""
         with self._lock:
-            if not self._callback:
+            if self._destroyed or not self._callback:
                 return
             self._callback = None
-            self._pv.auto_monitor = False
-            self._pv.remove_callback(self._callback_index)
+            i = self._callback_index
             self._callback_index = None
+        self._pv.auto_monitor = False
+        self._pv.remove_callback(i)
+        self._callback_index = None
 
     def put(self, value):
         """Set PV to value
@@ -175,6 +203,7 @@ class _Accessor:
         Args:
             value (object): Value to write to PV
         """
+        self._assert_destroyed()
         if not self.meta.pv_writable:
             raise AccessorPutError(f"read-only {self}")
         if self.meta.py_type == bool:
@@ -188,6 +217,10 @@ class _Accessor:
             raise DeviceError(f"put error={e} value={v} {self}")
         if not self._pv.connected:
             raise DeviceError(f"disconnected {self}")
+
+    def _assert_destroyed(self):
+        if self._destroyed:
+            raise AssertionError(f"destroyed {self}")
 
     def _fixup_value(self, raw):
         def _reshape(image):
@@ -233,4 +266,4 @@ class _Accessor:
         with self._lock:
             c = self._callback
         if c:
-            c(k)
+            c.op(k)

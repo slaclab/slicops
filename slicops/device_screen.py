@@ -80,7 +80,7 @@ class _FSM:
         if u := getattr(self, f"_event_{name}")(arg, **self.curr):
             self.curr.update(u)
 
-    def _event_handle_monitor(self, arg):
+    def _event_handle_monitor(self, arg, **kwargs):
         n = arg.accessor.accessor_name
         if "error" in arg:
             self.handler.on_screen_device_error(
@@ -93,16 +93,18 @@ class _FSM:
         if "connected" in arg:
             return
         if n == "image":
-            self.handler.on_screen_device_update(value=arg.value)
-            return
-        if n == "acquire":
-            self.handler.on_screen_device_update(accessor_name=n, value=arg.value)
-            return PKDict(acquire=arg.value)
-        if n == "target_status":
+            v = arg.value
+            rv = None
+        elif n == "acquire":
+            v = arg.value
+            rv = PKDict(acquire=arg.value)
+        elif n == "target_status":
             v = _STATUS_IN == arg.value
-            self.handler.on_screen_device_update(accessor_name=n, value=v)
-            return PKDict(move_target_arg=None, target_status=v)
-        raise AssertionError(f"unsupported accessor={n} {self}")
+            rv = PKDict(move_target_arg=None, target_status=v)
+        else:
+            raise AssertionError(f"unsupported accessor={n} {self}")
+        self.handler.on_screen_device_update(accessor_name=n, value=v)
+        return rv
 
     def _event_move_target(
         self,
@@ -179,10 +181,13 @@ class _Thread:
         pass
 
     def _loop(self):
+        timeout_kwarg = PKDict()
+        if self._loop_timeout_secs:
+            timeout_kwarg.timeout = self._loop_timeout_secs
         try:
             while True:
                 try:
-                    m, a = self.__actions.get(timeout=self._loop_timeout_secs)
+                    m, a = self.__actions.get(**timeout_kwarg)
                 except queue.Empty:
                     m, a = self.action_loop_timeout(), None
                 with self.__lock:
@@ -301,8 +306,8 @@ class _Worker(_Thread):
             (u, self.__upstream) = (self.__upstream, None)
             u.destroy()
 
-    def __handle_monitor(self, **kwargs):
-        self.action(self.action_handle_monitor, PKDict(kwargs))
+    def __handle_monitor(self, change):
+        self.action(self.action_handle_monitor, change)
 
     def _loop(self, *args, **kwargs):
         for a in "acquire", "image", "target_status":

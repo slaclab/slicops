@@ -1,17 +1,20 @@
 ---
-"OTRS:HTR:330:Image:ArrayData":
-  delay: 2
-  values:
-    - 1
-    - 2
-"OTRS:HTR:330:Image:ArraySize1_RBV": 64
-"OTRS:HTR:330:Image:ArraySize0_RBV": 64
-"OTRS:HTR:330:PNEUMATIC":
+"YAGS:IN20:351:Acquire":
+  value: 0
   triggers:
-    - pv: "OTRS:HTR:330:TGT_STS"
-      delay: 2
+    - pv: "YAGS:IN20:351:IMAGE"
+      delay: .2
       value_map:
+        0: [0, 0, 0, 0]
+        1: [0, 1, 2, 3]
+"YAGS:IN20:351:IMAGE": [0, 0, 0, 0]
+"YAGS:IN20:351:N_OF_ROW": 2
+"YAGS:IN20:351:N_OF_COL": 2
+"YAGS:IN20:351:PNEUMATIC":
+  triggers:
+    - pv: "YAGS:IN20:351:TGT_STS"
+      delay: 1
+      value_map:
+        0: 1
         1: 2
-        2: 0
-"OTRS:HTR:330:TGT_STS": 0
-"OTRS:HTR:330:Acquire": 0
+"YAGS:IN20:351:TGT_STS": 1
