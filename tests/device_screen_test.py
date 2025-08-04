@@ -29,11 +29,8 @@ def test_target():
         try:
             d = device_screen.DeviceScreen("CU_HXR", "YAG03", h)
             v = h.event_q.get(timeout=1)
-            pkdebug.pkdp(v)
             v = h.event_q.get(timeout=1)
-            pkdebug.pkdp(v)
             v = h.event_q.get(timeout=1)
-            pkdebug.pkdp(v)
             # pkunit.pkeq(1, d.accessor("target_status").get())
             # d.move_target(want_in=True)
             # pkunit.pkeq(2, d.accessor("target_status").get())
@@ -47,7 +44,6 @@ def test_target():
             # pkunit.pkeq(1, a.get())
             return
         except queue.Empty:
-            pkdebug.pkdp(time.time())
             pass
         finally:
             if d:

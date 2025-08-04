@@ -52,7 +52,6 @@ class _PVGroup(caproto.server.PVGroup):
         super().__init__(*args, **kwargs)
 
     async def xgroup_write(self, instance, value):
-        pkdp((instance, value))
         return
 
     async def __startup(self, _ignore_self, pv, async_lib):

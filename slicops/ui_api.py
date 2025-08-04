@@ -46,7 +46,6 @@ class API(slicops.quest.API):
                     return None
                 if isinstance(r, Exception):
                     raise r
-                pkdp(getattr(self, "subscription", None))
                 self.subscription.result_put(r)
         finally:
             if "session" in self:
