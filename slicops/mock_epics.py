@@ -28,16 +28,26 @@ _PV = None
 class PV:
     _CB_INDEX = 1
 
-    def __init__(self, name, connection_timeout=0, connection_callback=None):
+    def __init__(
+        self,
+        name,
+        connection_timeout=0,
+        callback=None,
+        auto_monitor=False,
+        connection_callback=None,
+    ):
         if name in _PV:
             raise AssertionError(f"already exists PV={name}")
         self.pvname = name
         self.connected = True
         self.connection_callback = connection_callback
         self.monitor_callback = None
-        self._auto_monitor = False
         self._monitor_queue = None
+        self._auto_monitor = False
         _PV[name] = self
+        if callback:
+            self.add_callback(callback)
+        self.auto_monitor = auto_monitor
 
     def disconnect(self):
         self._auto_monitor = False
