@@ -4,6 +4,8 @@
 :license: http://github.com/slaclab/slicops/LICENSE
 """
 
+_ACCESSORS = ("acquire", "image", "target_status")
+
 
 def test_target():
     from pykern.pkcollections import PKDict
@@ -14,23 +16,24 @@ def test_target():
     class _Handler(device_screen.EventHandler):
         def __init__(self, *args, **kwargs):
             super().__init__(*args, **kwargs)
-            self.event_q = queue.Queue()
+            self.q = PKDict({k: queue.Queue() for k in _ACCESSORS + ("error",)})
 
         def on_screen_device_error(self, **kwargs):
-            self.event_q.put_nowait(PKDict(kwargs))
+            pkdebug.pkdp(kwargs)
+            self.q.error.put_nowait(PKDict(kwargs))
 
         def on_screen_device_update(self, **kwargs):
-            self.event_q.put_nowait(PKDict(kwargs))
+            self.q[kwargs["accessor_name"]].put_nowait(PKDict(kwargs))
 
     with unit_util.start_mock_ioc(pkunit.data_dir()):
 
         d = None
         h = _Handler()
+        a = None
         try:
             d = device_screen.DeviceScreen("CU_HXR", "YAG03", h)
-            v = h.event_q.get(timeout=1)
-            v = h.event_q.get(timeout=1)
-            v = h.event_q.get(timeout=1)
+            for a in _ACCESSORS:
+                h.q[a].get(timeout=2)
             # pkunit.pkeq(1, d.accessor("target_status").get())
             # d.move_target(want_in=True)
             # pkunit.pkeq(2, d.accessor("target_status").get())
@@ -48,4 +51,4 @@ def test_target():
         finally:
             if d:
                 d.destroy()
-        pkunit.pkfail(f"timeout waiting on event_q")
+        pkunit.pkfail(f"timeout waiting on q.{a}")
