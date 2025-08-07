@@ -5,7 +5,7 @@
 """
 
 from pykern.pkcollections import PKDict
-from pykern.pkdebug import pkdc, pkdlog, pkdp
+from pykern.pkdebug import pkdc, pkdlog, pkdp, pkdexc
 import asyncio
 import caproto.server
 import pykern.fconf
@@ -17,9 +17,7 @@ def run(config_dir):
         for k, v in raw.items():
             if not isinstance(v, dict):
                 v = PKDict(value=v)
-            v.pksetdefault(delay=1, value=None)
-            for t in v.get("triggers", []):
-                t.pksetdefault(delay=1)
+            v.pksetdefault(delay=1, value=None, dispatch=PKDict)
             yield k, v
 
     def _pvgroup(config):
@@ -52,8 +50,16 @@ class _PVGroup(caproto.server.PVGroup):
         super().__init__(*args, **kwargs)
 
     async def group_write(self, instance, value, **kwargs):
-        pkdp((instance, value))
-        return super().group_write(instance, value, **kwargs)
+        try:
+            if c := self.__config.get(instance.pvname):
+                for k, v in c.dispatch.items():
+                    await self.pvdb[k].write(v[value])
+            return await super().group_write(instance, value, **kwargs)
+        except Exception as e:
+            pkdlog(
+                "error={} pv={} value={} stack={}", e, instance.name, value, pkdexc()
+            )
+            raise
 
     async def __startup(self, _ignore_self, pv, async_lib):
         # async_lib doesn't have create taxsk

@@ -35,12 +35,13 @@ def test_target():
             for a in _ACCESSORS:
                 h.q[a].get(timeout=0.2)
             d.move_target(want_in=True)
-            pkunit.pkok(h.q.target_status.get(timeout=0.2))
-            assert 0
-            # pkunit.pkeq(1, d.accessor("target_status").get())
-            #
-            # pkunit.pkeq(2, d.accessor("target_status").get())
-            # d.remove_target()
+            pkunit.pkok(
+                h.q.target_status.get(timeout=0.2), "target_status should be true"
+            )
+            d.move_target(want_in=False)
+            pkunit.pkok(
+                not h.q.target_status.get(timeout=0.2), "target_status should be false"
+            )
             # pkunit.pkeq(1, d.accessor("target_status").get())
             # u = device_db.upstream_devices("PROF", "target_control", "CU_HXR", "YAG03")
             # pkunit.pkeq(list(u.keys()), ["YAG01", "YAG02"])

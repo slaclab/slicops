@@ -82,6 +82,7 @@ class _FSM:
         pkdp((name, arg))
         if u := getattr(self, f"_event_{name}")(arg, **self.curr):
             self.curr.update(u)
+            pkdp(self.curr)
         pkdp(u)
 
     def _event_handle_monitor(self, arg, **kwargs):
@@ -103,8 +104,9 @@ class _FSM:
             v = arg.value
             rv = PKDict(acquire=arg.value)
         elif n == "target_status":
+            pkdp(arg.value)
             v = _STATUS_IN == arg.value
-            rv = PKDict(move_target_arg=None, target_status=v)
+            rv = pkdp(PKDict(move_target_arg=None, target_status=v))
         else:
             raise AssertionError(f"unsupported accessor={n} {self}")
         self.handler.on_screen_device_update(accessor_name=n, value=v)
