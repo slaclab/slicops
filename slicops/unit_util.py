@@ -11,7 +11,7 @@ import contextlib
 
 
 @contextlib.contextmanager
-def start_mock_ioc(config_dir):
+def start_ioc(config_dir):
     from pykern import pkdebug
     from pykern.pkcollections import PKDict
     import os, signal, time
@@ -19,9 +19,9 @@ def start_mock_ioc(config_dir):
     p = os.fork()
     if p == 0:
         try:
-            from slicops.pkcli import mock_ioc
+            from slicops.pkcli import ioc
 
-            mock_ioc.run(config_dir)
+            ioc.run(config_dir)
         except Exception as e:
             pkdebug.pkdlog("server exception={} stack={}", e, pkdebug.pkdexc())
         finally:

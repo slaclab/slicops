@@ -25,7 +25,7 @@ def test_target():
         def on_screen_device_update(self, **kwargs):
             self.q[kwargs["accessor_name"]].put_nowait(PKDict(kwargs))
 
-    with unit_util.start_mock_ioc(pkunit.data_dir()):
+    with unit_util.start_ioc(pkunit.data_dir()):
 
         d = None
         h = _Handler()

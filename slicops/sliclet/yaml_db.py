@@ -148,6 +148,7 @@ class _DBWatcher(watchdog.events.FileSystemEventHandler):
         if event.event_type in _EVENT_TYPES and (
             event.src_path in self.__paths or event.dest_path in self.__paths
         ):
+            pkdp(event.event_type)
             self.__update_op()
 
     def destroy(self):
