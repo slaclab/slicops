@@ -34,9 +34,6 @@ class YAMLDb(slicops.sliclet.Base):
 
     def handle_init(self, txn):
         self.__db_watcher = None
-
-    def handle_start(self, txn):
-        # TODO(robnagler) need a separate init for the instance before start
         self.__db_cache = PKDict()
         if not self.__read_db(txn):
             self.__write(txn)
@@ -149,7 +146,6 @@ class _DBWatcher(watchdog.events.FileSystemEventHandler):
         if event.event_type in _EVENT_TYPES and (
             event.src_path in self.__paths or event.dest_path in self.__paths
         ):
-            pkdp(event.event_type)
             self.__update_op()
 
     def destroy(self):

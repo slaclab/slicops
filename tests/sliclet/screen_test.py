@@ -15,10 +15,10 @@ async def test_basic():
         from pykern import pkunit, pkdebug
 
         rv = await s.ctx_update()
-        for k, a in zip(("start", "stop", "single"), expect):
+        for k, e in zip(("start", "stop", "single"), expect):
             x = f"{k}_button.ui.enabled"
             pkunit.pkeq(
-                rv.fields.pkunchecked_nested_get(x), a, "field={} expect={}", x, msg
+                e, rv.fields.pkunchecked_nested_get(x), "field={} expect={}", x, msg
             )
         return rv
 
@@ -28,10 +28,10 @@ async def test_basic():
         import asyncio
 
         r = await s.ctx_update()
-        r = await s.ctx_update()
         pkunit.pkeq("DEV_BEAM_PATH", r.fields.beam_path.value)
         pkunit.pkeq("DEV_CAMERA", r.fields.camera.value)
         await s.ctx_field_set(start_button=None)
+        assert 0, "rjn timiing issue here"
         await _buttons(s, (False, False, False), "all disabled after start")
         await _buttons(s, (False, True, False), "acquire should fire")
         # plot comes back

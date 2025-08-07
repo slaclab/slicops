@@ -79,11 +79,8 @@ class _FSM:
 
     def event(self, name, arg):
         self.prev = self.curr.copy()
-        pkdp((name, arg))
         if u := getattr(self, f"_event_{name}")(arg, **self.curr):
             self.curr.update(u)
-            pkdp(self.curr)
-        pkdp(u)
 
     def _event_handle_monitor(self, arg, **kwargs):
         n = arg.accessor.accessor_name
@@ -104,9 +101,8 @@ class _FSM:
             v = arg.value
             rv = PKDict(acquire=arg.value)
         elif n == "target_status":
-            pkdp(arg.value)
             v = _STATUS_IN == arg.value
-            rv = pkdp(PKDict(move_target_arg=None, target_status=v))
+            rv = PKDict(move_target_arg=None, target_status=v)
         else:
             raise AssertionError(f"unsupported accessor={n} {self}")
         self.handler.on_screen_device_update(accessor_name=n, value=v)
@@ -287,14 +283,12 @@ class _Worker(_Thread):
         return None
 
     def action_move_target(self, arg):
-        pkdp(arg)
         if not self.__target_control:
             self.__target_control = self.device.accessor("target_control")
-        self.__target_control.put(pkdp(_MOVE_TARGET_IN[arg.want_in]))
+        self.__target_control.put(_MOVE_TARGET_IN[arg.want_in])
         return None
 
     def action_req_move_target(self, arg):
-        pkdp(arg)
         self.__fsm.event("move_target", arg)
         return None
 

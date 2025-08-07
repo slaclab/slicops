@@ -9,6 +9,9 @@ import asyncio
 import pykern.api.unit_util
 import contextlib
 
+# TODO(robnagler) configurable?
+_TIMEOUT = 2
+
 
 @contextlib.contextmanager
 def start_ioc(config_dir):
@@ -35,18 +38,18 @@ def start_ioc(config_dir):
 
 class SlicletSetup(pykern.api.unit_util.Setup):
     def __init__(self, sliclet, *args, **kwargs):
+        self.__sliclet = sliclet
         if c := kwargs.get("caproto"):
             del kwargs["caproto"]
-        super().__init__(*args, **kwargs)
-        self.__sliclet = sliclet
-        self.__update_q = asyncio.Queue()
         self.__caproto = c
+        super().__init__(*args, **kwargs)
+        self.__update_q = asyncio.Queue()
 
     async def ctx_update(self):
         from pykern import pkunit
 
         self.__caller()
-        r = await self.__update_q.get()
+        r = await asyncio.wait_for(self.__update_q.get(), timeout=_TIMEOUT)
         self.__update_q.task_done()
         if r is None:
             pkunit.pkfail("subscription ended unexpectedly")
@@ -82,6 +85,7 @@ class SlicletSetup(pykern.api.unit_util.Setup):
             self.__start_caproto()
         else:
             from slicops import mock_epics
+            from pykern import pkdebug
 
             mock_epics.reset_state()
         return super()._server_config(*args, **kwargs)
@@ -113,7 +117,7 @@ class SlicletSetup(pykern.api.unit_util.Setup):
                 "ui_ctx_update", PKDict(sliclet=self.__sliclet)
             ) as s:
                 while True:
-                    r = await s.result_get()
+                    r = await asyncio.wait_for(s.result_get(), timeout=_TIMEOUT)
                     self.__update_q.put_nowait(r)
                     if r is None:
                         return

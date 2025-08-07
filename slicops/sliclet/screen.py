@@ -79,15 +79,6 @@ class Screen(slicops.sliclet.Base):
     def on_click_start_button(self, txn, **kwargs):
         self.__set_acquire(txn, True)
 
-    def on_change_target(self, txn, value, **kwargs):
-        self.__device.target_move(want_in=value, self.__target_moved)
-
-    def on_click_filter_in(self, txn, **kwargs):
-        pass
-
-    def on_click_filter_out(self, txn, **kwargs):
-        pass
-
     def on_click_stop_button(self, txn, **kwargs):
         self.__set_acquire(txn, False)
 
@@ -98,8 +89,6 @@ class Screen(slicops.sliclet.Base):
         txn.multi_set(("beam_path.constraints.choices", slicops.device_db.beam_paths()))
         self.__beam_path_change(txn, None)
         self.__device_change(txn, None)
-
-    def handle_start(self, txn):
         b = c = None
         if pykern.pkconfig.in_dev_mode():
             b = _cfg.dev.beam_path
@@ -109,7 +98,9 @@ class Screen(slicops.sliclet.Base):
         txn.field_set("beam_path", b)
         self.__beam_path_change(txn, b)
         txn.field_set("camera", c)
-        self.__device_change(txn, c)
+
+    def handle_start(self, txn):
+        self.__device_setup(txn, txn.field_get("camera"))
 
     def __beam_path_change(self, txn, value):
         def _choices():
@@ -140,37 +131,10 @@ class Screen(slicops.sliclet.Base):
             self.__device_change(txn, None)
 
     def __device_change(self, txn, camera):
-        def _monitors():
-            for n, h in (
-                ("image", self.__handle_image),
-                ("acquire", self.__handle_acquire),
-            ):
-                a = self.__device.accessor(n)
-                m = self.__monitors[n] = _Monitor(a, h)
-                a.monitor(m)
-
-        def _setup():
-            try:
-                # If there's an epics issues, we have to clear the device
-                self.__device = self.__device = slicops.device.Device(camera)
-                _monitors()
-            except slicops.device.DeviceError as e:
-                pkdlog(
-                    "error={} setting up {}, clearing; stack={}", e, camera, pkdexc()
-                )
-                self.__device_destroy(txn)
-                self.__user_alert(
-                    txn, "unable to connect to camera={} error={}", camera, e
-                )
-                return
-            txn.multi_set(
-                _DEVICE_ENABLE + (("pv.value", self.__device.meta.pv_prefix),)
-            )
-
         self.__device_destroy(txn)
         txn.multi_set(_DEVICE_DISABLE)
         if camera:
-            _setup()
+            self.__device_setup(txn, camera)
 
     def __device_destroy(self, txn=None):
         if not self.__device:
@@ -188,6 +152,27 @@ class Screen(slicops.sliclet.Base):
         except Exception as e:
             pkdlog("destroy device={} error={}", n, e)
         self.__device = None
+
+    def __device_setup(self, txn, camera):
+        def _monitors():
+            for n, h in (
+                ("image", self.__handle_image),
+                ("acquire", self.__handle_acquire),
+            ):
+                a = self.__device.accessor(n)
+                m = self.__monitors[n] = _Monitor(a, h)
+                a.monitor(m)
+
+        try:
+            # If there's an epics issues, we have to clear the device
+            self.__device = self.__device = slicops.device.Device(camera)
+            _monitors()
+        except slicops.device.DeviceError as e:
+            pkdlog("error={} setting up {}, clearing; stack={}", e, camera, pkdexc())
+            self.__device_destroy(txn)
+            self.__user_alert(txn, "unable to connect to camera={} error={}", camera, e)
+            return
+        txn.multi_set(_DEVICE_ENABLE + (("pv.value", self.__device.meta.pv_prefix),))
 
     def __handle_acquire(self, acquire):
         with self.lock_for_update() as txn:
@@ -233,14 +218,14 @@ class Screen(slicops.sliclet.Base):
             )
             raise pykern.util.APIError(e)
 
-    def __target_moved(self, status):
-        if status is failed:
-            display error
-        if status is out:
-            disable buttons
-        if status is in:
-            enable buttons
-
+    #    def __target_moved(self, status):
+    #        if status is failed:
+    #            display error
+    #        if status is out:
+    #            disable buttons
+    #        if status is in:
+    #            enable buttons
+    #
     def __update_plot(self, txn):
         if not self.__device:
             return False
