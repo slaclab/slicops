@@ -42,7 +42,9 @@ class DeviceScreen(slicops.device.Device):
         super().destroy()
 
     def move_target(self, want_in):
-        self.__worker.req_action(self.action_req_move_target, PKDict(want_in=want_in))
+        self.__worker.req_action(
+            self.__worker.action_req_move_target, PKDict(want_in=want_in)
+        )
 
 
 class ErrorKind(enum.Enum):
@@ -120,10 +122,10 @@ class _FSM:
                 error_kind="fsm", error_msg="target already moving"
             )
             return
-        if target_status is not None:
-            if self.want_in == target_status:
-                # TODO(robnagler) could be a race condition so probably fine to do nothing
-                return
+        if target_status is not None and arg.want_in == target_status:
+            # TODO(robnagler) could be a race condition so probably fine to do nothing
+            pkdlog("same target_status={} self.want_in={}", target_status, arg.want_in)
+            return
         # TODO(robnagler) allow moving without checking upstream
         rv = PKDict(move_target_arg=arg.want_in)
         if arg.want_in and upstream_problems is None or upstream_problems:
@@ -177,9 +179,6 @@ class _Thread:
         except Exception as e:
             pkdlog("error={} {} stack={}", e, self, pkdexc(simplify=True))
 
-    def _destroy(self):
-        pass
-
     def _loop(self):
         timeout_kwarg = PKDict()
         if self._loop_timeout_secs:
@@ -211,7 +210,7 @@ class _Upstream(_Thread):
     def __init__(self, worker, req_arg):
         def _names():
             return slicops.device_db.upstream_devices(
-                "PROF", "target_control", parent.beam_path, parent.device_name
+                "PROF", "target_control", worker.beam_path, worker.device.device_name
             )
 
         self.__worker = worker
@@ -264,8 +263,8 @@ class _Worker(_Thread):
     """Implements actions of DeviceScreen"""
 
     def __init__(self, beam_path, handler, device):
-        self.__beam_path = beam_path
-        self.__device = device
+        self.beam_path = beam_path
+        self.device = device
         self.__upstream = None
         self.__status = None
         self.__fsm = _FSM(self, handler)
@@ -311,11 +310,11 @@ class _Worker(_Thread):
 
     def _loop(self, *args, **kwargs):
         for a in "acquire", "image", "target_status":
-            self.__device.accessor(a).monitor(self.__handle_monitor)
+            self.device.accessor(a).monitor(self.__handle_monitor)
         super()._loop(*args, **kwargs)
 
     def _repr(self):
-        return f"device={self.__device.device_name}"
+        return f"device={self.device.device_name}"
 
 
 _cfg = pykern.pkconfig.init(

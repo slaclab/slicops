@@ -34,8 +34,11 @@ def test_target():
             d = device_screen.DeviceScreen("CU_HXR", "YAG03", h)
             for a in _ACCESSORS:
                 h.q[a].get(timeout=2)
+            d.move_target(want_in=True)
+            time.sleep(3)
+            assert 0
             # pkunit.pkeq(1, d.accessor("target_status").get())
-            # d.move_target(want_in=True)
+            #
             # pkunit.pkeq(2, d.accessor("target_status").get())
             # d.remove_target()
             # pkunit.pkeq(1, d.accessor("target_status").get())

@@ -51,8 +51,9 @@ class _PVGroup(caproto.server.PVGroup):
             p.__set_name__(self, k)
         super().__init__(*args, **kwargs)
 
-    async def xgroup_write(self, instance, value):
-        return
+    async def group_write(self, instance, value, **kwargs):
+        pkdp((instance, value))
+        return super().group_write(instance, value, **kwargs)
 
     async def __startup(self, _ignore_self, pv, async_lib):
         # async_lib doesn't have create taxsk
