@@ -13,6 +13,7 @@ import slicops.pkcli.yaml_db
 import slicops.sliclet
 import watchdog.events
 import watchdog.observers
+import watchdog.observers.polling
 
 
 _EVENT_TYPES = frozenset(
@@ -140,7 +141,7 @@ class _DBWatcher(watchdog.events.FileSystemEventHandler):
         super().__init__()
         self.__update_op = update_op
         self.__paths = str(paths)
-        self.__observer = watchdog.observers.Observer()
+        self.__observer = watchdog.observers.polling.PollingObserver()
         self.__observer.schedule(self, paths[0].dirname, recursive=False)
         self.__observer.start()
 
