@@ -263,7 +263,7 @@ class _Accessor:
                 # TODO(robnagler) need a better way of dealing with this
                 self._image_shape = (self.device.get("n_row"), self.device.get("n_col"))
             self._pv = epics.PV(
-                self.meta.pv_name,
+                pkdp(self.meta.pv_name),
                 connection_callback=self._on_connection,
                 connection_timeout=_TIMEOUT,
                 **k,

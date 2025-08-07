@@ -79,8 +79,10 @@ class _FSM:
 
     def event(self, name, arg):
         self.prev = self.curr.copy()
+        pkdp((name, arg))
         if u := getattr(self, f"_event_{name}")(arg, **self.curr):
             self.curr.update(u)
+        pkdp(u)
 
     def _event_handle_monitor(self, arg, **kwargs):
         n = arg.accessor.accessor_name
@@ -127,14 +129,14 @@ class _FSM:
             pkdlog("same target_status={} self.want_in={}", target_status, arg.want_in)
             return
         # TODO(robnagler) allow moving without checking upstream
-        rv = PKDict(move_target_arg=arg.want_in)
+        rv = PKDict(move_target_arg=arg)
         if arg.want_in and upstream_problems is None or upstream_problems:
             # Recheck the upstream
             self.worker.action(self.worker.action_check_upstream, None)
             rv.check_upstream = True
         return rv
 
-    def _event_upstream_status(self, arg, **kwargs):
+    def _event_upstream_status(self, arg, move_target_arg, **kwargs):
         rv = PKDict(check_upstream=False, upstream_problems=arg.problems)
         if arg.problems:
             self.handler.on_screen_device_error(
@@ -207,14 +209,13 @@ class _Thread:
 
 
 class _Upstream(_Thread):
-    def __init__(self, worker, req_arg):
+    def __init__(self, worker):
         def _names():
             return slicops.device_db.upstream_devices(
                 "PROF", "target_control", worker.beam_path, worker.device.device_name
             )
 
         self.__worker = worker
-        self.__callback_arg = req_arg
         self.__problems = PKDict()
         self.__devices = PKDict({u: slicops.device.Device(u) for u in _names()})
         self._loop_timeout_secs = _cfg.upstream_timeout_secs
@@ -243,12 +244,15 @@ class _Upstream(_Thread):
             x.destroy()
 
     def __done(self):
-        self.req_arg.problems = self.__problems
-        self.__worker.action(self.__worker.action_upstream_status, self.__req_arg)
+        self.__worker.action(
+            self.__worker.action_upstream_status, PKDict(problems=self.__problems)
+        )
         return self._LOOP_END
 
-    def __handle_status(self, **kwargs):
-        self.action(self.action_handle_status, PKDict(kwargs))
+    def __handle_status(self, kwargs):
+        if "connected" in kwargs:
+            return
+        self.action(self.action_handle_status, kwargs)
 
     def _loop(self, *args, **kwargs):
         for d in self.__devices.values():
@@ -268,11 +272,12 @@ class _Worker(_Thread):
         self.__upstream = None
         self.__status = None
         self.__fsm = _FSM(self, handler)
+        self.__target_control = None
         self._loop_timeout_secs = 0
         super().__init__()
 
     def action_check_upstream(self, arg):
-        self.__upstream = _Upstream(self, arg)
+        self.__upstream = _Upstream(self)
         return None
 
     def action_handle_monitor(self, arg):
@@ -280,17 +285,19 @@ class _Worker(_Thread):
         return None
 
     def action_move_target(self, arg):
-        if self.__target_control:
-            self.__target_control = self.accessor("target_control")
-        self.__target_control.put(_MOVE_TARGET_IN[arg.want_in])
+        pkdp(arg)
+        if not self.__target_control:
+            self.__target_control = self.device.accessor("target_control")
+        self.__target_control.put(pkdp(_MOVE_TARGET_IN[arg.want_in]))
         return None
 
     def action_req_move_target(self, arg):
+        pkdp(arg)
         self.__fsm.event("move_target", arg)
         return None
 
     def action_upstream_status(self, arg):
-        self.__fsm.event("upstream_status", arg.problems)
+        self.__fsm.event("upstream_status", arg)
         self.__upstream = None
         return None
 
