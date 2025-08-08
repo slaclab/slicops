@@ -7,19 +7,26 @@
 # limit imports that might touch config
 import asyncio
 import pykern.api.unit_util
+import contextlib
+
+# TODO(robnagler) configurable?
+_TIMEOUT = 2
 
 
-class Setup(pykern.api.unit_util.Setup):
+class SlicletSetup(pykern.api.unit_util.Setup):
     def __init__(self, sliclet, *args, **kwargs):
-        super().__init__(*args, **kwargs)
         self.__sliclet = sliclet
+        if c := kwargs.get("caproto"):
+            del kwargs["caproto"]
+        self.__caproto = c
+        super().__init__(*args, **kwargs)
         self.__update_q = asyncio.Queue()
 
     async def ctx_update(self):
         from pykern import pkunit
 
         self.__caller()
-        r = await self.__update_q.get()
+        r = await asyncio.wait_for(self.__update_q.get(), timeout=_TIMEOUT)
         self.__update_q.task_done()
         if r is None:
             pkunit.pkfail("subscription ended unexpectedly")
@@ -51,10 +58,13 @@ class Setup(pykern.api.unit_util.Setup):
         return config.cfg().ui_api.copy()
 
     def _server_config(self, *args, **kwargs):
-        from slicops import mock_epics
+        if self.__caproto:
+            self.__start_caproto()
+        else:
+            from slicops import mock_epics
+            from pykern import pkdebug
 
-        mock_epics.reset_state()
-
+            mock_epics.reset_state()
         return super()._server_config(*args, **kwargs)
 
     def _server_start(self, *args, **kwargs):
@@ -71,6 +81,9 @@ class Setup(pykern.api.unit_util.Setup):
             c = m.group(1)
         pkdebug.pkdlog("{} op={}", c, pkinspect.caller_func_name())
 
+    def __start_caproto(self):
+        pass
+
     async def __subscribe(self):
         from pykern import pkdebug
         from pykern.pkcollections import PKDict
@@ -81,7 +94,7 @@ class Setup(pykern.api.unit_util.Setup):
                 "ui_ctx_update", PKDict(sliclet=self.__sliclet)
             ) as s:
                 while True:
-                    r = await s.result_get()
+                    r = await asyncio.wait_for(s.result_get(), timeout=_TIMEOUT)
                     self.__update_q.put_nowait(r)
                     if r is None:
                         return
@@ -92,3 +105,108 @@ class Setup(pykern.api.unit_util.Setup):
             raise
         finally:
             pkdebug.pkdlog("ui_ctx_update subscription ended normally")
+
+
+@contextlib.contextmanager
+def random_epics_ports():
+    """Open the IOC"""
+
+    from pykern import util, pkconst
+    import os
+    import socket
+
+    r = str(util.unbound_localhost_udp_port())
+    s = str(util.unbound_localhost_udp_port())
+    os.environ.update(
+        dict(
+            EPICS_CAS_AUTO_BEACON_ADDR_LIST="no",
+            EPICS_CAS_BEACON_ADDR_LIST=pkconst.LOCALHOST_IP,
+            EPICS_CAS_BEACON_PORT=r,
+            EPICS_CAS_INTF_ADDR_LIST=pkconst.LOCALHOST_IP,
+            EPICS_CAS_SERVER_PORT=s,
+            EPICS_CA_ADDR_LIST=pkconst.LOCALHOST_IP,
+            EPICS_CA_AUTO_ADDR_LIST="no",
+            EPICS_CA_REPEATER_PORT=r,
+            EPICS_CA_SERVER_PORT=s,
+        )
+    )
+    with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        s.bind(("127.0.0.1", int(r)))
+        yield None
+
+
+@contextlib.contextmanager
+def setup_screen(beam_path, device_name):
+    with start_ioc("ioc.yaml"):
+        from slicops.device import screen
+        from pykern.pkcollections import PKDict
+
+        rv = PKDict(handler=_screen_handler())
+        rv.device = screen.Screen(beam_path, device_name, rv.handler)
+        try:
+            yield rv
+        finally:
+            rv.device.destroy()
+
+
+@contextlib.contextmanager
+def start_ioc(init_yaml, db_yaml=None):
+    import os, signal, time
+    import socket
+
+    with random_epics_ports():
+        p = os.fork()
+        if p == 0:
+            from pykern import pkdebug
+
+            try:
+                from slicops.pkcli import ioc
+                from pykern import pkunit
+
+                ioc.run(
+                    pkunit.data_dir().join(init_yaml),
+                    db_yaml=(pkunit.work_dir().join(db_yaml) if db_yaml else None),
+                )
+            except Exception as e:
+                pkdebug.pkdlog("server exception={} stack={}", e, pkdebug.pkdexc())
+            finally:
+                os._exit(0)
+        try:
+            time.sleep(1)
+            yield None
+        finally:
+            os.kill(p, signal.SIGKILL)
+
+
+def _screen_handler():
+    from pykern import pkunit
+    from pykern.pkcollections import PKDict
+    import queue
+    from slicops.device import screen
+
+    class _Handler(screen.EventHandler):
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            self.event_q = PKDict(
+                {
+                    k: queue.Queue()
+                    for k in ("acquire", "image", "target_status", "error")
+                }
+            )
+
+        def on_screen_device_error(self, **kwargs):
+            self.event_q.error.put_nowait(PKDict(kwargs))
+
+        def on_screen_device_update(self, **kwargs):
+            self.event_q[kwargs["accessor_name"]].put_nowait(PKDict(kwargs))
+
+        def test_get(self, event_name):
+            try:
+                rv = self.event_q[event_name].get(timeout=_TIMEOUT)
+                # Errors don't have value
+                return rv.get("value", rv)
+            except queue.Empty:
+                pkunit.pkfail("timeout event={}", event_name)
+
+    return _Handler()

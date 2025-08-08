@@ -15,14 +15,14 @@ def test_basic():
     pkunit.pkeq("SC_SXR", a[-1])
     pkunit.pkeq(18, len(a))
 
-    a = device_db.device_names("SC_SXR", "PROF")
+    a = device_db.device_names("PROF", "SC_SXR")
     pkunit.pkeq("BOD10", a[0])
     pkunit.pkeq("YAGH2", a[-1])
     pkunit.pkeq(11, len(a))
     with pkunit.pkexcept("XYZZY"):
-        device_db.device_names("XYZZY", "PROF")
+        device_db.device_names("PROF", "XYZZY")
     with pkunit.pkexcept("xyzzy"):
-        device_db.device_names("SC_SXR", "xyzzy")
+        device_db.device_names("xyzzy", "SC_SXR")
 
     a = device_db.meta_for_device("VCCB")
     pkunit.pkeq("CAMR:LGUN:950:Image:ArrayData", a.accessor.image.pv_name)
@@ -32,3 +32,13 @@ def test_basic():
     # YAG01B does not have any PVs so not in db
     with pkunit.pkexcept("NoRows"):
         device_db.meta_for_device("YAG01B")
+
+
+def test_upstream():
+    from pykern import pkdebug, pkunit
+    from slicops import device_db
+
+    a = device_db.upstream_devices("PROF", "target_control", "CU_HXR", "OTR11")
+    pkunit.pkeq(9, len(a))
+    pkunit.pkeq("YAG01", a[0], "Lowest Z Prof")
+    pkunit.pkeq("OTR4", a[-1], "Closest Z Prof")

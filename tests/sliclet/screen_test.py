@@ -6,6 +6,8 @@
 
 import pytest
 
+_BUTTONS = tuple(f"{k}_button.ui.enabled" for k in ("start", "stop", "single"))
+
 
 @pytest.mark.asyncio(loop_scope="module")
 async def test_basic():
@@ -13,24 +15,30 @@ async def test_basic():
 
     async def _buttons(s, expect, msg):
         from pykern import pkunit, pkdebug
+        from asyncio.exceptions import CancelledError
 
-        rv = await s.ctx_update()
-        for k, a in zip(("start", "stop", "single"), expect):
-            x = f"{k}_button.ui.enabled"
-            pkunit.pkeq(
-                rv.fields.pkunchecked_nested_get(x), a, "field={} expect={}", x, msg
-            )
+        # Wait for buttons to "settle" on expect. The updates
+        # are async so we can't control which update returns what.
+        while True:
+            try:
+                rv = await s.ctx_update()
+            except CancelledError:
+                # timed out so now report mismatch via pkunit
+                pkunit.pkeq(expect, v, msg)
+            v = tuple(rv.fields.pknested_get(k) for k in _BUTTONS)
+            if v == expect:
+                break
         return rv
 
-    async with unit_util.Setup("screen") as s:
+    async with unit_util.SlicletSetup("screen") as s:
         from pykern import pkunit, pkdebug
         from pykern.pkdebug import pkdc, pkdexc, pkdlog, pkdp
         import asyncio
 
         r = await s.ctx_update()
-        r = await s.ctx_update()
         pkunit.pkeq("DEV_BEAM_PATH", r.fields.beam_path.value)
         pkunit.pkeq("DEV_CAMERA", r.fields.camera.value)
+        await _buttons(s, (True, False, True), "start/single enabled")
         await s.ctx_field_set(start_button=None)
         await _buttons(s, (False, False, False), "all disabled after start")
         await _buttons(s, (False, True, False), "acquire should fire")

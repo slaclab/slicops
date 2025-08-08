@@ -10,6 +10,9 @@ import epics
 import slicops.device_db
 import threading
 
+# TODO(robnagler) configure via device_db
+_TIMEOUT = 5
+
 
 class AccessorPutError(RuntimeError):
     """The PV for this accessor is not writable"""
@@ -34,6 +37,7 @@ class Device:
     def __init__(self, device_name):
         self.device_name = device_name
         self.meta = slicops.device_db.meta_for_device(device_name)
+        self._destroyed = False
         self._accessor = PKDict()
         self.connected = False
 
@@ -45,16 +49,21 @@ class Device:
         Returns:
             _Accessor: object holding PV state
         """
+        if self._destroyed:
+            raise AssertionError(f"destroyed {self}")
         return self._accessor.pksetdefault(
             accessor_name, lambda: _Accessor(self, accessor_name)
         )[accessor_name]
 
     def destroy(self):
         """Disconnect from PV's and remove state about device"""
+        if self._destroyed:
+            return
+        self._destroyed = True
         x = list(self._accessor.values())
         self._accessor = PKDict()
         for a in x:
-            a.disconnect()
+            a.destroy()
 
     def get(self, accessor_name):
         """Read from PV
@@ -85,6 +94,9 @@ class Device:
         """
         return self.accessor(accessor_name).put(value)
 
+    def __repr__(self):
+        return f"<Device {self.device_name}>"
+
 
 class _Accessor:
     """Container for a PV, metadata, and dynamic state
@@ -96,26 +108,33 @@ class _Accessor:
 
     def __init__(self, device, accessor_name):
         self.device = device
+        self.accessor_name = accessor_name
         self.meta = device.meta.accessor[accessor_name]
         self._callback = None
-        self._mutex = threading.Lock()
-        # TODO(pjm): connection and PV timeouts need to be configurable?
-        self._pv = epics.PV(
-            self.meta.pv_name,
-            connection_callback=self._on_connection,
-            connection_timeout=4.0,
-        )
-        if accessor_name == "image":
-            # TODO(robnagler) this has to be done here, because you can't get pvs
-            # from within a monitor callback
-            self._image_shape = (self.device.get("n_row"), self.device.get("n_col"))
+        self._destroyed = False
+        self._lock = threading.Lock()
+        self._initialized = threading.Event()
+        self._initializing = False
+        # Defer initialization
+        self._pv = None
 
-    def disconnect(self):
+    def destroy(self):
         """Stop all monitoring and disconnect from PV"""
-        self._callback = None
+        if self._destroyed:
+            return
+        with self._lock:
+            if self._destroyed:
+                return
+            self._destroyed = True
+            self._initializing = False
+            self._callback = None
+            if (p := self._pv) is None:
+                return
+            self._pv = None
+            self._initialized.set()
         try:
             # Clears all callbacks
-            self._pv.disconnect()
+            p.disconnect()
         except Exception as e:
             pkdlog("error={} {} stack={}", e, self, pkdexc())
 
@@ -125,11 +144,10 @@ class _Accessor:
         Returns:
             object: the value from the PV converted to a Python type
         """
-
-        # TODO(pjm): connection and PV timeouts need to be configurable?
-        if (rv := self._pv.get(timeout=5.0)) is None:
+        p = self.__pv()
+        if (rv := p.get(timeout=_TIMEOUT)) is None:
             raise DeviceError(f"unable to get {self}")
-        if not self._pv.connected:
+        if not p.connected:
             raise DeviceError(f"disconnected {self}")
         return self._fixup_value(rv)
 
@@ -147,23 +165,21 @@ class _Accessor:
         Args:
             callback (callable): accepts a single `PKDict` as ag
         """
-        with self._mutex:
+        with self._lock:
+            self._assert_not_destroyed()
             if self._callback:
-                raise ValueError(f"already monitoring {self}")
-            # should lock
-            self._callback_index = self._pv.add_callback(self._on_value)
-            self._pv.auto_monitor = True
+                raise AssertionError("may only call monitor once")
+            if self._pv or self._initializing:
+                raise AssertionError("monitor must be called before get/put")
             self._callback = callback
+        self.__pv()
 
     def monitor_stop(self):
         """Stops monitoring PV"""
-        with self._mutex:
-            if not self._callback:
+        with self._lock:
+            if self._destroyed or not self._callback:
                 return
             self._callback = None
-            self._pv.auto_monitor = False
-            self._pv.remove_callback(self._callback_index)
-            self._callback_index = None
 
     def put(self, value):
         """Set PV to value
@@ -180,10 +196,15 @@ class _Accessor:
         else:
             raise AccessorPutError(f"unhandled py_type={self.meta.py_type} {self}")
         # ECA_NORMAL == 0 and None is normal, too, apparently
-        if (e := self._pv.put(v)) != 1:
+        p = self.__pv()
+        if (e := p.put(v)) != 1:
             raise DeviceError(f"put error={e} value={v} {self}")
-        if not self._pv.connected:
+        if not p.connected:
             raise DeviceError(f"disconnected {self}")
+
+    def _assert_not_destroyed(self):
+        if self._destroyed:
+            raise AssertionError(f"destroyed {self}")
 
     def _fixup_value(self, raw):
         def _reshape(image):
@@ -191,7 +212,7 @@ class _Accessor:
 
         if self.meta.py_type == bool:
             return bool(raw)
-        if self.meta.accessor_name == "image":
+        if self.accessor_name == "image":
             return _reshape(raw)
         return raw
 
@@ -221,12 +242,41 @@ class _Accessor:
             pkdlog("error={} {} stack={}", e, self, pkdexc())
             raise
 
+    def __pv(self):
+        with self._lock:
+            self._assert_not_destroyed()
+            if self._pv:
+                return self._pv
+            if not (i := self._initializing):
+                self._initializing = True
+        if i:
+            self._initialized.wait(timeout=_TIMEOUT)
+        else:
+            k = (
+                PKDict(callback=self._on_value, auto_monitor=True)
+                if self._callback
+                else PKDict()
+            )
+            if self.accessor_name == "image":
+                # TODO(robnagler) this has to be done here, because you can't get pvs
+                # from within a monitor callback.
+                # TODO(robnagler) need a better way of dealing with this
+                self._image_shape = (self.device.get("n_row"), self.device.get("n_col"))
+            self._pv = epics.PV(
+                self.meta.pv_name,
+                connection_callback=self._on_connection,
+                connection_timeout=_TIMEOUT,
+                **k,
+            )
+            self._initialized.set()
+        return self._pv
+
     def __repr__(self):
-        return f"<_Accessor {self.device.device_name}.{self.meta.accessor_name} {self.meta.pv_name}>"
+        return f"<_Accessor {self.device.device_name}.{self.accessor_name} {self.meta.pv_name}>"
 
     def _run_callback(self, **kwargs):
         k = PKDict(accessor=self, **kwargs)
-        with self._mutex:
+        with self._lock:
             c = self._callback
         if c:
             c(k)

@@ -34,9 +34,6 @@ class YAMLDb(slicops.sliclet.Base):
 
     def handle_init(self, txn):
         self.__db_watcher = None
-
-    def handle_start(self, txn):
-        # TODO(robnagler) need a separate init for the instance before start
         self.__db_cache = PKDict()
         if not self.__read_db(txn):
             self.__write(txn)

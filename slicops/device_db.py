@@ -22,10 +22,14 @@ _ACCESSOR_META_DEFAULT = PKDict(
 
 _ACCESSOR_META = PKDict(
     acquire=PKDict(py_type=bool, pv_writable=True),
+    enabled=PKDict(py_type=int, pv_writable=False),
     image=PKDict(py_type=numpy.ndarray, pv_writable=False),
     n_bits=PKDict(py_type=int, pv_writable=False),
     n_col=PKDict(py_type=int, pv_writable=False),
     n_row=PKDict(py_type=int, pv_writable=False),
+    start_scan=PKDict(py_type=int, pv_writable=True),
+    target_control=PKDict(py_type=int, pv_writable=True),
+    target_status=PKDict(py_type=int, pv_writable=False),
 )
 
 
@@ -194,18 +198,18 @@ def beam_paths():
     return rv
 
 
-def device_names(beam_path, device_type):
+def device_names(device_type, beam_path):
     """Query devices for device_type and beam_path
 
     Args:
-        beam_path (str): which beam path
         device_type (str): type of device to filter by
+        beam_path (str): which beam path
     Returns:
         tuple: sorted device names
     """
-    if device_type not in slicops.const.DEVICE_TYPES:
-        raise DeviceDbError(f"no such device_type={device_type}")
-    if rv := slicops.device_sql_db.device_names(beam_path, device_type):
+    if rv := slicops.device_sql_db.device_names(
+        _assert_device_type(device_type), beam_path
+    ):
         return rv
     # TODO(robnagler) refine because beam_path could exist, just not for device
     raise DeviceDbError(f"no devices for beam_path={beam_path}")
@@ -236,3 +240,19 @@ def meta_for_device(device_name):
     for r in rv.accessor.values():
         _static(rv, r)
     return rv
+
+
+def upstream_devices(device_type, accessor_name, beam_path, device_name):
+    """returns in z order"""
+    return slicops.device_sql_db.upstream_devices(
+        _assert_device_type(device_type),
+        accessor_name,
+        beam_path,
+        device_name,
+    )
+
+
+def _assert_device_type(value):
+    if value not in slicops.const.DEVICE_TYPES:
+        raise DeviceDbError(f"no such device_type={value}")
+    return value

@@ -11,7 +11,7 @@ import pytest
 async def test_basic():
     from slicops import unit_util
 
-    async with unit_util.Setup("yaml_db") as s:
+    async with unit_util.SlicletSetup("yaml_db") as s:
         from pykern import pkunit, pkdebug
         from slicops.pkcli import yaml_db
         import asyncio

@@ -28,10 +28,7 @@ def read(base):
     Returns:
         PKDict: values in the db
     """
-    rv = _read(path(base))
-    if rv is None:
-        return PKDict()
-    return rv
+    return _read(path(base))
 
 
 def write(base, *key_value_pairs):
@@ -50,26 +47,17 @@ def write(base, *key_value_pairs):
             return key_value_pairs[0].items()
         return key_value_pairs[0]
 
-    def _read_or_new(old, new):
-        # Atomic read/write
-        if old.exists():
-            old.copy(new)
-            return _read(new)
-        return PKDict()
-
     def _validate():
         ctx = slicops.ctx.Ctx(base, base)
         for k, v in _pairs():
             yield k, ctx.fields[k].value_set(v)
 
-    o = path(base)
-    n = o.new(ext="tmp" + pykern.util.random_base62())
-    try:
-        rv = _read_or_new(o, n).pkupdate(_validate())
-        pykern.pkyaml.dump_pretty(rv, n)
-        n.rename(o)
-    finally:
-        pykern.pkio.unchecked_remove(n)
+    p = path(base)
+    rv = _read(p).pkupdate(_validate())
+    pykern.pkio.atomic_write(
+        p,
+        writer=lambda x: pykern.pkyaml.dump_pretty(rv, filename=x),
+    )
     return rv
 
 
@@ -80,5 +68,5 @@ def _read(path):
     except Exception as e:
         if pykern.pkio.exception_is_not_found(e):
             pkdlog("ignoring not found path={}", path)
-            return None
+            return PKDict()
         raise
