@@ -41,6 +41,7 @@ def run(init_yaml, db_yaml=None):
 class _PVGroup(caproto.server.PVGroup):
 
     def __init__(self, config, db_yaml, *args, **kwargs):
+        pkdp("starting {}", config)
         self.__config = config
         self.__db_yaml = pykern.pkio.py_path(db_yaml) if db_yaml else None
         self.__db = PKDict()

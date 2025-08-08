@@ -36,6 +36,44 @@ def start_ioc(config_dir, db_yaml=None):
         os.kill(p, signal.SIGKILL)
 
 
+@contextlib.contextmanager
+def setup_screen(beam_path, device_name):
+    from pykern import pkdebug, pkunit
+    from pykern.pkcollections import PKDict
+    from slicops import unit_util
+    from slicops.device import screen
+    import queue
+
+    _ACCESSORS = ("acquire", "image", "target_status")
+
+    class _Handler(screen.EventHandler):
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            self.event_q = PKDict({k: queue.Queue() for k in _ACCESSORS + ("error",)})
+
+        def on_screen_device_error(self, **kwargs):
+            self.event_q.error.put_nowait(PKDict(kwargs))
+
+        def on_screen_device_update(self, **kwargs):
+            self.event_q[kwargs["accessor_name"]].put_nowait(PKDict(kwargs))
+
+        def test_get(self, event_name):
+            try:
+                rv = self.event_q[event_name].get(timeout=_TIMEOUT)
+                # Errors don't have value
+                return rv.get("value", rv)
+            except queue.Empty:
+                pkunit.pkfail("timeout event={}", event_name)
+
+    with unit_util.start_ioc(pkunit.data_dir().join("ioc.yaml")):
+        rv = PKDict(handler=_Handler())
+        rv.device = screen.Screen(beam_path, device_name, rv.handler)
+        try:
+            yield rv
+        finally:
+            rv.device.destroy()
+
+
 class SlicletSetup(pykern.api.unit_util.Setup):
     def __init__(self, sliclet, *args, **kwargs):
         self.__sliclet = sliclet
