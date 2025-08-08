@@ -24,14 +24,6 @@ fields:
         Gaussian: gaussian
         "Super Gaussian": super_gaussian
     value: gaussian
-  filter_in:
-    prototype: Button
-    ui:
-      css_kind: light
-  filter_out:
-    prototype: Button
-    ui:
-      css_kind: light
   plot:
     prototype: Dict
     ui:
@@ -70,9 +62,6 @@ ui_layout:
         - start_button
         - stop_button
         - single_button
-      - cell_group:
-        - filter_in
-        - filter_out
     - css: col-sm-9 col-xxl-7
       rows:
       - plot
