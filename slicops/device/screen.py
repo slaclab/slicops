@@ -26,8 +26,8 @@ _TIMEOUT_MSG = "upstream target status accessor timed out"
 _ERROR_PREFIX_MSG = "upstream target error: "
 
 
-class DeviceScreen(slicops.device.Device):
-    """Augment Device with screen specific operations"""
+class Screen(slicops.device.Device):
+    """Augment `Device` with screen specific operations"""
 
     def __init__(self, beam_path, device_name, handler, *args, **kwargs):
         super().__init__(device_name, *args, **kwargs)
@@ -42,18 +42,26 @@ class DeviceScreen(slicops.device.Device):
         super().destroy()
 
     def move_target(self, want_in):
+        """Insert or remove the target
+
+        Args:
+            want_in (bool): True to insert, and False to remove
+        """
         self.__worker.req_action(
             self.__worker.action_req_move_target, PKDict(want_in=want_in)
         )
 
 
 class ErrorKind(enum.Enum):
+    """Errors passed to on_screen_device_error"""
+
     fsm = enum.auto()
     monitor = enum.auto()
     upstream = enum.auto()
 
 
 class EventHandler:
+    """Clients of DeviceScreen must implement this"""
 
     @abc.abstractmethod
     def on_screen_device_error(self, accessor_name, error_kind, error_msg):
@@ -64,7 +72,66 @@ class EventHandler:
         pass
 
 
+class _ActionLoop:
+    """Generic thread that processes actions in a loop on request"""
+
+    _LOOP_END = object()
+
+    def __init__(self):
+        self.destroyed = False
+        self.__lock = threading.Lock()
+        self.__actions = queue.Queue()
+        self.__thread = threading.Thread(target=self._start, daemon=True)
+        if self._loop_timeout_secs > 0 and not hasattr(self, "action_loop_timeout"):
+            raise AssertionError(
+                f"_loop_timeout_secs={self._loop_timeout_secs} and not action_loop_timeout"
+            )
+        self.__thread.start()
+
+    def action(self, method, arg):
+        self.__actions.put_nowait((method, arg))
+
+    def destroy(self):
+        try:
+            with self.__lock:
+                if self.destroyed:
+                    return
+                self.destroyed = True
+                self.__actions.put_nowait((None, None))
+                self._destroy()
+        except Exception as e:
+            pkdlog("error={} {} stack={}", e, self, pkdexc(simplify=True))
+
+    def __repr__(self):
+        def _destroyed():
+            return " DESTROYED" if self.destroyed else ""
+
+        return f"<{self.__class__.__name__}{_destroyed()} self._repr()>"
+
+    def _start(self):
+        timeout_kwarg = PKDict()
+        if self._loop_timeout_secs:
+            timeout_kwarg.timeout = self._loop_timeout_secs
+        try:
+            while True:
+                try:
+                    m, a = self.__actions.get(**timeout_kwarg)
+                except queue.Empty:
+                    m, a = self.action_loop_timeout(), None
+                with self.__lock:
+                    if self.destroyed:
+                        return
+                    if m(a) is self._LOOP_END:
+                        return
+        except Exception as e:
+            pkdlog("error={} {} stack={}", e, self, pkdexc(simplify=True))
+        finally:
+            self.destroy()
+
+
 class _FSM:
+    """Finite State Machine for DeviceScreen"""
+
     def __init__(self, worker, handler):
         self.worker = worker
         self.handler = handler
@@ -132,6 +199,8 @@ class _FSM:
             # Recheck the upstream
             self.worker.action(self.worker.action_check_upstream, None)
             rv.check_upstream = True
+        else:
+            self.worker.action(self.worker.action_move_target, arg)
         return rv
 
     def _event_upstream_status(self, arg, move_target_arg, **kwargs):
@@ -151,62 +220,9 @@ class _FSM:
         return f"<_FSM {self.worker.device.device_name} {_states(self.curr)}>"
 
 
-class _Thread:
-    _LOOP_END = object()
+class _Upstream(_ActionLoop):
+    """Action loop to check targets of upstream screens"""
 
-    def __init__(self):
-        self.destroyed = False
-        self.__lock = threading.Lock()
-        self.__actions = queue.Queue()
-        self.__thread = threading.Thread(target=self._loop, daemon=True)
-        if self._loop_timeout_secs > 0 and not hasattr(self, "action_loop_timeout"):
-            raise AssertionError(
-                f"_loop_timeout_secs={self._loop_timeout_secs} and not action_loop_timeout"
-            )
-        self.__thread.start()
-
-    def action(self, method, arg):
-        self.__actions.put_nowait((method, arg))
-
-    def destroy(self):
-        try:
-            with self.__lock:
-                if self.destroyed:
-                    return
-                self.destroyed = True
-                self.__actions.put_nowait((None, None))
-                self._destroy()
-        except Exception as e:
-            pkdlog("error={} {} stack={}", e, self, pkdexc(simplify=True))
-
-    def _loop(self):
-        timeout_kwarg = PKDict()
-        if self._loop_timeout_secs:
-            timeout_kwarg.timeout = self._loop_timeout_secs
-        try:
-            while True:
-                try:
-                    m, a = self.__actions.get(**timeout_kwarg)
-                except queue.Empty:
-                    m, a = self.action_loop_timeout(), None
-                with self.__lock:
-                    if self.destroyed:
-                        return
-                    if m(a) is self._LOOP_END:
-                        return
-        except Exception as e:
-            pkdlog("error={} {} stack={}", e, self, pkdexc(simplify=True))
-        finally:
-            self.destroy()
-
-    def __repr__(self):
-        def _destroyed():
-            return " DESTROYED" if self.destroyed else ""
-
-        return f"<{self.__class__.__name__}{_destroyed()} self._repr()>"
-
-
-class _Upstream(_Thread):
     def __init__(self, worker):
         def _names():
             return slicops.device_db.upstream_devices(
@@ -252,17 +268,17 @@ class _Upstream(_Thread):
             return
         self.action(self.action_handle_status, kwargs)
 
-    def _loop(self, *args, **kwargs):
+    def _start(self, *args, **kwargs):
         for d in self.__devices.values():
             d.accessor("target_status").monitor(self.__handle_status)
-        super()._loop(*args, **kwargs)
+        super()._start(*args, **kwargs)
 
     def _repr(self):
         return f"pending={sorted(self.__devices)} problems={sorted(self.__problems)}"
 
 
-class _Worker(_Thread):
-    """Implements actions of DeviceScreen"""
+class _Worker(_ActionLoop):
+    """Action loop for DeviceScreen"""
 
     def __init__(self, beam_path, handler, device):
         self.beam_path = beam_path
@@ -311,10 +327,10 @@ class _Worker(_Thread):
     def __handle_monitor(self, change):
         self.action(self.action_handle_monitor, change)
 
-    def _loop(self, *args, **kwargs):
+    def _start(self, *args, **kwargs):
         for a in "acquire", "image", "target_status":
             self.device.accessor(a).monitor(self.__handle_monitor)
-        super()._loop(*args, **kwargs)
+        super()._start(*args, **kwargs)
 
     def _repr(self):
         return f"device={self.device.device_name}"
