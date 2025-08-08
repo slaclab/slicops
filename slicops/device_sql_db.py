@@ -71,10 +71,12 @@ def upstream_devices(device_type, required_accessor, beam_path, end_device):
                     s.t.device_meta_float.join(
                         s.t.device,
                         s.t.device.c.device_name == c,
-                    ).join(
+                    )
+                    .join(
                         s.t.beam_path,
                         s.t.beam_path.c.beam_area == s.t.device.c.beam_area,
-                    ).join(
+                    )
+                    .join(
                         s.t.device_pv,
                         s.t.device_pv.c.device_name == c,
                     )
@@ -91,6 +93,7 @@ def upstream_devices(device_type, required_accessor, beam_path, end_device):
             )
         )
 
+
 def _assert_on_beampath(device, beam_path, select):
     c = select.t.device.c.device_name
     v = select.select_one_or_none(
@@ -100,14 +103,16 @@ def _assert_on_beampath(device, beam_path, select):
                 select.t.beam_path,
                 select.t.beam_path.c.beam_area == select.t.device.c.beam_area,
             )
-        ).where(
+        )
+        .where(
             select.t.device.c.device_name == device,
             select.t.beam_path.c.beam_path == beam_path,
         ),
-        None
+        None,
     )
     if v is None:
         raise ValueError(f"device={device} is not in beam_path={beam_path}")
+
 
 def _device_meta(device, meta, select):
     return select.select_one(
@@ -211,7 +216,9 @@ def _init():
 
 
 def _path():
-    return pykern.pkresource.file_path(".", packages=slicops.config.cfg().package_path).join(_BASE_PATH)
+    return pykern.pkresource.file_path(
+        ".", packages=slicops.config.cfg().package_path
+    ).join(_BASE_PATH)
 
 
 def _session():
