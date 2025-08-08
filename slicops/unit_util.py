@@ -14,7 +14,7 @@ _TIMEOUT = 2
 
 
 @contextlib.contextmanager
-def start_ioc(config_dir):
+def start_ioc(config_dir, db_yaml=None):
     from pykern import pkdebug
     from pykern.pkcollections import PKDict
     import os, signal, time
@@ -24,7 +24,7 @@ def start_ioc(config_dir):
         try:
             from slicops.pkcli import ioc
 
-            ioc.run(config_dir)
+            ioc.run(config_dir, db_yaml=db_yaml)
         except Exception as e:
             pkdebug.pkdlog("server exception={} stack={}", e, pkdebug.pkdexc())
         finally:

@@ -8,11 +8,12 @@ from pykern.pkcollections import PKDict
 from pykern.pkdebug import pkdc, pkdlog, pkdp, pkdexc
 import asyncio
 import caproto.server
-import pykern.fconf
 import pykern.pkio
+import pykern.pkyaml
+import numpy
 
 
-def run(config_dir):
+def run(init_yaml, db_yaml=None):
     def _normalize(raw):
         for k, v in raw.items():
             if not isinstance(v, dict):
@@ -24,7 +25,7 @@ def run(config_dir):
         return PKDict(
             # Need to hardwire the defaults, because ioc_arg_parser uses
             # argparse globally which causes a mess with argh (which uses argparse)
-            pvdb=_PVGroup(config, macros={}, prefix="").pvdb,
+            pvdb=_PVGroup(config, db_yaml, macros={}, prefix="").pvdb,
             interfaces=["0.0.0.0"],
             module_name="caproto.asyncio.server",
             log_pv_names=False,
@@ -32,28 +33,48 @@ def run(config_dir):
 
     caproto.server.run(
         **_pvgroup(
-            PKDict(_normalize(pykern.fconf.parse_all(pykern.pkio.py_path(config_dir)))),
+            PKDict(_normalize(pykern.pkyaml.load_file(init_yaml))),
         ),
     )
 
 
 class _PVGroup(caproto.server.PVGroup):
 
-    def __init__(self, config, *args, **kwargs):
+    def __init__(self, config, db_yaml, *args, **kwargs):
         self.__config = config
+        self.__db_yaml = pykern.pkio.py_path(db_yaml) if db_yaml else None
+        self.__db = PKDict()
         for k, v in self.__config.items():
-            self._pvs_[k] = p = caproto.server.pvproperty(
-                startup=self.__startup,
-                value=v.value,
-            )
+            self._pvs_[k] = p = caproto.server.pvproperty(value=v.value)
+            self.__db[k] = v.value
             p.__set_name__(self, k)
+        self.__write_db()
         super().__init__(*args, **kwargs)
 
     async def group_write(self, instance, value, **kwargs):
+        async def _dispatch(todo):
+            for k, v in todo.items():
+                u = _un_numpy(v[value], k)
+                if self.__db[k] != u:
+                    self.__db[k] = u
+                    await self.pvdb[k].write(u)
+
+        def _un_numpy(v, name):
+            if not isinstance(v, numpy.generic):
+                return v
+            if isinstance(v, numpy.integer):
+                return int(v)
+            if isinstance(v, numpy.floating):
+                return float(v)
+            if isinstance(v, numpy.bool_):
+                return bool(v)
+            raise AssertionError(f"unhandled type={type(v)} pv={name}")
+
         try:
-            if c := self.__config.get(instance.pvname):
-                for k, v in c.dispatch.items():
-                    await self.pvdb[k].write(v[value])
+            if self.__db[instance.pvname] != value:
+                self.__db[instance.pvname] = _un_numpy(value, instance.pvname)
+                await _dispatch(self.__config[instance.pvname].dispatch)
+                self.__write_db()
             return await super().group_write(instance, value, **kwargs)
         except Exception as e:
             pkdlog(
@@ -61,12 +82,9 @@ class _PVGroup(caproto.server.PVGroup):
             )
             raise
 
-    async def __startup(self, _ignore_self, pv, async_lib):
-        # async_lib doesn't have create taxsk
-        # _ignore_self needed to match signature checking in caproto
-        # pkdp("{} {}", pv.name, async_lib)
-        # asyncio.create_task(self.__publish(pv))
-        pass
-
-    async def __publish(self, pv):
-        pass
+    def __write_db(self):
+        if self.__db_yaml:
+            pykern.pkio.atomic_write(
+                self.__db_yaml,
+                writer=lambda p: pykern.pkyaml.dump_pretty(self.__db, filename=p),
+            )

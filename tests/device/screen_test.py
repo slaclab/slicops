@@ -1,6 +1,6 @@
-"""Test slicops.device
+"""Test slicops.device.screen
 
-:copyright: Copyright (c) 2024 The Board of Trustees of the Leland Stanford Junior University, through SLAC National Accelerator Laboratory (subject to receipt of any required approvals from the U.S. Dept. of Energy).  All Rights Reserved.
+:copyright: Copyright (c) 2025 The Board of Trustees of the Leland Stanford Junior University, through SLAC National Accelerator Laboratory (subject to receipt of any required approvals from the U.S. Dept. of Energy).  All Rights Reserved.
 :license: http://github.com/slaclab/slicops/LICENSE
 """
 
@@ -35,7 +35,7 @@ def test_target():
             except queue.Empty:
                 pkunit.pkfail("timeout event={}", event_name)
 
-    with unit_util.start_ioc(pkunit.data_dir()):
+    with unit_util.start_ioc(pkunit.data_dir().join("ioc.yaml")):
         h = _Handler()
         d = screen.Screen("CU_HXR", "YAG03", h)
         try:

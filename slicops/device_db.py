@@ -22,10 +22,12 @@ _ACCESSOR_META_DEFAULT = PKDict(
 
 _ACCESSOR_META = PKDict(
     acquire=PKDict(py_type=bool, pv_writable=True),
+    enabled=PKDict(py_type=int, pv_writable=False),
     image=PKDict(py_type=numpy.ndarray, pv_writable=False),
     n_bits=PKDict(py_type=int, pv_writable=False),
     n_col=PKDict(py_type=int, pv_writable=False),
     n_row=PKDict(py_type=int, pv_writable=False),
+    start_scan=PKDict(py_type=int, pv_writable=True),
     target_control=PKDict(py_type=int, pv_writable=True),
     target_status=PKDict(py_type=int, pv_writable=False),
 )
