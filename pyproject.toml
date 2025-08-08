@@ -16,6 +16,7 @@ classifiers = [
     "Topic :: Utilities",
 ]
 dependencies = [
+    'caproto',
     'lcls-tools @ git+https://github.com/slaclab/lcls-tools',
     'pyepics',
     'pykern',
