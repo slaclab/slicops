@@ -4,8 +4,6 @@
 :license: http://github.com/slaclab/slicops/LICENSE
 """
 
-import contextlib
-
 
 def test_upstream_blocked():
     from pykern import pkdebug, pkunit
