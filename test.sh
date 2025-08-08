@@ -8,10 +8,11 @@ _carepeater() {
     if [[ $(type -p caRepeater) ]]; then
         return
     fi
-    declare d=
-    echo 'sleep 10000' > run/caRepeater
-    chmod +x run/caRepeater
-    export PATH=$(cd "$(dirname "$0")"; pwd):$PATH
+    declare d=$(cd "$(dirname "$0")"; pwd)/run
+    mkdir -p "$d"
+    echo 'sleep 10000' > "$d"/caRepeater
+    chmod +x "$d"/caRepeater
+    export PATH=$d:$PATH
 }
 
 _err() {
