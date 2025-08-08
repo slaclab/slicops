@@ -4,31 +4,20 @@
 :license: http://github.com/slaclab/slicops/LICENSE
 """
 
-_INIT = """---
-WIRE:HTR:340:MOTR_ENABLED_STS: 33
-WIRE:HTR:340:STARTSCAN:
-  value: 0
-  dispatch:
-    WIRE:HTR:340:MOTR_ENABLED_STS:
-      0: 33
-      1: 66
-"""
-
 _DB = """WIRE:HTR:340:MOTR_ENABLED_STS: {}
 WIRE:HTR:340:STARTSCAN: {}
 """
 
 
 def test_db_yaml():
-    from pykern import pkdebug, pkunit
     from slicops import unit_util
-    from slicops import device
-    import time
 
-    i = pkunit.work_dir().join("init.yaml")
-    i.write(_INIT)
-    b = i.dirpath().join("db.yaml")
-    with unit_util.start_ioc(i, db_yaml=b):
+    with unit_util.start_ioc("init.yaml", db_yaml="db.yaml"):
+        from slicops import device
+        from pykern import pkdebug, pkunit
+        import time
+
+        b = pkunit.work_dir().join("db.yaml")
         d = device.Device("WS0H04")
         try:
             pkunit.pkeq(33, d.get("enabled"))

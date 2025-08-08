@@ -1,0 +1,7 @@
+WIRE:HTR:340:MOTR_ENABLED_STS: 33
+WIRE:HTR:340:STARTSCAN:
+  value: 0
+  dispatch:
+    WIRE:HTR:340:MOTR_ENABLED_STS:
+      0: 33
+      1: 66

@@ -4,10 +4,11 @@
 :license: http://github.com/slaclab/slicops/LICENSE
 """
 
+from slicops import unit_util
+
 
 def test_upstream_ok():
     from pykern import pkdebug, pkunit
-    from slicops import unit_util
 
     with unit_util.setup_screen("CU_HXR", "YAG03") as s:
         s.handler.test_get("image")
