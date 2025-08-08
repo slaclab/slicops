@@ -8,8 +8,9 @@ Use slicops.device_db for a stable interface.
 
 from pykern.pkcollections import PKDict
 from pykern.pkdebug import pkdc, pkdlog, pkdp
-import pykern.sql_db
 import pykern.pkresource
+import pykern.sql_db
+import slicops.config
 import sqlalchemy
 
 _BASE_PATH = "device_db.sqlite3"
@@ -210,7 +211,7 @@ def _init():
 
 
 def _path():
-    return pykern.pkresource.file_path(".").join(_BASE_PATH)
+    return pykern.pkresource.file_path(".", packages=slicops.config.cfg().package_path).join(_BASE_PATH)
 
 
 def _session():
