@@ -155,6 +155,9 @@ def start_ioc(init_yaml, db_yaml=None):
     import os, signal, time
     import socket
 
+    def _path(path, arg):
+        return path.join(arg) if isinstance(arg, str) else arg
+
     with random_epics_ports():
         p = os.fork()
         if p == 0:
@@ -165,8 +168,8 @@ def start_ioc(init_yaml, db_yaml=None):
                 from pykern import pkunit
 
                 ioc.run(
-                    pkunit.data_dir().join(init_yaml),
-                    db_yaml=(pkunit.work_dir().join(db_yaml) if db_yaml else None),
+                    _path(pkunit.data_dir(), init_yaml),
+                    db_yaml=_path(pkunit.work_dir(), db_yaml),
                 )
             except Exception as e:
                 pkdebug.pkdlog("server exception={} stack={}", e, pkdebug.pkdexc())
