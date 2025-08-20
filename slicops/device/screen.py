@@ -73,9 +73,7 @@ class EventHandler:
 
 
 class _ActionLoop:
-    """Generic thread that processes actions in a loop on request
-
-    """
+    """Generic thread that processes actions in a loop on request"""
 
     _LOOP_END = object()
 
