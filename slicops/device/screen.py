@@ -73,7 +73,9 @@ class EventHandler:
 
 
 class _ActionLoop:
-    """Generic thread that processes actions in a loop on request"""
+    """Generic thread that processes actions in a loop on request
+
+    """
 
     _LOOP_END = object()
 
@@ -89,6 +91,25 @@ class _ActionLoop:
         self.__thread.start()
 
     def action(self, method, arg):
+        """Queue ``method`` to be called in loop thread.
+
+        Actions are methods that (by convention) begin with
+        ``action_`` and are called sequentially inside `_start`. A
+        lock is used to prevent `destroy` being called during the action.
+
+        Actions return ``None`` to continue on to the next
+        action. `_LOOP_END` should be returned to terminate `_start`
+        (the loop) in which case no further actions are
+        performed. Actions can return a callable that will be called
+        inside the loop and outside the lock. These returned callables
+        are known as external callbacks, that is, functions that may
+        do anything so holding the lock could be problematic.
+
+        Args:
+            method (callable): see above
+            arg (object): passed verbatim to ``method``
+
+        """
         self.__actions.put_nowait((method, arg))
 
     def destroy(self):
@@ -96,7 +117,7 @@ class _ActionLoop:
 
         THREADING: subclasses should not call destroy directly. They should
         return `_LOOP_END` instead. External callbacks may call destroy, because
-        lock is not held during external callbacks (returned from actions).
+        _ActionLoop does not hold lock during external callbacks.
         """
         try:
             with self.__lock:
@@ -136,7 +157,7 @@ class _ActionLoop:
                     # Will be true if destroy called inside action (m)
                     if self.destroyed:
                         return
-                # Action returned an external callback, which must occurs outside lock
+                # Action returned an external callback, which must occur outside lock
                 if m:
                     m()
         except Exception as e:
