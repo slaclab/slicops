@@ -89,9 +89,34 @@ class _ActionLoop:
         self.__thread.start()
 
     def action(self, method, arg):
+        """Queue ``method`` to be called in loop thread.
+
+        Actions are methods that (by convention) begin with
+        ``action_`` and are called sequentially inside `_start`. A
+        lock is used to prevent `destroy` being called during the action.
+
+        Actions return ``None`` to continue on to the next
+        action. `_LOOP_END` should be returned to terminate `_start`
+        (the loop) in which case no further actions are
+        performed. Actions can return a callable that will be called
+        inside the loop and outside the lock. These returned callables
+        are known as external callbacks, that is, functions that may
+        do anything so holding the lock could be problematic.
+
+        Args:
+            method (callable): see above
+            arg (object): passed verbatim to ``method``
+
+        """
         self.__actions.put_nowait((method, arg))
 
     def destroy(self):
+        """Stops thread and calls subclass `_destroy`
+
+        THREADING: subclasses should not call destroy directly. They should
+        return `_LOOP_END` instead. External callbacks may call destroy, because
+        _ActionLoop does not hold lock during external callbacks.
+        """
         try:
             with self.__lock:
                 if self.destroyed:
@@ -114,6 +139,9 @@ class _ActionLoop:
             timeout_kwarg.timeout = self._loop_timeout_secs
         try:
             while True:
+                with self.__lock:
+                    if self.destroyed:
+                        return
                 try:
                     m, a = self.__actions.get(**timeout_kwarg)
                 except queue.Empty:
@@ -121,8 +149,15 @@ class _ActionLoop:
                 with self.__lock:
                     if self.destroyed:
                         return
-                    if m(a) is self._LOOP_END:
+                    # Do not need to check m, because only invalid when destroyed is True
+                    if (m := m(a)) is self._LOOP_END:
                         return
+                    # Will be true if destroy called inside action (m)
+                    if self.destroyed:
+                        return
+                # Action returned an external callback, which must occur outside lock
+                if m:
+                    m()
         except Exception as e:
             pkdlog("error={} {} stack={}", e, self, pkdexc(simplify=True))
         finally:
@@ -130,11 +165,13 @@ class _ActionLoop:
 
 
 class _FSM:
-    """Finite State Machine for DeviceScreen"""
+    """Finite State Machine called by `_Worker` exclusively
 
-    def __init__(self, worker, handler):
+    Manages state via `event` calls and schedules actions in `_Worker`.
+    """
+
+    def __init__(self, worker):
         self.worker = worker
-        self.handler = handler
         self.curr = PKDict(
             acquire=False,
             check_upstream=False,
@@ -152,8 +189,11 @@ class _FSM:
     def _event_handle_monitor(self, arg, **kwargs):
         n = arg.accessor.accessor_name
         if "error" in arg:
-            self.handler.on_screen_device_error(
-                error_kind=ErrorKind.monitor, accessor_name=n, error_msg=arg.error
+            self.worker.action(
+                self.worker.action_call_handler,
+                PKDict(
+                    error_kind=ErrorKind.monitor, accessor_name=n, error_msg=arg.error
+                ),
             )
             if n == "target_status":
                 # TODO(robnagler) is resetting move_target_arg right?
@@ -172,7 +212,9 @@ class _FSM:
             rv = PKDict(move_target_arg=None, target_status=v)
         else:
             raise AssertionError(f"unsupported accessor={n} {self}")
-        self.handler.on_screen_device_update(accessor_name=n, value=v)
+        self.worker.action(
+            self.worker.action_call_handler, PKDict(accessor_name=n, value=v)
+        )
         return rv
 
     def _event_move_target(
@@ -185,8 +227,9 @@ class _FSM:
         **kwargs,
     ):
         if move_target_arg:
-            self.handler.on_screen_device_error(
-                error_kind="fsm", error_msg="target already moving"
+            self.worker.action(
+                self.worker.action_call_handler,
+                PKDict(error_kind=ErrorKind.fsm, error_msg="target already moving"),
             )
             return
         if target_status is not None and arg.want_in == target_status:
@@ -206,8 +249,9 @@ class _FSM:
     def _event_upstream_status(self, arg, move_target_arg, **kwargs):
         rv = PKDict(check_upstream=False, upstream_problems=arg.problems)
         if arg.problems:
-            self.handler.on_screen_device_error(
-                error_kind="upstream", error_msg=arg.problems
+            self.worker.action(
+                self.worker.action_call_handler,
+                PKDict(error_kind=ErrorKind.upstream, error_msg=arg.problems),
             )
             return rv.pkupdate(move_target_arg=None)
         self.worker.action(self.worker.action_move_target, move_target_arg)
@@ -278,17 +322,33 @@ class _Upstream(_ActionLoop):
 
 
 class _Worker(_ActionLoop):
-    """Action loop for DeviceScreen"""
+    """Action loop for Screen
+
+    _Worker uses `_FSM` to translate events to actions. Monitor calls
+    from device are translated to actions to avoid locking in
+    callback. Similarly, when Screen requests to move target, this is
+    a queued action as well.
+    """
 
     def __init__(self, beam_path, handler, device):
         self.beam_path = beam_path
         self.device = device
+        self.__handler = handler
         self.__upstream = None
         self.__status = None
-        self.__fsm = _FSM(self, handler)
+        self.__fsm = _FSM(self)
         self.__target_control = None
         self._loop_timeout_secs = 0
         super().__init__()
+
+    def action_call_handler(self, arg):
+        m = (
+            self.__handler.on_screen_device_error
+            if "error_kind" in arg
+            else self.__handler.on_screen_device_update
+        )
+        # Denormalized state so no need for lock during call
+        return lambda: m(**arg)
 
     def action_check_upstream(self, arg):
         self.__upstream = _Upstream(self)

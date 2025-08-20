@@ -12,5 +12,5 @@ def test_upstream_blocked():
     with unit_util.setup_screen("CU_HXR", "YAG03") as s:
         s.device.move_target(want_in=True)
         e = s.handler.test_get("error")
-        pkunit.pkeq("upstream", e.error_kind)
+        pkunit.pkeq("upstream", e.error_kind.name)
         pkunit.pkeq("upstream target is in", e.error_msg.YAG02)
