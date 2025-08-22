@@ -47,17 +47,20 @@ def write(base, *key_value_pairs):
             return key_value_pairs[0].items()
         return key_value_pairs[0]
 
+    def _update(old, tmp):
+        nonlocal rv
+
+        rv = _read(old).pkupdate(_validate())
+        pykern.pkyaml.dump_pretty(rv, filename=tmp)
+
     def _validate():
         ctx = slicops.ctx.Ctx(base, base)
         for k, v in _pairs():
             yield k, ctx.fields[k].value_set(v)
 
     p = path(base)
-    rv = _read(p).pkupdate(_validate())
-    pykern.pkio.atomic_write(
-        p,
-        writer=lambda x: pykern.pkyaml.dump_pretty(rv, filename=x),
-    )
+    rv = None
+    pykern.pkio.atomic_write(p, writer=lambda x: _update(p, x))
     return rv
 
 
