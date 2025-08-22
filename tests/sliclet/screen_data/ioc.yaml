@@ -1,0 +1,16 @@
+---
+13SIM1:cam1:Acquire:
+  value: 0
+  dispatch:
+    13SIM1:image1:ArrayData:
+      0: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      1: [0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3]
+13SIM1:image1:ArrayData: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+13SIM1:cam1:SizeY: 4
+13SIM1:cam1:SizeX: 4
+13SIM1:cam1:PNEUMATIC:
+  dispatch:
+    13SIM1:cam1:TGT_STS:
+      0: 1
+      1: 2
+13SIM1:cam1:TGT_STS: 1

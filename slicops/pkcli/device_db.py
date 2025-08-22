@@ -33,6 +33,7 @@ screens:
         n_col: 13SIM1:cam1:SizeX
         n_row: 13SIM1:cam1:SizeY
         n_bits: 13SIM1:cam1:N_OF_BITS
+        target_status: 13SIM1:cam1:TGT_STS
       control_name: 13SIM1
     metadata:
       area: DEV_AREA

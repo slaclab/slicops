@@ -389,7 +389,13 @@ class _Worker(_ActionLoop):
 
     def _start(self, *args, **kwargs):
         for a in "acquire", "image", "target_status":
+            # Needs better handling here if the accessor doesn't exit.
+            if not self.device.has_accessor(a):
+                pkdlog(f"Device={self.device} has no accessor={a}")
+                self.destroy()
+                return
             self.device.accessor(a).monitor(self.__handle_monitor)
+            pkdlog(f"Started monitor={self.device.accessor(a)}")
         super()._start(*args, **kwargs)
 
     def _repr(self):
