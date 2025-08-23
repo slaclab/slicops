@@ -30,7 +30,7 @@ async def test_basic():
                 break
         return rv
 
-    with unit_util.start_ioc("ioc.yaml"):
+    with unit_util.start_ioc("ioc"):
         async with unit_util.SlicletSetup("screen") as s:
             from pykern import pkunit, pkdebug
             from pykern.pkdebug import pkdc, pkdexc, pkdlog, pkdp
@@ -44,17 +44,12 @@ async def test_basic():
             await s.ctx_field_set(start_button=None)
             await _buttons(s, (False, False, False), "all disabled after start")
             await _buttons(s, (False, True, False), "acquire should fire")
-            # plot comes back
-            r = await s.ctx_update()
-            # TODO(robnagler) need to test acquire is set around when the plot comes back
-            # mock epics should handle this
-            p = r.fields.plot.value
-            # TODO Need to find a way to get actual data here again.
-            # pkunit.pkeq(65, len(p.raw_pixels))
-            # pkunit.pkeq(50, len(p.raw_pixels[0]))
+            p = (await s.ctx_update()).fields.plot.value
+            pkunit.pkeq(65, len(p.raw_pixels))
+            pkunit.pkeq(50, len(p.raw_pixels[0]))
             # x fit should be 10
-            # pkunit.pkeq(10.00, round(p.x.fit.results.sig, 2))
-            # pkunit.pkeq(13.00, round(p.y.fit.results.sig, 2))
+            pkunit.pkeq(10.00, round(p.x.fit.results.sig, 2))
+            pkunit.pkeq(13.00, round(p.y.fit.results.sig, 2))
             await s.ctx_field_set(
                 beam_path="CU_SPEC",
                 curve_fit_method="super_gaussian",
