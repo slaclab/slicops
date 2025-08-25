@@ -81,7 +81,7 @@ class _ActionLoop:
         self.destroyed = False
         self.__lock = threading.Lock()
         self.__actions = queue.Queue()
-        self.__thread = threading.Thread(target=self._start, daemon=True)
+        self.__thread = threading.Thread(target=self.__target, daemon=True)
         if self._loop_timeout_secs > 0 and not hasattr(self, "action_loop_timeout"):
             raise AssertionError(
                 f"_loop_timeout_secs={self._loop_timeout_secs} and not action_loop_timeout"
@@ -137,29 +137,32 @@ class _ActionLoop:
         timeout_kwarg = PKDict()
         if self._loop_timeout_secs:
             timeout_kwarg.timeout = self._loop_timeout_secs
+        while True:
+            with self.__lock:
+                if self.destroyed:
+                    return
+            try:
+                m, a = self.__actions.get(**timeout_kwarg)
+            except queue.Empty:
+                m, a = self.action_loop_timeout(), None
+            with self.__lock:
+                if self.destroyed:
+                    return
+                # Do not need to check m, because only invalid when destroyed is True
+                if (m := m(a)) is self._LOOP_END:
+                    return
+                # Will be true if destroy called inside action (m)
+                if self.destroyed:
+                    return
+            # Action returned an external callback, which must occur outside lock
+            if m:
+                m()
+
+    def __target(self):
         try:
-            while True:
-                with self.__lock:
-                    if self.destroyed:
-                        return
-                try:
-                    m, a = self.__actions.get(**timeout_kwarg)
-                except queue.Empty:
-                    m, a = self.action_loop_timeout(), None
-                with self.__lock:
-                    if self.destroyed:
-                        return
-                    # Do not need to check m, because only invalid when destroyed is True
-                    if (m := m(a)) is self._LOOP_END:
-                        return
-                    # Will be true if destroy called inside action (m)
-                    if self.destroyed:
-                        return
-                # Action returned an external callback, which must occur outside lock
-                if m:
-                    m()
+            self._start()
         except Exception as e:
-            pkdlog("error={} {} stack={}", e, self, pkdexc(simplify=True))
+            pkdlog("clyde error={} {} stack={}", e, self, pkdexc(simplify=True))
         finally:
             self.destroy()
 
@@ -389,11 +392,6 @@ class _Worker(_ActionLoop):
 
     def _start(self, *args, **kwargs):
         for a in "acquire", "image", "target_status":
-            # Needs better handling here if the accessor doesn't exit.
-            if not self.device.has_accessor(a):
-                pkdlog(f"Device={self.device} has no accessor={a}")
-                self.destroy()
-                return
             self.device.accessor(a).monitor(self.__handle_monitor)
             pkdlog(f"Started monitor={self.device.accessor(a)}")
         super()._start(*args, **kwargs)
