@@ -59,6 +59,11 @@ _PLOT_ENABLE = (
     ("plot.ui.visible", True),
 )
 
+# Target Controls
+_CTL_OUT = 0
+_CTL_IN = 1
+_STS_OUT = 1
+_STS_IN = 2
 
 class Screen(slicops.sliclet.Base):
     def handle_destroy(self):
@@ -82,6 +87,13 @@ class Screen(slicops.sliclet.Base):
 
     def on_click_stop_button(self, txn, **kwargs):
         self.__set_acquire(txn, False)
+
+    def on_click_target_in_button(self, txn, **kwargs):
+        pkdlog("in")
+        self.__set_target(txn, _CTL_IN)
+
+    def on_click_target_out_button(self, txn, **kwargs):
+        self.__set_target(txn, _CTL_OUT)
 
     def handle_init(self, txn):
         self.__device = None
@@ -192,7 +204,10 @@ class Screen(slicops.sliclet.Base):
                 self.__single_button = False
 
     def __handle_error(self, accessor_name, error_kind, error_msg):
-        pkdlog("error={} accessor={} msg={}", error_kind, accessor_name, error_msg)
+        m = f"{error_kind} accessor={accessor_name} msg={error_msg}"
+        pkdlog("error=" + m)
+        e = pykern.util.APIError(m)
+        self._put_work(slicops.sliclet._Work.error, f"error={e}")
 
     def __handle_image(self, image):
         with self.lock_for_update() as txn:
@@ -222,6 +237,16 @@ class Screen(slicops.sliclet.Base):
                 "error={} on {}, clearing camera; stack={}", e, self.__device, pkdexc()
             )
             raise pykern.util.APIError(e)
+
+    def __set_target(self, txn, target):
+        try:
+            self.__device.put("target_control", target)
+        except slicops.device.DeviceError as e:
+            pkdlog(
+                "error={} on {}, clearing camera; stack={}", e, self.__device, pkdexc()
+            )
+            raise pykern.util.APIError(e)
+
 
     #    def __target_moved(self, status):
     #        if status is failed:
@@ -283,16 +308,12 @@ class _Handler(slicops.device.screen.EventHandler):
         self.__device_error(accessor_name, error_kind, error_msg)
 
     def on_screen_device_update(self, accessor_name, value):
-        # TODO move business logic here
         # TODO move prev value to sliclet within txn
-        def _update(d):
-            self.__value.update(d)
-        
         if accessor_name == "image":
-            _update(PKDict(image=value))
+            self.__value.update(PKDict(image=value))
             self.__handle_image(value)
         elif accessor_name == "acquire":
-            _update(PKDict(acquire=value))
+            self.__value.update(PKDict(acquire=value))
             self.__handle_acquire(value)
         elif accessor_name == "target_status":
             pass

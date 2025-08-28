@@ -8,9 +8,3 @@
 13SIM1:image1:ArrayData: empty_image()
 13SIM1:cam1:SizeY: size_y()
 13SIM1:cam1:SizeX: size_x()
-13SIM1:cam1:PNEUMATIC:
-  dispatch:
-    13SIM1:cam1:TGT_STS:
-      0: 1
-      1: 2
-13SIM1:cam1:TGT_STS: 1
