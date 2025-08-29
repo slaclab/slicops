@@ -217,7 +217,7 @@ class _Accessor:
         if self.accessor_name == "image":
             return _reshape(raw)
         elif self.accessor_name == "target_status":
-            return(raw + 1)
+            return raw + 1
         return raw
 
     def _on_connection(self, **kwargs):

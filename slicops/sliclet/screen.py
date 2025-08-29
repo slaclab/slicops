@@ -65,11 +65,12 @@ _CTL_IN = 1
 _STS_OUT = 1
 _STS_IN = 2
 
+
 class Screen(slicops.sliclet.Base):
     def __init__(self, *args):
         self.__prev_value = PKDict(acquire=None, image=None)
         super().__init__(*args)
-    
+
     def handle_destroy(self):
         self.__device_destroy()
 
@@ -116,10 +117,7 @@ class Screen(slicops.sliclet.Base):
         txn.field_set("camera", c)
 
     def handle_start(self, txn):
-        self.__device_setup(txn,
-                            txn.field_get("beam_path"),
-                            txn.field_get("camera")
-        )
+        self.__device_setup(txn, txn.field_get("beam_path"), txn.field_get("camera"))
 
     def __beam_path_change(self, txn, value):
         def _choices():
@@ -177,8 +175,8 @@ class Screen(slicops.sliclet.Base):
             PKDict(
                 image=self.__handle_image,
                 acquire=self.__handle_acquire,
-                target_status=self.__handle_target
-            )
+                target_status=self.__handle_target,
+            ),
         )
         try:
             # If there's an epics issues, we have to clear the device
@@ -257,7 +255,6 @@ class Screen(slicops.sliclet.Base):
             )
             raise pykern.util.APIError(e)
 
-
     #    def __target_moved(self, status):
     #        if status is failed:
     #            display error
@@ -321,7 +318,7 @@ def _init():
             beam_path=("DEV_BEAM_PATH", str, "dev beam path name"),
             camera=("DEV_CAMERA", str, "dev camera name"),
         ),
-     )
+    )
 
 
 _init()

@@ -48,10 +48,7 @@ class Screen(slicops.device.Device):
         Args:
             want_in (bool): True to insert, and False to remove
         """
-        self.__worker.req_action(
-            "req_move_target",
-            PKDict(want_in=want_in)
-        )
+        self.__worker.req_action("req_move_target", PKDict(want_in=want_in))
 
 
 class ErrorKind(enum.Enum):
@@ -122,9 +119,7 @@ class _FSM:
             rv = PKDict(move_target_arg=None, target_status=v)
         else:
             raise AssertionError(f"unsupported accessor={n} {self}")
-        self.worker.action(
-            "call_handler", PKDict(accessor_name=n, value=v)
-        )
+        self.worker.action("call_handler", PKDict(accessor_name=n, value=v))
         return rv
 
     def _event_move_target(
@@ -142,7 +137,7 @@ class _FSM:
                 PKDict(
                     accessor_name="",
                     error_kind=ErrorKind.fsm,
-                    error_msg="target already moving"
+                    error_msg="target already moving",
                 ),
             )
             return
@@ -220,9 +215,7 @@ class _Upstream(ActionLoop):
             x.destroy()
 
     def __done(self):
-        self.__worker.action(
-            "upstream_status", PKDict(problems=self.__problems)
-        )
+        self.__worker.action("upstream_status", PKDict(problems=self.__problems))
         return self._LOOP_END
 
     def __handle_status(self, kwargs):
