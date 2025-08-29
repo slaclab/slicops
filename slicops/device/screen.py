@@ -139,7 +139,11 @@ class _FSM:
         if move_target_arg:
             self.worker.action(
                 "call_handler",
-                PKDict(error_kind=ErrorKind.fsm, error_msg="target already moving"),
+                PKDict(
+                    accessor_name="",
+                    error_kind=ErrorKind.fsm,
+                    error_msg="target already moving"
+                ),
             )
             return
         if target_status is not None and arg.want_in == target_status:
@@ -186,6 +190,10 @@ class _Upstream(ActionLoop):
         self.__worker = worker
         self.__problems = PKDict()
         self.__devices = PKDict({u: slicops.device.Device(u) for u in _names()})
+        if len(self.__devices) == 0:
+            self.__done()
+            self._destroy()
+            return
         self._loop_timeout_secs = _cfg.upstream_timeout_secs
         super().__init__()
 
@@ -300,7 +308,6 @@ class _Worker(ActionLoop):
     def _start(self, *args, **kwargs):
         for a in "acquire", "image", "target_status":
             self.device.accessor(a).monitor(self.__handle_monitor)
-            pkdlog(f"Started monitor={self.device.accessor(a)}")
         super()._start(*args, **kwargs)
 
     def _repr(self):

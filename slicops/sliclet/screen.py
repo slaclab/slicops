@@ -66,6 +66,10 @@ _STS_OUT = 1
 _STS_IN = 2
 
 class Screen(slicops.sliclet.Base):
+    def __init__(self, *args):
+        self.__prev_value = PKDict(acquire=None, image=None)
+        super().__init__(*args)
+    
     def handle_destroy(self):
         self.__device_destroy()
 
@@ -89,7 +93,6 @@ class Screen(slicops.sliclet.Base):
         self.__set_acquire(txn, False)
 
     def on_click_target_in_button(self, txn, **kwargs):
-        pkdlog("in")
         self.__set_target(txn, _CTL_IN)
 
     def on_click_target_out_button(self, txn, **kwargs):
@@ -171,8 +174,11 @@ class Screen(slicops.sliclet.Base):
     def __device_setup(self, txn, beam_path, camera):
         self.__handler = _Handler(
             self.__handle_error,
-            self.__handle_image,
-            self.__handle_acquire
+            PKDict(
+                image=self.__handle_image,
+                acquire=self.__handle_acquire,
+                target_status=self.__handle_target
+            )
         )
         try:
             # If there's an epics issues, we have to clear the device
@@ -190,6 +196,7 @@ class Screen(slicops.sliclet.Base):
 
     def __handle_acquire(self, acquire):
         with self.lock_for_update() as txn:
+            self.__prev_value["acquire"] = acquire
             n = not acquire
             # Leave plot alone
             txn.multi_set(
@@ -204,13 +211,11 @@ class Screen(slicops.sliclet.Base):
                 self.__single_button = False
 
     def __handle_error(self, accessor_name, error_kind, error_msg):
-        m = f"{error_kind} accessor={accessor_name} msg={error_msg}"
-        pkdlog("error=" + m)
-        e = pykern.util.APIError(m)
-        self._put_work(slicops.sliclet._Work.error, f"error={e}")
+        pkdlog(f"error={error_kind} accessor={accessor_name} msg={error_msg}")
 
     def __handle_image(self, image):
         with self.lock_for_update() as txn:
+            self.__prev_value["image"] = image
             if self.__update_plot(txn) and self.__single_button:
                 # self.__single_button = False
                 self.__set_acquire(txn, False)
@@ -219,11 +224,16 @@ class Screen(slicops.sliclet.Base):
                     ("start_button.ui.enabled", True),
                 )
 
+    def __handle_target(self, status):
+        with self.lock_for_update() as txn:
+            msg = "In" if status else "Out"
+            txn.field_set("target_status", msg)
+
     def __set_acquire(self, txn, acquire):
         if not self.__device or not self.__handler:
             # buttons already disabled
             return
-        v = self.__handler.prev_value("acquire")
+        v = self.__prev_value["acquire"]
         if v is not None and v == acquire:
             # No button disable since nothing changed
             return
@@ -240,7 +250,7 @@ class Screen(slicops.sliclet.Base):
 
     def __set_target(self, txn, target):
         try:
-            self.__device.put("target_control", target)
+            self.__device.move_target(want_in=bool(target))
         except slicops.device.DeviceError as e:
             pkdlog(
                 "error={} on {}, clearing camera; stack={}", e, self.__device, pkdexc()
@@ -260,7 +270,7 @@ class Screen(slicops.sliclet.Base):
         if not self.__device or not self.__handler:
             return False
         # TOOD Change previous value to current value (nominally).
-        if (i := self.__handler.prev_value("image")) is None or not i.size:
+        if (i := self.__prev_value["image"]) is None or not i.size:
             return False
         if not txn.group_get("plot", "ui", "visible"):
             txn.multi_set(_PLOT_ENABLE)
@@ -278,47 +288,30 @@ CLASS = Screen
 
 
 class _Handler(slicops.device.screen.EventHandler):
-    def __init__(self, device_error, handle_image, handle_acquire):
+    def __init__(self, handle_error, handle_device):
         self.__destroyed = False
-        self.__value = PKDict(
-            acquire=None,
-            image=None
-        )
         self.__lock = threading.Lock()
-        self.__device_error = device_error
-        self.__handle_image = handle_image
-        self.__handle_acquire = handle_acquire
+        self.__handle_error = handle_error
+        self.__handle_device = handle_device.copy()
 
     def destroy(self):
         with self.__lock:
             if self.__destroyed:
                 return
             self.__destroyed = True
-            self.__value = PKDict()
-            self.__device_error = None
-            self.__device_update = None
-
-    def prev_value(self, accessor):
-        with self.__lock:
-            if self.__destroyed:
-                return
-            return self.__value[accessor]
+            self.__handle_error = None
+            self.__handle_device = None
 
     def on_screen_device_error(self, accessor_name, error_kind, error_msg):
-        self.__device_error(accessor_name, error_kind, error_msg)
+        self.__handle_error(accessor_name, error_kind, error_msg)
 
     def on_screen_device_update(self, accessor_name, value):
         # TODO move prev value to sliclet within txn
-        if accessor_name == "image":
-            self.__value.update(PKDict(image=value))
-            self.__handle_image(value)
-        elif accessor_name == "acquire":
-            self.__value.update(PKDict(acquire=value))
-            self.__handle_acquire(value)
-        elif accessor_name == "target_status":
-            pass
-        else:
+        if not accessor_name in self.__handle_device:
             raise AssertionError(f"unsupported accessor={n} {self}")
+        h = self.__handle_device[accessor_name]
+        h(value)
+
 
 def _init():
     global _cfg

@@ -35,6 +35,12 @@ fields:
       label: PV
       writable: false
       widget: static
+  target_status:
+    prototype: String
+    ui:
+      label: Target Status
+      writable: false
+      widget: static
   single_button:
     prototype: Button
     ui:
@@ -75,6 +81,7 @@ ui_layout:
       - cell_group:
         - target_in_button
         - target_out_button
+        - target_status
     - css: col-sm-9 col-xxl-7
       rows:
       - plot
