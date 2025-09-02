@@ -216,7 +216,10 @@ class _Accessor:
             return bool(raw)
         if self.accessor_name == "image":
             return _reshape(raw)
-        elif self.accessor_name == "target_status":
+        if (
+            self.accessor_name == "target_status"
+            and self.device.device_name == "DEV_CAMERA"
+        ):
             return raw + 1
         return raw
 
