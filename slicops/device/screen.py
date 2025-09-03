@@ -63,6 +63,10 @@ class EventHandler:
     """Clients of DeviceScreen must implement this"""
 
     @abc.abstractmethod
+    def on_screen_worker_error(self, exception):
+        pass
+
+    @abc.abstractmethod
     def on_screen_device_error(self, accessor_name, error_kind, error_msg):
         pass
 
@@ -299,9 +303,14 @@ class _Worker(ActionLoop):
         self.action("handle_monitor", change)
 
     def _start(self, *args, **kwargs):
-        for a in "acquire", "image", "target_status":
-            self.device.accessor(a).monitor(self.__handle_monitor)
-        super()._start(*args, **kwargs)
+        try:
+            for a in "acquire", "image", "target_status":
+                self.device.accessor(a).monitor(self.__handle_monitor)
+            super()._start(*args, **kwargs)
+        except Exception as e:
+            msg = f"error='{e}' in worker loop. See log for stack trace."
+            self.__handler.on_screen_worker_error(msg)
+            raise
 
     def _repr(self):
         return f"device={self.device.device_name}"

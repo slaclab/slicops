@@ -75,6 +75,9 @@ class Base:
     def handle_start(self, txn):
         pass
 
+    def put_error(self, exception):
+        self.__put_work(_Work.error, exception)
+
     @contextlib.contextmanager
     def lock_for_update(self, log_op=None):
         ok = True

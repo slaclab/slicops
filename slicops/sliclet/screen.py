@@ -171,7 +171,8 @@ class Screen(slicops.sliclet.Base):
 
     def __device_setup(self, txn, beam_path, camera):
         self.__handler = _Handler(
-            self.__handle_error,
+            self.__handle_worker_error,
+            self.__handle_device_error,
             PKDict(
                 image=self.__handle_image,
                 acquire=self.__handle_acquire,
@@ -208,7 +209,7 @@ class Screen(slicops.sliclet.Base):
             if not acquire:
                 self.__single_button = False
 
-    def __handle_error(self, accessor_name, error_kind, error_msg):
+    def __handle_device_error(self, accessor_name, error_kind, error_msg):
         pkdlog(f"error={error_kind} accessor={accessor_name} msg={error_msg}")
 
     def __handle_image(self, image):
@@ -226,6 +227,9 @@ class Screen(slicops.sliclet.Base):
         with self.lock_for_update() as txn:
             msg = "In" if status else "Out"
             txn.field_set("target_status", msg)
+
+    def __handle_worker_error(self, exception):
+        self.put_error(exception)
 
     def __set_acquire(self, txn, acquire):
         if not self.__device or not self.__handler:
@@ -285,28 +289,37 @@ CLASS = Screen
 
 
 class _Handler(slicops.device.screen.EventHandler):
-    def __init__(self, handle_error, handle_device):
+    def __init__(
+        self,
+        handle_worker_error,
+        handle_device_error,
+        handle_device_update,
+    ):
         self.__destroyed = False
         self.__lock = threading.Lock()
-        self.__handle_error = handle_error
-        self.__handle_device = handle_device.copy()
+        self.__handle_worker_error = handle_worker_error
+        self.__handle_device_error = handle_device_error
+        self.__handle_device_update = handle_device_update
 
     def destroy(self):
         with self.__lock:
             if self.__destroyed:
                 return
             self.__destroyed = True
-            self.__handle_error = None
-            self.__handle_device = None
+            self.__handle_device_error = None
+            self.__handle_device_update = None
+
+    def on_screen_worker_error(self, exception):
+        self.__handle_worker_error(exception)
 
     def on_screen_device_error(self, accessor_name, error_kind, error_msg):
-        self.__handle_error(accessor_name, error_kind, error_msg)
+        self.__handle_device_error(accessor_name, error_kind, error_msg)
 
     def on_screen_device_update(self, accessor_name, value):
         # TODO move prev value to sliclet within txn
-        if not accessor_name in self.__handle_device:
+        if not accessor_name in self.__handle_device_update:
             raise AssertionError(f"unsupported accessor={n} {self}")
-        h = self.__handle_device[accessor_name]
+        h = self.__handle_device_update[accessor_name]
         h(value)
 
 
