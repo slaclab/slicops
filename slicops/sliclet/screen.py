@@ -59,16 +59,14 @@ _PLOT_ENABLE = (
     ("plot.ui.visible", True),
 )
 
-# Target Controls
-_CTL_OUT = 0
-_CTL_IN = 1
-_STS_OUT = 1
-_STS_IN = 2
-
 
 class Screen(slicops.sliclet.Base):
     def __init__(self, *args):
-        self.__prev_value = PKDict(acquire=None, image=None)
+        self.__prev_value = PKDict(
+            acquire=None,
+            image=None,
+            target_status=None
+        )
         super().__init__(*args)
 
     def handle_destroy(self):
@@ -94,10 +92,10 @@ class Screen(slicops.sliclet.Base):
         self.__set_acquire(txn, False)
 
     def on_click_target_in_button(self, txn, **kwargs):
-        self.__set_target(txn, _CTL_IN)
+        self.__set_target(txn, True)
 
     def on_click_target_out_button(self, txn, **kwargs):
-        self.__set_target(txn, _CTL_OUT)
+        self.__set_target(txn, False)
 
     def handle_init(self, txn):
         self.__device = None
@@ -171,7 +169,6 @@ class Screen(slicops.sliclet.Base):
 
     def __device_setup(self, txn, beam_path, camera):
         self.__handler = _Handler(
-            self.__handle_worker_error,
             self.__handle_device_error,
             PKDict(
                 image=self.__handle_image,
@@ -209,8 +206,8 @@ class Screen(slicops.sliclet.Base):
             if not acquire:
                 self.__single_button = False
 
-    def __handle_device_error(self, accessor_name, error_kind, error_msg):
-        pkdlog(f"error={error_kind} accessor={accessor_name} msg={error_msg}")
+    def __handle_device_error(self, exc):
+        self.put_exception(exc)
 
     def __handle_image(self, image):
         with self.lock_for_update() as txn:
@@ -224,12 +221,9 @@ class Screen(slicops.sliclet.Base):
                 )
 
     def __handle_target(self, status):
+        self.__prev_value["target_status"] = status
         with self.lock_for_update() as txn:
-            msg = "In" if status else "Out"
-            txn.field_set("target_status", msg)
-
-    def __handle_worker_error(self, exception):
-        self.put_error(exception)
+            txn.field_set("target_status", "In" if status else "Out")
 
     def __set_acquire(self, txn, acquire):
         if not self.__device or not self.__handler:
@@ -239,9 +233,8 @@ class Screen(slicops.sliclet.Base):
         if v is not None and v == acquire:
             # No button disable since nothing changed
             return
-        if txn:
-            # No presses until we get a response from device
-            txn.multi_set(_BUTTONS_DISABLE)
+        # No presses until we get a response from device
+        txn.multi_set(_BUTTONS_DISABLE)
         try:
             self.__device.put("acquire", acquire)
         except slicops.device.DeviceError as e:
@@ -250,14 +243,14 @@ class Screen(slicops.sliclet.Base):
             )
             raise pykern.util.APIError(e)
 
-    def __set_target(self, txn, target):
-        try:
-            self.__device.move_target(want_in=bool(target))
-        except slicops.device.DeviceError as e:
-            pkdlog(
-                "error={} on {}, clearing camera; stack={}", e, self.__device, pkdexc()
-            )
-            raise pykern.util.APIError(e)
+    def __set_target(self, txn, want_in):
+        if not self.__device or not self.__handler:
+            # buttons already disabled
+            return
+        v = self.__prev_value["target_status"]
+        if v is not None and v == want_in:
+            return
+        self.__device.move_target(want_in=want_in)
 
     #    def __target_moved(self, status):
     #        if status is failed:
@@ -291,13 +284,11 @@ CLASS = Screen
 class _Handler(slicops.device.screen.EventHandler):
     def __init__(
         self,
-        handle_worker_error,
         handle_device_error,
         handle_device_update,
     ):
         self.__destroyed = False
         self.__lock = threading.Lock()
-        self.__handle_worker_error = handle_worker_error
         self.__handle_device_error = handle_device_error
         self.__handle_device_update = handle_device_update
 
@@ -309,11 +300,8 @@ class _Handler(slicops.device.screen.EventHandler):
             self.__handle_device_error = None
             self.__handle_device_update = None
 
-    def on_screen_worker_error(self, exception):
-        self.__handle_worker_error(exception)
-
-    def on_screen_device_error(self, accessor_name, error_kind, error_msg):
-        self.__handle_device_error(accessor_name, error_kind, error_msg)
+    def on_screen_device_error(self, exc):
+        self.__handle_device_error(exc)
 
     def on_screen_device_update(self, accessor_name, value):
         # TODO move prev value to sliclet within txn

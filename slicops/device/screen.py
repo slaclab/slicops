@@ -5,7 +5,7 @@
 """
 
 from pykern.pkcollections import PKDict
-from pykern.pkdebug import pkdc, pkdexc, pkdlog, pkdp
+from pykern.pkdebug import pkdc, pkdexc, pkdlog, pkdp, pkdformat
 from pykern.pkasyncio import ActionLoop
 from slicops.device import DeviceError
 import abc
@@ -63,11 +63,7 @@ class EventHandler:
     """Clients of DeviceScreen must implement this"""
 
     @abc.abstractmethod
-    def on_screen_worker_error(self, exception):
-        pass
-
-    @abc.abstractmethod
-    def on_screen_device_error(self, accessor_name, error_kind, error_msg):
+    def on_screen_device_error(self, exc):
         pass
 
     @abc.abstractmethod
@@ -102,8 +98,11 @@ class _FSM:
         if "error" in arg:
             self.worker.action(
                 "call_handler",
-                PKDict(
-                    error_kind=ErrorKind.monitor, accessor_name=n, error_msg=arg.error
+                ScreenError(
+                    device=self.worker.device.device_name,
+                    error_kind=ErrorKind.monitor,
+                    accessor_name=n,
+                    error_msg=arg.error
                 ),
             )
             if n == "target_status":
@@ -138,8 +137,8 @@ class _FSM:
         if move_target_arg:
             self.worker.action(
                 "call_handler",
-                PKDict(
-                    accessor_name="",
+                ScreenError(
+                    device=self.worker.device.device_name,
                     error_kind=ErrorKind.fsm,
                     error_msg="target already moving",
                 ),
@@ -164,7 +163,11 @@ class _FSM:
         if arg.problems:
             self.worker.action(
                 "call_handler",
-                PKDict(error_kind=ErrorKind.upstream, error_msg=arg.problems),
+                ScreenError(
+                    device=self.worker.device.device_name,
+                    error_kind=ErrorKind.upstream,
+                    error_msg=arg.problems,
+                ),
             )
             return rv.pkupdate(move_target_arg=None)
         self.worker.action("move_target", move_target_arg)
@@ -175,6 +178,15 @@ class _FSM:
             return " ".join(f"{k}={curr[k]}" for k in sorted(curr.keys()))
 
         return f"<_FSM {self.worker.device.device_name} {_states(self.curr)}>"
+
+class ScreenError(Exception):
+    def __init__(self, **kwargs):
+        def _arg_str():
+            return pkdformat(
+                " ".join(k + "={" + k + "}" for k in sorted(kwargs)),
+                **kwargs,
+            )
+        super().__init__(_arg_str())
 
 
 class _Upstream(ActionLoop):
@@ -259,7 +271,7 @@ class _Worker(ActionLoop):
     def action_call_handler(self, arg):
         m = (
             self.__handler.on_screen_device_error
-            if "error_kind" in arg
+            if isinstance(arg, Exception)
             else self.__handler.on_screen_device_update
         )
         # Denormalized state so no need for lock during call
@@ -280,6 +292,7 @@ class _Worker(ActionLoop):
         return None
 
     def action_req_move_target(self, arg):
+        raise AssertionError("broken")
         self.__fsm.event("move_target", arg)
         return None
 
@@ -299,18 +312,21 @@ class _Worker(ActionLoop):
             (u, self.__upstream) = (self.__upstream, None)
             u.destroy()
 
+    def _handle_exception(self, exc):
+        self.__handler.on_screen_device_error(
+            ScreenError(
+                device=self.device.device_name,
+                error=exc,
+            )
+        )
+
     def __handle_monitor(self, change):
         self.action("handle_monitor", change)
 
     def _start(self, *args, **kwargs):
-        try:
-            for a in "acquire", "image", "target_status":
-                self.device.accessor(a).monitor(self.__handle_monitor)
-            super()._start(*args, **kwargs)
-        except Exception as e:
-            msg = f"error='{e}' in worker loop. See log for stack trace."
-            self.__handler.on_screen_worker_error(msg)
-            raise
+        for a in "acquire", "image", "target_status":
+            self.device.accessor(a).monitor(self.__handle_monitor)
+        super()._start(*args, **kwargs)
 
     def _repr(self):
         return f"device={self.device.device_name}"
