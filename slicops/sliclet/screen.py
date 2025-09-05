@@ -4,10 +4,13 @@
 :license: http://github.com/slaclab/slicops/LICENSE
 """
 
+from datetime import datetime
 from pykern.pkcollections import PKDict
 from pykern.pkdebug import pkdc, pkdexc, pkdlog, pkdp
+import h5py
 import numpy
 import pykern.pkconfig
+import pykern.pkio
 import pykern.util
 import queue
 import slicops.device
@@ -79,8 +82,14 @@ class Screen(slicops.sliclet.Base):
         self.__update_plot(txn)
 
     def on_click_save_button(self, txn, **kwargs):
-        #TODO(pjm): create and save hdf5 file to $PYHSICS_DATA
-        pass
+        self.__image.save(
+            PKDict(
+                [
+                    (k, txn.field_get(k))
+                    for k in ("pv", "camera", "curve_fit_method", "pv")
+                ]
+            ),
+        )
 
     def on_click_single_button(self, txn, **kwargs):
         self.__single_button = True
@@ -94,10 +103,7 @@ class Screen(slicops.sliclet.Base):
 
     def handle_init(self, txn):
         self.__device = None
-        self.__images = PKDict(
-            frames=[],
-            average=None,
-        )
+        self.__image = _ImageSet()
         self.__monitors = PKDict()
         self.__single_button = False
         txn.multi_set(("beam_path.constraints.choices", slicops.device_db.beam_paths()))
@@ -205,7 +211,10 @@ class Screen(slicops.sliclet.Base):
 
     def __handle_image(self, image):
         with self.lock_for_update() as txn:
-            if self.__update_plot(txn, txn.field_get("n_average")) and self.__single_button:
+            if (
+                self.__update_plot(txn, txn.field_get("n_average"))
+                and self.__single_button
+            ):
                 self.__set_acquire(txn, False)
                 txn.multi_set(
                     ("single_button.ui.enabled", True),
@@ -242,27 +251,20 @@ class Screen(slicops.sliclet.Base):
     def __update_plot(self, txn, n_average=None):
         if not self.__device:
             return False
-        if (i := self.__monitors.image.prev_value()) is None or not i.size:
-            return False
         if n_average is None:
-            if self.__images.average is None:
-                self.__images.average = i
-        else:
-            self.__images.frames.append(i)
-            if len(self.__images.frames) < n_average:
+            if not self.__image.ready():
                 return False
-            self.__images.average = numpy.mean(numpy.array(self.__images.frames), axis=0)
-            self.__images.frames = []
+        else:
+            if (i := self.__monitors.image.prev_value()) is None or not i.size:
+                return False
+            # TODO(pjm): timestamp should be EPICS timestamp included with image data
+            if not self.__image.add(i, datetime.now(), n_average):
+                return False
         if not txn.group_get("plot", "ui", "visible"):
             txn.multi_set(_PLOT_ENABLE)
-        txn.field_set(
-            "plot",
-            slicops.plot.fit_image(self.__images.average, txn.field_get("curve_fit_method")),
-        )
+        txn.field_set("plot", self.__image.fit(txn.field_get("curve_fit_method")))
         if not txn.group_get("save_button", "ui", "enabled"):
-            txn.multi_set(
-                ("save_button.ui.enabled", True),
-            )
+            txn.multi_set(("save_button.ui.enabled", True))
         return True
 
     def __user_alert(self, txn, fmt, *args):
@@ -270,6 +272,89 @@ class Screen(slicops.sliclet.Base):
 
 
 CLASS = Screen
+
+
+class _ImageSet:
+    """Collects images for averaging"""
+
+    def __init__(self):
+        self._complete = None
+        self._frames = []
+
+    def add(self, image, timestamp, n_average):
+        """Add an image to the set. Returns True if ready"""
+        assert n_average
+        if len(self._frames) >= n_average:
+            # n_average changed while collecting frames
+            self._frames = self._frames[: n_average - 1]
+        self._frames.append(
+            PKDict(
+                image=image,
+                timestamp=timestamp,
+            )
+        )
+        if len(self._frames) == n_average:
+            self._complete = self._frames
+            self._frames = []
+            return True
+        return False
+
+    def fit(self, curve_fit_method):
+        assert self.ready()
+        if len(self._complete) == 1:
+            i = self._complete[0].image
+        else:
+            i = numpy.mean(numpy.array([v.image for v in self._complete]), axis=0)
+        return slicops.plot.fit_image(i, curve_fit_method)
+
+    def ready(self):
+        return bool(self._complete)
+
+    def save(self, metadata):
+        """Creates a hdf5 file with the structure:
+        /image Group
+          /frames Dataset {n_average, ysize, xsize}
+          /mean Dataset {ysize, xsize}
+          /timestamps Dataset {n_average}
+          /x Group
+            /fit Dataset {xsize}
+            /profile Dataset {xsize}
+          /y Group
+            /fit Dataset {ysize}
+            /profile Dataset {ysize}
+        /meta Group (beam_path, camera, pv, curve_fit_method)
+        """
+        assert self.ready()
+        i = self.fit(metadata.curve_fit_method)
+        with h5py.File(self._file_path(metadata), "w") as hf:
+            g = hf.create_group("meta")
+            for f in metadata:
+                g.attrs[f] = metadata[f]
+            g = hf.create_group("image")
+            g.create_dataset("mean", data=i.raw_pixels)
+            for dim in ("x", "y"):
+                g2 = g.create_group(dim)
+                g2.create_dataset("profile", data=i[dim].lineout)
+                if not i[dim].fit.results:
+                    continue
+                for f in i[dim].fit.results:
+                    g2.attrs[f] = i[dim].fit.results[f]
+                g2.create_dataset("fit", data=i[dim].fit.fit_line)
+            g.create_dataset(
+                "frames", data=numpy.array([v.image for v in self._complete])
+            )
+            g.create_dataset(
+                "timestamps", data=[v.timestamp.timestamp() for v in self._complete]
+            )
+
+    def _file_path(self, metadata):
+        t = self._complete[-1].timestamp
+        # TODO(pjm): not sure about filename or whether it should be nested in directories
+        n = f"Screen-{metadata.camera}-{t.strftime('%Y-%m-%d-%f')}.h5"
+        p = pykern.pkio.py_path(_cfg.save_file_path).join(n)
+        if p.exists():
+            p.remove()
+        return str(p)
 
 
 class _Monitor:
@@ -356,6 +441,7 @@ def _init():
             beam_path=("DEV_BEAM_PATH", str, "dev beam path name"),
             camera=("DEV_CAMERA", str, "dev camera name"),
         ),
+        save_file_path=("/tmp", str, "root path for screen save files"),
     )
 
 
