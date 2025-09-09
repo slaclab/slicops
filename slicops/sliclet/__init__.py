@@ -11,6 +11,9 @@ import contextlib
 import enum
 import importlib
 import inspect
+import pykern.pkconst
+import pykern.pkconfig
+import pykern.pkio
 import pykern.util
 import queue
 import re
@@ -112,6 +115,9 @@ class Base:
             pkdlog("ERROR {}", d)
             self.__put_work(_Work.error, PKDict(desc=d))
 
+    def save_file_path(self):
+        return _cfg.save_file_root.join(self.__class__.__name__).ensure(dir=True)
+
     def session_end(self):
         self.__put_work(_Work.session_end, None)
 
@@ -207,12 +213,28 @@ class Base:
         return True
 
 
+def _cfg_py_path(value):
+    if isinstance(value, str):
+        if not os.path.isabs(value):
+            pykern.pkconfig.raise_error(f"not an absolute path={value}")
+        return pykern.pkio.py_path(value)
+    if not isinstance(value, pykern.pkconst.PY_PATH_LOCAL_TYPE):
+        pykern.pkconfig.raise_error(f"not a py.path type={type(value)} value={value}")
+    return value
+
+
 def _init():
     global _cfg
-    from pykern import pkconfig
+
+    def _path():
+        rv = (_cfg_py_path, "root path for screen save files")
+        if pykern.pkconfig.in_dev_mode():
+            return (pykern.util.dev_run_dir("save").ensure(dir=True),) + rv
+        return pykern.pkconfig.Required(rv)
 
     _cfg = pkconfig.init(
         default=("screen", str, "default sliclet"),
+        save_file_root=_path(),
     )
 
 
