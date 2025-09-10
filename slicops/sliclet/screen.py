@@ -148,8 +148,7 @@ class Screen(slicops.sliclet.Base):
     def __device_change(self, txn, beam_path, camera):
         self.__device_destroy(txn)
         txn.multi_set(_DEVICE_DISABLE)
-        if camera and beam_path:
-            self.__device_setup(txn, beam_path, camera)
+        self.__device_setup(txn, camera)
 
     def __device_destroy(self, txn=None):
         if not self.__device:
@@ -176,6 +175,9 @@ class Screen(slicops.sliclet.Base):
                 target_status=self.__handle_target,
             ),
         )
+
+        if camera is None:
+            return
         try:
             # If there's an epics issues, we have to clear the device
             self.__device = slicops.device.screen.Screen(
