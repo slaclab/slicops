@@ -166,7 +166,7 @@ class Txn:
         return self.__ctx.fields[field].group_get(group, attr)
 
     def multi_get(self, fields):
-        return PKDict(k: self.__field(k).value_get() for k in fields)
+        return PKDict((k, self.__field(k).value_get()) for k in fields)
 
     def multi_set(self, *args):
         def _args():

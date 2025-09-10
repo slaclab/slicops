@@ -232,7 +232,7 @@ def _init():
             return (pykern.util.dev_run_dir("save").ensure(dir=True),) + rv
         return pykern.pkconfig.Required(rv)
 
-    _cfg = pkconfig.init(
+    _cfg = pykern.pkconfig.init(
         default=("screen", str, "default sliclet"),
         save_file_root=_path(),
     )

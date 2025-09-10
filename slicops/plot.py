@@ -38,8 +38,8 @@ class ImageSet:
             PKDict: frame and fit or None if not enough frames
         """
 
-        def _mean(self):
-            if self._frames.maxlen == 1:
+        def _mean():
+            if self.meta.n_average == 1:
                 return self._frames[-1]
             return numpy.mean(self._frames, axis=0)
 

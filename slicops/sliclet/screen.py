@@ -233,7 +233,7 @@ class Screen(slicops.sliclet.Base):
                     ("start_button.ui.enabled", True),
                 )
 
-    def __new_image_set(self, txtn):
+    def __new_image_set(self, txn):
         self.__image_set = slicops.plot.ImageSet(
             txn.multi_get(("beam_path", "camera", "curve_fit_method", "n_average", "pv")),
         )
