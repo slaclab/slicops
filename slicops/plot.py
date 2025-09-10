@@ -6,10 +6,10 @@
 
 from pykern.pkcollections import PKDict
 from pykern.pkdebug import pkdc, pkdexc, pkdlog, pkdp
-import collections
 import numpy
 import pykern.pkio
 import scipy.optimize
+
 
 class ImageSet:
     """Fits images, possibly averaging.
@@ -24,9 +24,9 @@ class ImageSet:
 
     def __init__(self, meta):
         self.meta = meta
-        self._frames = collections.deque(meta.n_average)
-        self._timestamps = collections.deque(meta.n_average)
-        self._fit = None
+        self._frames = []
+        self._timestamps = []
+        self._prev = None
 
     def add_frame(self, frame, timestamp):
         """Add and update fit
@@ -45,12 +45,18 @@ class ImageSet:
 
         self._frames.append(frame)
         self._timestamps.append(timestamp)
-        if self._ready():
-            self._fit = fit_image(_mean(), self.meta.curve_fit_method)
-        return self._fit
+        if len(self._frames) == self.meta.n_average:
+            self._prev = PKDict(
+                fit=fit_image(_mean(), self.meta.curve_fit_method),
+                frames=self._frames,
+                timestamps=self._timestamps,
+            )
+            self._frames = []
+            self._timestamps =[]
+        return self._prev.fit
 
     def save_file(self, dir_path):
-        #TODO(robnagler) the naming is a bit goofy, possibly frames/{images,timestamps} and analysis.
+        # TODO(robnagler) the naming is a bit goofy, possibly frames/{images,timestamps} and analysis.
         """Creates a hdf5 file with the structure::
             /image Group
               /frames Dataset {n_average, ysize, xsize}
@@ -70,7 +76,7 @@ class ImageSet:
 
         def _image_dim(meta_group, dim):
             g = meta_group.create_group(dim)
-            f = self._fit[dim]
+            f = self._prev.fit[dim]
             g.create_dataset("profile", data=f.lineout)
             if not f.fit.results:
                 return
@@ -80,8 +86,8 @@ class ImageSet:
         def _meta(h5_file):
             g = h5_file.create_group("meta")
             g.attrs.update(self.meta)
-            g.create_dataset("frames", data=self._frames)
-            g.create_dataset("timestamps", data=self._timestamps)
+            g.create_dataset("frames", data=self._prev.frames)
+            g.create_dataset("timestamps", data=self._prev.timestamps)
 
         def _path():
             # TODO(robnagler) centralize timestamp format
@@ -95,17 +101,14 @@ class ImageSet:
             with h5py.File(path, "w") as f:
                 _meta(f)
                 g = f.create_group("image")
-                g.dataset("mean", self._fit.raw_pixels)
+                g.dataset("mean", self._prev.fit.raw_pixels)
                 _image_dim(g, "x")
                 _image_dim(g, "y")
 
-        if not self._ready():
-            return False
         pykern.pkio.atomic_write(_path(), writer=_writer)
-        return True
 
     def _ready(self):
-        return len(self._frames) == self._frames.maxlen
+        return
 
 
 def fit_image(image, method):
