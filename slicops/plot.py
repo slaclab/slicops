@@ -45,14 +45,15 @@ class ImageSet:
 
         self._frames.append(frame)
         self._timestamps.append(timestamp)
-        if len(self._frames) == self.meta.n_average:
-            self._prev = PKDict(
-                fit=fit_image(_mean(), self.meta.curve_fit_method),
-                frames=self._frames,
-                timestamps=self._timestamps,
-            )
-            self._frames = []
-            self._timestamps =[]
+        if len(self._frames) != self.meta.n_average:
+            return None
+        self._prev = PKDict(
+            fit=fit_image(_mean(), self.meta.curve_fit_method),
+            frames=self._frames,
+            timestamps=self._timestamps,
+        )
+        self._frames = []
+        self._timestamps =[]
         return self._prev.fit
 
     def save_file(self, dir_path):

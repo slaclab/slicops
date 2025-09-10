@@ -229,7 +229,7 @@ def _init():
     def _path():
         rv = (_cfg_py_path, "root path for screen save files")
         if pykern.pkconfig.in_dev_mode():
-            return (pykern.util.dev_run_dir("save").ensure(dir=True),) + rv
+            return (pykern.util.dev_run_dir(_path).join("save").ensure(dir=True),) + rv
         return pykern.pkconfig.Required(rv)
 
     _cfg = pykern.pkconfig.init(
