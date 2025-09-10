@@ -90,9 +90,9 @@ class Screen(slicops.sliclet.Base):
         self.__beam_path_change(txn, None)
         self.__device_change(txn, None)
         b = c = None
-        if pykern.pkconfig.in_dev_mode():
-            b = _cfg.dev.beam_path
-            c = _cfg.dev.camera
+        #        if pykern.pkconfig.in_dev_mode():
+        #            b = _cfg.dev.beam_path
+        #            c = _cfg.dev.camera
         # the values are None by default, but this initializes
         # the state of the choices, buttons and fields appropriately
         txn.field_set("beam_path", b)
@@ -133,8 +133,7 @@ class Screen(slicops.sliclet.Base):
     def __device_change(self, txn, camera):
         self.__device_destroy(txn)
         txn.multi_set(_DEVICE_DISABLE)
-        if camera:
-            self.__device_setup(txn, camera)
+        self.__device_setup(txn, camera)
 
     def __device_destroy(self, txn=None):
         if not self.__device:
@@ -163,6 +162,8 @@ class Screen(slicops.sliclet.Base):
                 m = self.__monitors[n] = _Monitor(a, h)
                 a.monitor(m)
 
+        if camera is None:
+            return
         try:
             # If there's an epics issues, we have to clear the device
             self.__device = self.__device = slicops.device.Device(camera)
