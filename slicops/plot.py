@@ -6,6 +6,7 @@
 
 from pykern.pkcollections import PKDict
 from pykern.pkdebug import pkdc, pkdexc, pkdlog, pkdp
+import h5py
 import numpy
 import pykern.pkio
 import scipy.optimize
@@ -53,7 +54,7 @@ class ImageSet:
             timestamps=self._timestamps,
         )
         self._frames = []
-        self._timestamps =[]
+        self._timestamps = []
         return self._prev.fit
 
     def save_file(self, dir_path):
@@ -88,15 +89,19 @@ class ImageSet:
             g = h5_file.create_group("meta")
             g.attrs.update(self.meta)
             g.create_dataset("frames", data=self._prev.frames)
-            g.create_dataset("timestamps", data=self._prev.timestamps)
+            g.create_dataset(
+                "timestamps", data=(d.timestamp() for d in self._prev.timestamps)
+            )
 
         def _path():
             # TODO(robnagler) centralize timestamp format
-            t = self._timestamps[-1]
-            return dir_path.join(
+            t = self._prev.timestamps[-1]
+            rv = dir_path.join(
                 t.strftime("%Y-%m"),
                 f"{t.strftime('%Y%m%d%H%M%S')}-{self.meta.camera}.h5",
             )
+            rv.dirpath().ensure(dir=True)
+            return rv
 
         def _writer(path):
             with h5py.File(path, "w") as f:
