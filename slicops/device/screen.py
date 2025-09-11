@@ -292,7 +292,6 @@ class _Worker(ActionLoop):
         return None
 
     def action_req_move_target(self, arg):
-        raise AssertionError("broken")
         self.__fsm.event("move_target", arg)
         return None
 
