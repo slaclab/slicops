@@ -234,7 +234,9 @@ class Screen(slicops.sliclet.Base):
 
     def __new_image_set(self, txn):
         self.__image_set = slicops.plot.ImageSet(
-            txn.multi_get(("beam_path", "camera", "curve_fit_method", "images_to_average", "pv")),
+            txn.multi_get(
+                ("beam_path", "camera", "curve_fit_method", "images_to_average", "pv")
+            ),
         )
 
     def __set_acquire(self, txn, acquire):
