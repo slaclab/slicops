@@ -148,7 +148,7 @@ class Screen(slicops.sliclet.Base):
     def __device_change(self, txn, beam_path, camera):
         self.__device_destroy(txn)
         txn.multi_set(_DEVICE_DISABLE)
-        self.__device_setup(txn, camera)
+        self.__device_setup(txn, beam_path, camera)
 
     def __device_destroy(self, txn=None):
         if not self.__device:
