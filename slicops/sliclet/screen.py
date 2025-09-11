@@ -24,9 +24,10 @@ _DEVICE_TYPE = "PROF"
 _cfg = None
 
 _BUTTONS_DISABLE = (
+    ("save_button.ui.enabled", False),
     ("single_button.ui.enabled", False),
-    ("stop_button.ui.enabled", False),
     ("start_button.ui.enabled", False),
+    ("stop_button.ui.enabled", False),
 )
 
 _DEVICE_DISABLE = (
@@ -43,8 +44,7 @@ _DEVICE_DISABLE = (
     ("start_button.ui.visible", False),
     ("stop_button.ui.visible", False),
     ("save_button.ui.visible", False),
-    ("n_average.ui.visible", False),
-    ("save_button.ui.enabled", False),
+    ("images_to_average.ui.visible", False),
 ) + _BUTTONS_DISABLE
 
 _DEVICE_ENABLE = (
@@ -53,7 +53,7 @@ _DEVICE_ENABLE = (
     ("start_button.ui.visible", True),
     ("stop_button.ui.visible", True),
     ("save_button.ui.visible", True),
-    ("n_average.ui.visible", True),
+    ("images_to_average.ui.visible", True),
     ("single_button.ui.enabled", True),
     ("stop_button.ui.enabled", False),
     ("start_button.ui.enabled", True),
@@ -82,8 +82,8 @@ class Screen(slicops.sliclet.Base):
         # TODO(robnagler) optimize with ImageSet.update_curve_fit_method()
         self.__new_image_set(txn)
 
-    def on_change_n_average(self, txn, value, **kwargs):
-        # TODO(robnagler) optimize with ImageSet.update_n_average()
+    def on_change_images_to_average(self, txn, value, **kwargs):
+        # TODO(robnagler) optimize with ImageSet.update_images_to_average()
         self.__new_image_set(txn)
 
     def on_click_save_button(self, txn, **kwargs):
@@ -221,8 +221,7 @@ class Screen(slicops.sliclet.Base):
             if not txn.group_get("plot", "ui", "visible"):
                 txn.multi_set(_PLOT_ENABLE)
             txn.field_set("plot", p)
-            if not txn.group_get("save_button", "ui", "enabled"):
-                txn.multi_set(("save_button.ui.enabled", True))
+            txn.multi_set(("save_button.ui.enabled", True))
             return True
 
         with self.lock_for_update() as txn:
@@ -235,7 +234,7 @@ class Screen(slicops.sliclet.Base):
 
     def __new_image_set(self, txn):
         self.__image_set = slicops.plot.ImageSet(
-            txn.multi_get(("beam_path", "camera", "curve_fit_method", "n_average", "pv")),
+            txn.multi_get(("beam_path", "camera", "curve_fit_method", "images_to_average", "pv")),
         )
 
     def __set_acquire(self, txn, acquire):

@@ -19,7 +19,7 @@ class ImageSet:
     `save_file`.
 
     Args:
-        meta (PKDict): n_average, camera, curve_fit_method, pv
+        meta (PKDict): images_to_average, camera, curve_fit_method, pv
 
     """
 
@@ -40,13 +40,13 @@ class ImageSet:
         """
 
         def _mean():
-            if self.meta.n_average == 1:
+            if self.meta.images_to_average == 1:
                 return self._frames[-1]
             return numpy.mean(self._frames, axis=0)
 
         self._frames.append(frame)
         self._timestamps.append(timestamp)
-        if len(self._frames) != self.meta.n_average:
+        if len(self._frames) != self.meta.images_to_average:
             return None
         self._prev = PKDict(
             fit=fit_image(_mean(), self.meta.curve_fit_method),
@@ -61,16 +61,16 @@ class ImageSet:
         # TODO(robnagler) the naming is a bit goofy, possibly frames/{images,timestamps} and analysis.
         """Creates a hdf5 file with the structure::
             /image Group
-              /frames Dataset {n_average, ysize, xsize}
+              /frames Dataset {images_to_average, ysize, xsize}
               /mean Dataset {ysize, xsize}
-              /timestamps Dataset {n_average}
+              /timestamps Dataset {images_to_average}
               /x Group
                 /fit Dataset {xsize}
                 /profile Dataset {xsize}
               /y Group
                 /fit Dataset {ysize}
                 /profile Dataset {ysize}
-            /meta Group (camera, curve_fit_method, n_average, etc.)
+            /meta Group (camera, curve_fit_method, images_to_average, etc.)
 
         Args:
             dir_path (py.path): directory
@@ -82,7 +82,7 @@ class ImageSet:
             g.create_dataset("profile", data=f.lineout)
             if not f.fit.results:
                 return
-            g.attrs.update(f.results)
+            g.attrs.update(f.fit.results)
             g.create_dataset("fit", data=f.fit.fit_line)
 
         def _meta(h5_file):
@@ -90,7 +90,8 @@ class ImageSet:
             g.attrs.update(self.meta)
             g.create_dataset("frames", data=self._prev.frames)
             g.create_dataset(
-                "timestamps", data=(d.timestamp() for d in self._prev.timestamps)
+                "timestamps",
+                data=[d.timestamp() for d in self._prev.timestamps],
             )
 
         def _path():
@@ -98,7 +99,7 @@ class ImageSet:
             t = self._prev.timestamps[-1]
             rv = dir_path.join(
                 t.strftime("%Y-%m"),
-                f"{t.strftime('%Y%m%d%H%M%S')}-{self.meta.camera}.h5",
+                f"{t.strftime('%Y%m%dT%H%M%SZ')}-{self.meta.camera}.h5",
             )
             rv.dirpath().ensure(dir=True)
             return rv
@@ -107,7 +108,7 @@ class ImageSet:
             with h5py.File(path, "w") as f:
                 _meta(f)
                 g = f.create_group("image")
-                g.dataset("mean", self._prev.fit.raw_pixels)
+                g.create_dataset("mean", data=self._prev.fit.raw_pixels)
                 _image_dim(g, "x")
                 _image_dim(g, "y")
 
