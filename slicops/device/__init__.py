@@ -247,7 +247,8 @@ class _Accessor:
                     return
                 if self.meta.accessor_name == "image":
                     # 2 frames a second
-                    t = int(time.time() * 2) / 2
+                    # t = int(time.time() * 2) / 2
+                    t = int(time.time())
                     if t == self._last_time:
                         return
                     self._last_time = t

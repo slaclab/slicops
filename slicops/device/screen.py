@@ -275,7 +275,10 @@ class _Worker(ActionLoop):
             else self.__handler.on_screen_device_update
         )
         # Denormalized state so no need for lock during call
-        return lambda: m(**arg if isinstance(arg, dict) else arg)
+        if isinstance(arg, dict):
+            return lambda: m(**arg)
+        else:
+            return lambda: m(arg)
 
     def action_check_upstream(self, arg):
         self.__upstream = _Upstream(self)
