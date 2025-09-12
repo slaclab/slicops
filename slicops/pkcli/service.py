@@ -96,4 +96,5 @@ class _ProxyHandler(tornado.web.RequestHandler):
 
 class _VueIndexHandler(tornado.web.StaticFileHandler):
     def get_absolute_path(self, root, path, *args, **kwargs):
+        pkdp(path)
         return super().get_absolute_path(root, self.default_filename)

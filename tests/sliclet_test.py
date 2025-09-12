@@ -42,3 +42,4 @@ async def test_all(monkeypatch):
 
     async with unit_util.SlicletSetup("unit", prod=True) as s:
         pkunit.pkeq(b"xyzzy\n", await s.http_get(""))
+        pkunit.pkeq(b"xyzzy\n", await s.http_get("/screen"))
