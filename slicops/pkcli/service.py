@@ -24,8 +24,42 @@ class Commands(slicops.pkcli.CommandsBase):
         """
         from pykern import pkconfig, pkresource
         from pykern.api import server
-        from slicops import config, ui_api, quest
+        from slicops import config, quest, sliclet, ui_api
+
         from tornado import web
+
+        def _dev_uri_map(config):
+            return [
+                (
+                    # send any non-api call to the proxy
+                    rf"^(?!{config.api_uri}).*",
+                    _ProxyHandler,
+                    PKDict(
+                        proxy_url=f"http://localhost:{config.vue_port}",
+                    ),
+                ),
+            ]
+
+        def _prod_uri_map(config):
+            d = PKDict(
+                # TODO(robnagler) package_path
+                path=str(pkresource.file_path("vue")),
+                default_filename="index.html",
+            )
+            return [
+                (
+                    # very specific so we control the name space
+                    r"^/(assets/[^/.]+\.(?:css|js)|favicon.png|index.html|)$",
+                    web.StaticFileHandler,
+                    d,
+                ),
+                (
+                    # vue index.html is returned for sliclet URLs
+                    rf"^/(?:$|{'|'.join(sliclet.names())}(?:$|/.*))",
+                    _VueIndexHandler,
+                    d,
+                ),
+            ]
 
         def _tcp_port():
             return (
@@ -34,44 +68,20 @@ class Commands(slicops.pkcli.CommandsBase):
                 else PKDict()
             )
 
-        def _uri_map(config):
-            if prod:
-                return [
-                    (
-                        # very specific so we control the name space
-                        r"^/(assets/[^/.]+\.(?:css|js)|favicon.png|index.html|)$",
-                        web.StaticFileHandler,
-                        PKDict(
-                            path=str(pkresource.file_path("vue")),
-                            default_filename="index.html",
-                        ),
-                    ),
-                ]
-            return [
-                (
-                    # send any non-api call to the proxy
-                    rf"^(?!{config.api_uri}).*",
-                    ProxyHandler,
-                    PKDict(
-                        proxy_url=f"http://localhost:{config.vue_port}",
-                    ),
-                ),
-            ]
-
         c = config.cfg().ui_api.copy()
         server.start(
             attr_classes=quest.attr_classes(),
             api_classes=ui_api.api_classes(),
             http_config=c.pkupdate(
                 PKDict(
-                    uri_map=_uri_map(c),
+                    uri_map=_prod_uri_map(c) if prod else _dev_uri_map(c),
                     **_tcp_port(),
                 )
             ),
         )
 
 
-class ProxyHandler(tornado.web.RequestHandler):
+class _ProxyHandler(tornado.web.RequestHandler):
     def initialize(self, proxy_url, **kwargs):
         super(ProxyHandler, self).initialize(**kwargs)
         self.http_client = tornado.httpclient.AsyncHTTPClient()
@@ -82,3 +92,8 @@ class ProxyHandler(tornado.web.RequestHandler):
         self.set_status(r.code)
         self.set_header("Content-Type", r.headers["Content-Type"])
         self.write(r.body)
+
+
+class _VueIndexHandler(tornado.web.StaticFileHandler):
+    def get_absolute_path(self, root, path, *args, **kwargs):
+        return super().get_absolute_path(root, self.default_filename)

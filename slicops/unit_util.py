@@ -21,6 +21,9 @@ class SlicletSetup(pykern.api.unit_util.Setup):
         self.__caproto = c
         super().__init__(*args, **kwargs)
         self.__update_q = asyncio.Queue()
+        self.__http_uri = (
+            f"http://{self.http_config.tcp_ip}:{self.http_config.tcp_port}"
+        )
 
     async def ctx_update(self):
         from pykern import pkunit
@@ -38,6 +41,24 @@ class SlicletSetup(pykern.api.unit_util.Setup):
 
         self.__caller()
         await self.client.call_api("ui_ctx_write", PKDict(field_values=PKDict(kwargs)))
+
+    async def http_get(self, rel_uri):
+        from tornado import httpclient
+
+        def _client():
+            return httpclient.AsyncHTTPClient(force_instance=True)
+
+        self.__caller()
+        return (
+            await _client().fetch(
+                httpclient.HTTPRequest(
+                    connect_timeout=_TIMEOUT,
+                    method="GET",
+                    request_timeout=_TIMEOUT,
+                    url=self.__http_uri + rel_uri,
+                ),
+            )
+        ).body
 
     async def __aenter__(self):
         await super().__aenter__()
@@ -69,8 +90,12 @@ class SlicletSetup(pykern.api.unit_util.Setup):
 
     def _server_start(self, *args, **kwargs):
         from slicops.pkcli import service
+        from pykern.pkcollections import PKDict
 
-        service.Commands().ui_api()
+        k = PKDict()
+        if self.server_config.get("prod"):
+            k.prod = True
+        service.Commands().ui_api(**k)
 
     def __caller(self):
         from pykern import pkdebug, pkinspect

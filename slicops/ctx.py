@@ -10,6 +10,7 @@ import copy
 import pykern.fconf
 import pykern.pkresource
 import pykern.util
+import slicops.config
 import slicops.field
 import slicops.ui_layout
 
@@ -32,10 +33,19 @@ class Ctx:
 
         step = "yaml"
         try:
-            r = pykern.fconf.parse_all(
-                path or pykern.pkresource.file_path("sliclet"),
-                glob=f"{name}*",
-            )
+            n = f"sliclet/{name}.yaml"
+            r = pykern.fconf.Parser(
+                [
+                    (
+                        path.join(n)
+                        if path
+                        else pykern.pkresource.file_path(
+                            n,
+                            packages=slicops.config.cfg().package_path,
+                        )
+                    )
+                ]
+            ).result
             _check_raw(r)
             step = "fields"
             self.fields = self.__parse(r[step], PKDict(), slicops.field.prototypes())

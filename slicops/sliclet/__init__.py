@@ -11,9 +11,12 @@ import contextlib
 import enum
 import importlib
 import inspect
+import itertools
+import pykern.pkinspect
 import pykern.util
 import queue
 import re
+import slicops.config
 import slicops.ctx
 import slicops.field
 import threading
@@ -30,11 +33,50 @@ _ON_METHODS_RE = re.compile(r"^on_(click|change)_(\w+)$")
 
 _CTX_WRITE_ARGS = frozenset(["field_values"])
 
+_NAMES = None
+
 
 def instance(name, queue):
+    def _import(name):
+        # TODO(robnagler) move to pykern, copied from sirepo.util
+        # NOTE: fixed a bug (s = None)
+        s = None
+        for p in slicops.config.cfg().package_path:
+            n = None
+            try:
+                n = f"{p}.sliclet.{name}"
+                return importlib.import_module(n)
+            except ModuleNotFoundError as e:
+                if n is not None and n != e.name:
+                    # import is failing due to ModuleNotFoundError in a sub-import
+                    # not the module we are looking for
+                    raise
+                s = pkdexc()
+                pass
+        # gives more debugging info (perhaps more confusion)
+        if s:
+            pkdc(s)
+        raise AssertionError(
+            f"cannot find sliclet={name} in package_path={slicops.config.cfg().package_path}"
+        )
+
     if not name:
         name = _cfg.default
-    return importlib.import_module(f"slicops.sliclet.{name}").CLASS(name, queue)
+    return _import(name).CLASS(name, queue)
+
+
+def names():
+
+    def _find():
+        # TODO(robnagler) move to pykern, copied from sirepo
+        for p in slicops.config.cfg().package_path:
+            yield pykern.pkinspect.package_module_names(f"{p}.sliclet")
+
+    global _NAMES
+
+    if _NAMES is None:
+        _NAMES = tuple(sorted(itertools.chain.from_iterable(_find())))
+    return _NAMES
 
 
 class Base:
