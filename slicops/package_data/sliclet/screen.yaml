@@ -25,7 +25,7 @@ fields:
         "Super Gaussian": super_gaussian
     value: gaussian
   images_to_average:
-    prototype: Integer
+    prototype: Enum
     constraints:
       choices:
         - 1
@@ -62,7 +62,7 @@ fields:
     ui:
       css_kind: danger
       label: Stop
-  save_button:
+  save_to_file:
     prototype: Button
     ui:
       css_kind: outline-info
@@ -70,7 +70,7 @@ fields:
 
 ui_layout:
   - cols:
-    - css: col-sm-3
+    - css: col-md-3
       rows:
       - beam_path
       - camera
@@ -80,14 +80,16 @@ ui_layout:
         - start_button
         - stop_button
         - single_button
-      - save_button
-    - css: col-sm-9 col-xxl-7
+    - css: col-md-8 col-xxl-7
       rows:
       - plot
       - cols:
-        - css: col-sm-3
+        - css: col-md-3
           rows:
           - curve_fit_method
-        - css: col-sm-3
+        - css: col-md-3
           rows:
           - color_map
+    - css: col-md-1
+      rows:
+      - save_to_file

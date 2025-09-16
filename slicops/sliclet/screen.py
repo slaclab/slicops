@@ -24,7 +24,6 @@ _DEVICE_TYPE = "PROF"
 _cfg = None
 
 _BUTTONS_DISABLE = (
-    ("save_button.ui.enabled", False),
     ("single_button.ui.enabled", False),
     ("start_button.ui.enabled", False),
     ("stop_button.ui.enabled", False),
@@ -35,16 +34,17 @@ _DEVICE_DISABLE = (
     ("color_map.ui.visible", False),
     ("curve_fit_method.ui.enabled", False),
     ("curve_fit_method.ui.visible", False),
+    ("images_to_average.ui.visible", False),
     ("plot.ui.visible", False),
     # Useful to avoid large ctx sends
     ("plot.value", None),
     ("pv.ui.visible", False),
     ("pv.value", None),
+    ("save_to_file.ui.enabled", False),
+    ("save_to_file.ui.visible", False),
     ("single_button.ui.visible", False),
     ("start_button.ui.visible", False),
     ("stop_button.ui.visible", False),
-    ("save_button.ui.visible", False),
-    ("images_to_average.ui.visible", False),
 ) + _BUTTONS_DISABLE
 
 _DEVICE_ENABLE = (
@@ -52,7 +52,6 @@ _DEVICE_ENABLE = (
     ("single_button.ui.visible", True),
     ("start_button.ui.visible", True),
     ("stop_button.ui.visible", True),
-    ("save_button.ui.visible", True),
     ("images_to_average.ui.visible", True),
     ("single_button.ui.enabled", True),
     ("stop_button.ui.enabled", False),
@@ -65,6 +64,8 @@ _PLOT_ENABLE = (
     ("curve_fit_method.ui.enabled", True),
     ("curve_fit_method.ui.visible", True),
     ("plot.ui.visible", True),
+    ("save_to_file.ui.enabled", True),
+    ("save_to_file.ui.visible", True),
 )
 
 
@@ -86,7 +87,7 @@ class Screen(slicops.sliclet.Base):
         # TODO(robnagler) optimize with ImageSet.update_images_to_average()
         self.__new_image_set(txn)
 
-    def on_click_save_button(self, txn, **kwargs):
+    def on_click_save_to_file(self, txn, **kwargs):
         self.__image_set.save_file(self.save_file_path())
 
     def on_click_single_button(self, txn, **kwargs):
@@ -222,7 +223,6 @@ class Screen(slicops.sliclet.Base):
             if not txn.group_get("plot", "ui", "visible"):
                 txn.multi_set(_PLOT_ENABLE)
             txn.field_set("plot", p)
-            txn.multi_set(("save_button.ui.enabled", True))
             return True
 
         with self.lock_for_update() as txn:
