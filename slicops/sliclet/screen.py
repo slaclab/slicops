@@ -4,11 +4,8 @@
 :license: http://github.com/slaclab/slicops/LICENSE
 """
 
-from datetime import datetime
 from pykern.pkcollections import PKDict
 from pykern.pkdebug import pkdc, pkdexc, pkdlog, pkdp
-import h5py
-import numpy
 import pykern.pkcompat
 import pykern.pkconfig
 import pykern.util
