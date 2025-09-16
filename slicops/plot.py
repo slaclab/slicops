@@ -114,9 +114,6 @@ class ImageSet:
 
         pykern.pkio.atomic_write(_path(), writer=_writer)
 
-    def _ready(self):
-        return
-
 
 def fit_image(image, method):
     """Attemp an analytical fit for the sum along the x and y dimensions
