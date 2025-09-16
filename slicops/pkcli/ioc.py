@@ -25,7 +25,7 @@ def run(init_yaml, db_yaml=None):
         return PKDict(
             # Need to hardwire the defaults, because ioc_arg_parser uses
             # argparse globally which causes a mess with argh (which uses argparse)
-            pvdb=pkdp(_PVGroup(config, db_yaml, macros={}, prefix="").pvdb),
+            pvdb=_PVGroup(config, db_yaml, macros={}, prefix="").pvdb,
             interfaces=["0.0.0.0"],
             module_name="caproto.asyncio.server",
             log_pv_names=False,
