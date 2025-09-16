@@ -19,10 +19,8 @@ import threading
 
 # TODO(robnagler) these should be reused for both cases
 _MOVE_TARGET_IN = PKDict({False: 0, True: 1})
-_STATUS_IN = 2
-_STATUS_OUT = 1
 
-_BLOCKING_MSG = "upstream target is in"
+_BLOCKING_MSG = "upstream target is {}"
 _TIMEOUT_MSG = "upstream target status accessor timed out"
 _ERROR_PREFIX_MSG = "upstream target error: "
 
@@ -118,7 +116,7 @@ class _FSM:
             v = arg.value
             rv = PKDict(acquire=arg.value)
         elif n == "target_status":
-            v = _STATUS_IN == arg.value
+            v = TargetStatus(arg.value)
             rv = PKDict(move_target_arg=None, target_status=v)
         else:
             raise AssertionError(f"unsupported accessor={n} {self}")
@@ -134,17 +132,17 @@ class _FSM:
         upstream_problems,
         **kwargs,
     ):
-        if move_target_arg:
+        if move_target_arg or target_status in (TargetStatus.MOVING, TargetStatus.INCONSISTENT, None):
             self.worker.action(
                 "call_handler",
                 ScreenError(
                     device=self.worker.device.device_name,
                     error_kind=ErrorKind.fsm,
-                    error_msg="target already moving",
+                    error_msg="target already moving, inconsistent, or not intialized",
                 ),
             )
             return
-        if target_status is not None and arg.want_in == target_status:
+        if arg.want_in == (target_status == TargetStatus.IN):
             # TODO(robnagler) could be a race condition so probably fine to do nothing
             pkdlog("same target_status={} self.want_in={}", target_status, arg.want_in)
             return
@@ -191,6 +189,15 @@ class ScreenError(Exception):
         super().__init__(_arg_str())
 
 
+class TargetStatus(enum.Enum):
+    """Errors passed to on_screen_device_error"""
+
+    INCONSISTENT = 3
+    IN = 2
+    OUT = 1
+    MOVING = 0
+
+
 class _Upstream(ActionLoop):
     """Action loop to check targets of upstream screens"""
 
@@ -210,14 +217,14 @@ class _Upstream(ActionLoop):
         self._loop_timeout_secs = _cfg.upstream_timeout_secs
         super().__init__()
 
-    def action_handle_status(self, arg):
+    def action_handle_target_status(self, arg):
         n = arg.accessor.device.device_name
         self.__devices.pkdel(n).destroy()
         if e := arg.get("error"):
             pkdlog("device={} error={}", n, e)
             self.__problems[n] = f"{_ERROR_PREFIX_MSG}{e}"
-        elif arg.value == _STATUS_IN:
-            self.__problems[n] = _BLOCKING_MSG
+        elif arg.value != TargetStatus.OUT.value:
+            self.__problems[n] = _BLOCKING_MSG.format(arg.value)
         if not self.__devices:
             return self.__done()
         return None
@@ -236,14 +243,14 @@ class _Upstream(ActionLoop):
         self.__worker.action("upstream_status", PKDict(problems=self.__problems))
         return self._LOOP_END
 
-    def __handle_status(self, kwargs):
+    def __handle_target_status(self, kwargs):
         if "connected" in kwargs:
             return
-        self.action("handle_status", kwargs)
+        self.action("handle_target_status", kwargs)
 
     def _start(self, *args, **kwargs):
         for d in self.__devices.values():
-            d.accessor("target_status").monitor(self.__handle_status)
+            d.accessor("target_status").monitor(self.__handle_target_status)
         super()._start(*args, **kwargs)
 
     def _repr(self):
@@ -328,8 +335,10 @@ class _Worker(ActionLoop):
         self.action("handle_monitor", change)
 
     def _start(self, *args, **kwargs):
-        for a in "acquire", "image", "target_status":
+        for a in "acquire", "image":
             self.device.accessor(a).monitor(self.__handle_monitor)
+        if self.device.has_accessor("target_status"):
+            self.device.accessor("target_status").monitor(self.__handle_monitor)
         super()._start(*args, **kwargs)
 
     def _repr(self):

@@ -15,6 +15,7 @@ async def test_basic():
 
     async def _buttons(s, expect, msg):
         from pykern import pkunit, pkdebug
+        from pykern.pkdebug import pkdlog
         from asyncio.exceptions import CancelledError
 
         # Wait for buttons to "settle" on expect. The updates
@@ -25,6 +26,7 @@ async def test_basic():
             except CancelledError:
                 # timed out so now report mismatch via pkunit
                 pkunit.pkeq(expect, v, msg)
+            pkdlog(rv.fields)
             v = tuple(rv.fields.pknested_get(k) for k in _BUTTONS)
             if v == expect:
                 break

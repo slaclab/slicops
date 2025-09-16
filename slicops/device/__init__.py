@@ -7,7 +7,6 @@
 from pykern.pkcollections import PKDict
 from pykern.pkdebug import pkdc, pkdexc, pkdlog, pkdp
 import epics
-import time
 import slicops.device_db
 import threading
 
@@ -217,6 +216,7 @@ class _Accessor:
             return bool(raw)
         if self.accessor_name == "image":
             return _reshape(raw)
+        # TODO: This is a hack. Needs to be database-driven.
         if (
             self.accessor_name == "target_status"
             and self.device.device_name == "DEV_CAMERA"
@@ -245,13 +245,6 @@ class _Accessor:
                 if self.meta.accessor_name == "image" and not len(v):
                     pkdlog("empty image received {}", self)
                     return
-                if self.meta.accessor_name == "image":
-                    # 2 frames a second
-                    # t = int(time.time() * 2) / 2
-                    t = int(time.time())
-                    if t == self._last_time:
-                        return
-                    self._last_time = t
                 self._run_callback(value=self._fixup_value(v))
         except Exception as e:
             pkdlog("error={} {} stack={}", e, self, pkdexc())
@@ -277,7 +270,6 @@ class _Accessor:
                 # from within a monitor callback.
                 # TODO(robnagler) need a better way of dealing with this
                 self._image_shape = (self.device.get("n_row"), self.device.get("n_col"))
-                self._last_time = 0
             self._pv = epics.PV(
                 self.meta.pv_name,
                 connection_callback=self._on_connection,
