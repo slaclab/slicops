@@ -82,15 +82,11 @@ _PLOT_ENABLE = (
 
 class Screen(slicops.sliclet.Base):
     def __init__(self, *args):
-<<<<<<< Updated upstream
-        self.__prev_value = PKDict(acquire=None, image=None, target_status=None)
-=======
         self.__current_value = PKDict(
             acquire=None,
             image=None,
             target=None
         )
->>>>>>> Stashed changes
         super().__init__(*args)
 
     def handle_destroy(self):
