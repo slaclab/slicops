@@ -102,7 +102,7 @@ class _FSM:
                     device=self.worker.device.device_name,
                     error_kind=ErrorKind.monitor,
                     accessor_name=n,
-                    error_msg=arg.error
+                    error_msg=arg.error,
                 ),
             )
             if n == "target_status":
@@ -179,6 +179,7 @@ class _FSM:
 
         return f"<_FSM {self.worker.device.device_name} {_states(self.curr)}>"
 
+
 class ScreenError(Exception):
     def __init__(self, **kwargs):
         def _arg_str():
@@ -186,6 +187,7 @@ class ScreenError(Exception):
                 " ".join(k + "={" + k + "}" for k in sorted(kwargs)),
                 **kwargs,
             )
+
         super().__init__(_arg_str())
 
 

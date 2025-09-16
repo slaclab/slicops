@@ -62,11 +62,7 @@ _PLOT_ENABLE = (
 
 class Screen(slicops.sliclet.Base):
     def __init__(self, *args):
-        self.__prev_value = PKDict(
-            acquire=None,
-            image=None,
-            target_status=None
-        )
+        self.__prev_value = PKDict(acquire=None, image=None, target_status=None)
         super().__init__(*args)
 
     def handle_destroy(self):
