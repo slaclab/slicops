@@ -70,7 +70,7 @@ fields:
 
 ui_layout:
   - cols:
-    - css: col-md-3
+    - css: col-lg-3
       rows:
       - beam_path
       - camera
@@ -80,16 +80,16 @@ ui_layout:
         - start_button
         - stop_button
         - single_button
-    - css: col-md-8 col-xxl-7
+    - css: col-lg-9 col-xxl-7
       rows:
       - plot
       - cols:
-        - css: col-md-3
+        - css: col-lg-3
           rows:
           - curve_fit_method
-        - css: col-md-3
+        - css: col-lg-3
           rows:
           - color_map
-    - css: col-md-1
-      rows:
-      - save_to_file
+    # - css: col-md-1
+    #   rows:
+    #   - save_to_file

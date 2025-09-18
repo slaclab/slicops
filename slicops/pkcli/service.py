@@ -46,6 +46,15 @@ class Commands(slicops.pkcli.CommandsBase):
                             default_filename="index.html",
                         ),
                     ),
+                    (
+                        # TODO(pjm): this should only route sliclet names
+                        # route everything except the api_uri else to index.html
+                        rf"^()(?!{config.api_uri}).*",
+                        web.StaticFileHandler,
+                        PKDict(
+                            path=str(pkresource.file_path("vue")) + "/index.html",
+                        ),
+                    ),
                 ]
             return [
                 (
