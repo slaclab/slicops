@@ -47,6 +47,7 @@ class Commands(slicops.pkcli.CommandsBase):
                 default_filename="index.html",
             )
             return [
+                # NOTE: StaticFileHandler requires match returns a group
                 (
                     # very specific so we control the name space
                     r"^/(assets/[^/.]+\.(?:css|js)|favicon.png|index.html|)$",
@@ -55,7 +56,7 @@ class Commands(slicops.pkcli.CommandsBase):
                 ),
                 (
                     # vue index.html is returned for sliclet URLs
-                    rf"^/(?:$|{'|'.join(sliclet.names())}(?:$|/.*))",
+                    rf"^/($|(?:{'|'.join(sliclet.names())})(?:$|/.*))",
                     _VueIndexHandler,
                     d,
                 ),
@@ -83,7 +84,7 @@ class Commands(slicops.pkcli.CommandsBase):
 
 class _ProxyHandler(tornado.web.RequestHandler):
     def initialize(self, proxy_url, **kwargs):
-        super(ProxyHandler, self).initialize(**kwargs)
+        super().initialize(**kwargs)
         self.http_client = tornado.httpclient.AsyncHTTPClient()
         self.proxy_url = proxy_url
 
@@ -96,5 +97,4 @@ class _ProxyHandler(tornado.web.RequestHandler):
 
 class _VueIndexHandler(tornado.web.StaticFileHandler):
     def get_absolute_path(self, root, path, *args, **kwargs):
-        pkdp(path)
         return super().get_absolute_path(root, self.default_filename)
