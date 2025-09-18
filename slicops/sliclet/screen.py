@@ -6,6 +6,7 @@
 
 from pykern.pkcollections import PKDict
 from pykern.pkdebug import pkdc, pkdexc, pkdlog, pkdp
+import pykern.pkcompat
 import pykern.pkconfig
 import pykern.util
 import queue
@@ -21,8 +22,8 @@ _cfg = None
 
 _BUTTONS_DISABLE = (
     ("single_button.ui.enabled", False),
-    ("stop_button.ui.enabled", False),
     ("start_button.ui.enabled", False),
+    ("stop_button.ui.enabled", False),
 )
 
 _DEVICE_DISABLE = (
@@ -30,11 +31,14 @@ _DEVICE_DISABLE = (
     ("color_map.ui.visible", False),
     ("curve_fit_method.ui.enabled", False),
     ("curve_fit_method.ui.visible", False),
+    ("images_to_average.ui.visible", False),
     ("plot.ui.visible", False),
     # Useful to avoid large ctx sends
     ("plot.value", None),
     ("pv.ui.visible", False),
     ("pv.value", None),
+    ("save_to_file.ui.enabled", False),
+    ("save_to_file.ui.visible", False),
     ("single_button.ui.visible", False),
     ("start_button.ui.visible", False),
     ("stop_button.ui.visible", False),
@@ -45,6 +49,7 @@ _DEVICE_ENABLE = (
     ("single_button.ui.visible", True),
     ("start_button.ui.visible", True),
     ("stop_button.ui.visible", True),
+    ("images_to_average.ui.visible", True),
     ("single_button.ui.enabled", True),
     ("stop_button.ui.enabled", False),
     ("start_button.ui.enabled", True),
@@ -56,6 +61,8 @@ _PLOT_ENABLE = (
     ("curve_fit_method.ui.enabled", True),
     ("curve_fit_method.ui.visible", True),
     ("plot.ui.visible", True),
+    ("save_to_file.ui.enabled", True),
+    ("save_to_file.ui.visible", True),
 )
 
 
@@ -63,14 +70,22 @@ class Screen(slicops.sliclet.Base):
     def handle_destroy(self):
         self.__device_destroy()
 
-    def on_change_camera(self, txn, value, **kwargs):
-        self.__device_change(txn, value)
-
     def on_change_beam_path(self, txn, value, **kwargs):
         self.__beam_path_change(txn, value)
 
-    def on_change_curve_fit_method(self, txn, **kwargs):
-        self.__update_plot(txn)
+    def on_change_camera(self, txn, value, **kwargs):
+        self.__device_change(txn, value)
+
+    def on_change_curve_fit_method(self, txn, value, **kwargs):
+        # TODO(robnagler) optimize with ImageSet.update_curve_fit_method()
+        self.__new_image_set(txn)
+
+    def on_change_images_to_average(self, txn, value, **kwargs):
+        # TODO(robnagler) optimize with ImageSet.update_images_to_average()
+        self.__new_image_set(txn)
+
+    def on_click_save_to_file(self, txn, **kwargs):
+        self.__image_set.save_file(self.save_file_path())
 
     def on_click_single_button(self, txn, **kwargs):
         self.__single_button = True
@@ -138,6 +153,7 @@ class Screen(slicops.sliclet.Base):
     def __device_destroy(self, txn=None):
         if not self.__device:
             return
+        self.__image_set = None
         self.__single_button = False
         for m in self.__monitors.values():
             m.destroy()
@@ -174,6 +190,7 @@ class Screen(slicops.sliclet.Base):
             self.__user_alert(txn, "unable to connect to camera={} error={}", camera, e)
             return
         txn.multi_set(_DEVICE_ENABLE + (("pv.value", self.__device.meta.pv_prefix),))
+        self.__new_image_set(txn)
 
     def __handle_acquire(self, acquire):
         with self.lock_for_update() as txn:
@@ -191,14 +208,34 @@ class Screen(slicops.sliclet.Base):
                 self.__single_button = False
 
     def __handle_image(self, image):
+        def _plot(txn):
+            if not self.__device:
+                return False
+            if (i := self.__monitors.image.prev_value()) is None or not i.size:
+                return False
+            if (
+                p := self.__image_set.add_frame(image, pykern.pkcompat.utcnow())
+            ) is None:
+                return False
+            if not txn.group_get("plot", "ui", "visible"):
+                txn.multi_set(_PLOT_ENABLE)
+            txn.field_set("plot", p)
+            return True
+
         with self.lock_for_update() as txn:
-            if self.__update_plot(txn) and self.__single_button:
-                # self.__single_button = False
+            if _plot(txn) and self.__single_button:
                 self.__set_acquire(txn, False)
                 txn.multi_set(
                     ("single_button.ui.enabled", True),
                     ("start_button.ui.enabled", True),
                 )
+
+    def __new_image_set(self, txn):
+        self.__image_set = slicops.plot.ImageSet(
+            txn.multi_get(
+                ("beam_path", "camera", "curve_fit_method", "images_to_average", "pv")
+            ),
+        )
 
     def __set_acquire(self, txn, acquire):
         if not self.__device:
@@ -227,19 +264,6 @@ class Screen(slicops.sliclet.Base):
     #        if status is in:
     #            enable buttons
     #
-    def __update_plot(self, txn):
-        if not self.__device:
-            return False
-        if (i := self.__monitors.image.prev_value()) is None or not i.size:
-            return False
-        if not txn.group_get("plot", "ui", "visible"):
-            txn.multi_set(_PLOT_ENABLE)
-        txn.field_set(
-            "plot",
-            slicops.plot.fit_image(i, txn.field_get("curve_fit_method")),
-        )
-        return True
-
     def __user_alert(self, txn, fmt, *args):
         pkdlog("TODO: USER ALERT: " + fmt, *args)
 

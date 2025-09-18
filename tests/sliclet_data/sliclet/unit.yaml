@@ -1,0 +1,10 @@
+fields:
+  one:
+    prototype: Integer
+    value: 1
+
+ui_layout:
+  - cols:
+    - css: col-lg-6
+      rows:
+        - one
