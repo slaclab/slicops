@@ -132,7 +132,11 @@ class _FSM:
         upstream_problems,
         **kwargs,
     ):
-        if move_target_arg or target_status in (TargetStatus.MOVING, TargetStatus.INCONSISTENT, None):
+        if move_target_arg or target_status in (
+            TargetStatus.MOVING,
+            TargetStatus.INCONSISTENT,
+            None,
+        ):
             self.worker.action(
                 "call_handler",
                 ScreenError(

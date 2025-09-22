@@ -56,20 +56,24 @@ _BUTTONS_VISIBLE = (
 )
 
 _DEVICE_DISABLE = (
-    ("color_map.ui.enabled", False),
-    ("color_map.ui.visible", False),
-    ("curve_fit_method.ui.enabled", False),
-    ("curve_fit_method.ui.visible", False),
-    ("plot.ui.visible", False),
-    # Useful to avoid large ctx sends
-    ("plot.value", None),
-    ("pv.ui.visible", False),
-    ("pv.value", None),
-) + _BUTTONS_DISABLE + _BUTTONS_INVISIBLE + _TARGET_DISABLE + _TARGET_INVISIBLE
+    (
+        ("color_map.ui.enabled", False),
+        ("color_map.ui.visible", False),
+        ("curve_fit_method.ui.enabled", False),
+        ("curve_fit_method.ui.visible", False),
+        ("plot.ui.visible", False),
+        # Useful to avoid large ctx sends
+        ("plot.value", None),
+        ("pv.ui.visible", False),
+        ("pv.value", None),
+    )
+    + _BUTTONS_DISABLE
+    + _BUTTONS_INVISIBLE
+    + _TARGET_DISABLE
+    + _TARGET_INVISIBLE
+)
 
-_DEVICE_ENABLE = (
-    ("pv.ui.visible", True),
-) + _BUTTONS_VISIBLE
+_DEVICE_ENABLE = (("pv.ui.visible", True),) + _BUTTONS_VISIBLE
 
 _PLOT_ENABLE = (
     ("color_map.ui.enabled", True),
@@ -82,11 +86,7 @@ _PLOT_ENABLE = (
 
 class Screen(slicops.sliclet.Base):
     def __init__(self, *args):
-        self.__current_value = PKDict(
-            acquire=None,
-            image=None,
-            target=None
-        )
+        self.__current_value = PKDict(acquire=None, image=None, target=None)
         super().__init__(*args)
 
     def handle_destroy(self):
