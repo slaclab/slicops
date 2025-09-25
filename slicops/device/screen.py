@@ -91,7 +91,15 @@ class _FSM:
         if u := getattr(self, f"_event_{name}")(arg, **self.curr):
             self.curr.update(u)
 
-    def _event_handle_monitor(self, arg, **kwargs):
+    def _event_handle_monitor(
+        self,
+        arg,
+        check_upstream,
+        move_target_arg,
+        target_status,
+        upstream_problems,
+        **kwargs,
+    ):
         n = arg.accessor.accessor_name
         if "error" in arg:
             self.worker.action(
@@ -117,7 +125,16 @@ class _FSM:
             rv = PKDict(acquire=arg.value)
         elif n == "target_status":
             v = TargetStatus(arg.value)
-            rv = PKDict(move_target_arg=None, target_status=v)
+            if target_status is None and move_target_arg:
+                rv = PKDict(target_status=v)
+                u = self.__move_with_upstream_check(
+                    move_target_arg, upstream_problems, check_upstream
+                )
+                if u is not None:
+                    rv.check_upstream = u
+            else:
+                v = TargetStatus(arg.value)
+                rv = PKDict(move_target_arg=None, target_status=v)
         else:
             raise AssertionError(f"unsupported accessor={n} {self}")
         self.worker.action("call_handler", PKDict(accessor_name=n, value=v))
@@ -132,10 +149,13 @@ class _FSM:
         upstream_problems,
         **kwargs,
     ):
+        # If target_status hasn't initialized, defer to monitor fire.
+        if target_status == None:
+            rv = PKDict(move_target_arg=arg)
+            return rv
         if move_target_arg or target_status in (
             TargetStatus.MOVING,
             TargetStatus.INCONSISTENT,
-            None,
         ):
             self.worker.action(
                 "call_handler",
@@ -152,12 +172,11 @@ class _FSM:
             return
         # TODO(robnagler) allow moving without checking upstream
         rv = PKDict(move_target_arg=arg)
-        if arg.want_in and upstream_problems is None or upstream_problems:
-            # Recheck the upstream
-            self.worker.action("check_upstream", None)
-            rv.check_upstream = True
-        else:
-            self.worker.action("move_target", arg)
+        v = self.__move_with_upstream_check(
+            arg.want_in, upstream_problems, check_upstream
+        )
+        if v is not None:
+            rv.check_upstream = v
         return rv
 
     def _event_upstream_status(self, arg, move_target_arg, **kwargs):
@@ -173,6 +192,17 @@ class _FSM:
             )
             return rv.pkupdate(move_target_arg=None)
         self.worker.action("move_target", move_target_arg)
+        return rv
+
+    def __move_with_upstream_check(self, want_in, upstream_problems, check_upstream):
+        rv = None
+        if want_in and upstream_problems is None or upstream_problems:
+            # Recheck the upstream
+            if not check_upstream:
+                self.worker.action("check_upstream", None)
+                rv = True
+        else:
+            self.worker.action("move_target", arg)
         return rv
 
     def __repr__(self):
@@ -211,6 +241,7 @@ class _Upstream(ActionLoop):
                 "PROF", "target_control", worker.beam_path, worker.device.device_name
             )
 
+        self.__is_ready = threading.Event()
         self.__worker = worker
         self.__problems = PKDict()
         self.__devices = PKDict({u: slicops.device.Device(u) for u in _names()})
@@ -228,7 +259,8 @@ class _Upstream(ActionLoop):
             pkdlog("device={} error={}", n, e)
             self.__problems[n] = f"{_ERROR_PREFIX_MSG}{e}"
         elif arg.value != TargetStatus.OUT.value:
-            self.__problems[n] = _BLOCKING_MSG.format(arg.value)
+            s = TargetStatus(arg.value)
+            self.__problems[n] = _BLOCKING_MSG.format(s.name)
         if not self.__devices:
             return self.__done()
         return None
@@ -276,10 +308,15 @@ class _Worker(ActionLoop):
         self.__handler = handler
         self.__upstream = None
         self.__status = None
-        self.__fsm = _FSM(self)
+        # self.monitors = pkdict...
+        self.__fsm = _FSM(self)  # self.monitors ...
         self.__target_control = None
         self._loop_timeout_secs = 0
         super().__init__()
+
+        # get from ready queue with timeout
+        # except
+        # exit
 
     def action_call_handler(self, arg):
         m = (
@@ -294,7 +331,8 @@ class _Worker(ActionLoop):
             return lambda: m(arg)
 
     def action_check_upstream(self, arg):
-        self.__upstream = _Upstream(self)
+        if self.__upstream is None or self.__upstream.destroyed:
+            self.__upstream = _Upstream(self)
         return None
 
     def action_handle_monitor(self, arg):
@@ -318,6 +356,7 @@ class _Worker(ActionLoop):
 
     def req_action(self, method, arg):
         """Called by DeviceScreen which has separate life cycle"""
+        # __fsm.is_ready
         if self.destroyed:
             raise AssertionError("object is destroyed")
         self.action(method, arg)
@@ -339,7 +378,7 @@ class _Worker(ActionLoop):
         self.action("handle_monitor", change)
 
     def _start(self, *args, **kwargs):
-        for a in "acquire", "image":
+        for a in "acquire", "image":  # self.monitors ...
             self.device.accessor(a).monitor(self.__handle_monitor)
         if self.device.has_accessor("target_status"):
             self.device.accessor("target_status").monitor(self.__handle_monitor)

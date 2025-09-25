@@ -11,11 +11,16 @@ def test_upstream_blocked():
     from slicops.device.screen import ScreenError, ErrorKind
 
     with unit_util.setup_screen("CU_HXR", "YAG03") as s:
+        # hack to make sure target_status fires
+        # import time
+        # time.sleep(1.0)
+
         s.device.move_target(want_in=True)
         e = s.handler.test_get("error")
+        pkunit.pkeq(e, False)
         s = ScreenError(
-                    device="YAG03",
-                    error_kind=ErrorKind.upstream,
-                    error_msg="upstream target is in",
-                )
-        pkunit.pkeq(s, e.exception)
+            device="YAG03",
+            error_kind=ErrorKind.upstream,
+            error_msg="{'YAG02': 'upstream target is IN'}",
+        )
+        pkunit.pkeq(repr(s), repr(e.exception))  # pkeq magic?
