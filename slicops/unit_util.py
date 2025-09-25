@@ -185,8 +185,8 @@ def _screen_handler():
                 }
             )
 
-        def on_screen_device_error(self, **kwargs):
-            self.event_q.error.put_nowait(PKDict(kwargs))
+        def on_screen_device_error(self, exc):
+            self.event_q.error.put_nowait(PKDict(exception=exc))
 
         def on_screen_device_update(self, **kwargs):
             self.event_q[kwargs["accessor_name"]].put_nowait(PKDict(kwargs))
