@@ -22,8 +22,9 @@ _DEVICE_TYPE = "PROF"
 _cfg = None
 
 _BUTTONS_DISABLE = (
-    ("single_button.ui.enabled", False),
+    ("start_button.ui.enabled", False),
     ("stop_button.ui.enabled", False),
+    ("single_button.ui.enabled", False),
 )
 
 _TARGET_DISABLE = (

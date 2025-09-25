@@ -26,7 +26,6 @@ async def test_basic():
             except CancelledError:
                 # timed out so now report mismatch via pkunit
                 pkunit.pkeq(expect, v, msg)
-            pkdlog(rv.fields)
             v = tuple(rv.fields.pknested_get(k) for k in _BUTTONS)
             if v == expect:
                 break
