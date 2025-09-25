@@ -9,12 +9,13 @@ from slicops import unit_util
 
 def test_upstream_ok():
     from pykern import pkdebug, pkunit
+    from slicops.device.screen import TargetStatus
 
     with unit_util.setup_screen("CU_HXR", "YAG03") as s:
         s.handler.test_get("image")
         pkunit.pkeq(False, s.handler.test_get("acquire"))
-        pkunit.pkeq(False, s.handler.test_get("target_status"))
+        pkunit.pkeq(TargetStatus.OUT, s.handler.test_get("target_status"))
         s.device.move_target(want_in=True)
-        pkunit.pkeq(True, s.handler.test_get("target_status"))
+        pkunit.pkeq(TargetStatus.IN, s.handler.test_get("target_status"))
         s.device.move_target(want_in=False)
-        pkunit.pkeq(False, s.handler.test_get("target_status"))
+        pkunit.pkeq(TargetStatus.OUT, s.handler.test_get("target_status"))

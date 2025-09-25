@@ -202,6 +202,7 @@ class _FSM:
                 self.worker.action("check_upstream", None)
                 rv = True
         else:
+            arg = PKDict(want_in=want_in)
             self.worker.action("move_target", arg)
         return rv
 
