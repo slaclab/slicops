@@ -6,8 +6,7 @@
 
 from pykern.pkcollections import PKDict
 from pykern.pkdebug import pkdc, pkdexc, pkdlog, pkdp, pkdformat
-from pykern.pkasyncio import ActionLoop
-from slicops.device import DeviceError
+import pykern.pkasyncio
 import abc
 import enum
 import logging
@@ -233,7 +232,7 @@ class TargetStatus(enum.Enum):
     MOVING = 0
 
 
-class _Upstream(ActionLoop):
+class _Upstream(pykern.pkasyncio.ActionLoop):
     """Action loop to check targets of upstream screens"""
 
     def __init__(self, worker):
@@ -294,7 +293,7 @@ class _Upstream(ActionLoop):
         return f"pending={sorted(self.__devices)} problems={sorted(self.__problems)}"
 
 
-class _Worker(ActionLoop):
+class _Worker(pykern.pkasyncio.ActionLoop):
     """Action loop for Screen
 
     _Worker uses `_FSM` to translate events to actions. Monitor calls
