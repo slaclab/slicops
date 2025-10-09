@@ -77,11 +77,11 @@ class _FSM:
     def __init__(self, worker):
         self.worker = worker
         self.curr = PKDict(
-            acquire=False,
-            check_upstream=False,
-            move_target_arg=None,
-            target_status=None,
-            upstream_problems=None,
+            acquire=False,  # status of screen acquire
+            move_target_arg=None,  # where do we want the target to be?
+            target_status=None,  # where is the status right now?
+            await_upstream=False,  # are we checking upstream?
+            upstream_problems=None,  # are there problems upstream?
         )
         self.prev = self.curr.copy()
 
@@ -93,7 +93,7 @@ class _FSM:
     def _event_handle_monitor(
         self,
         arg,
-        check_upstream,
+        await_upstream,
         move_target_arg,
         target_status,
         upstream_problems,
@@ -124,16 +124,13 @@ class _FSM:
             rv = PKDict(acquire=arg.value)
         elif n == "target_status":
             v = TargetStatus(arg.value)
+            rv = PKDict(target_status=v)
             if target_status is None and move_target_arg:
-                rv = PKDict(target_status=v)
-                u = self.__move_with_upstream_check(
-                    move_target_arg, upstream_problems, check_upstream
+                rv.await_upstream = self.__move_target_upstream_check(
+                    move_target_arg, upstream_problems, await_upstream
                 )
-                if u is not None:
-                    rv.check_upstream = u
             else:
-                v = TargetStatus(arg.value)
-                rv = PKDict(move_target_arg=None, target_status=v)
+                rv.move_target_arg = None
         else:
             raise AssertionError(f"unsupported accessor={n} {self}")
         self.worker.action("call_handler", PKDict(accessor_name=n, value=v))
@@ -142,7 +139,7 @@ class _FSM:
     def _event_move_target(
         self,
         arg,
-        check_upstream,
+        await_upstream,
         move_target_arg,
         target_status,
         upstream_problems,
@@ -171,15 +168,13 @@ class _FSM:
             return
         # TODO(robnagler) allow moving without checking upstream
         rv = PKDict(move_target_arg=arg)
-        v = self.__move_with_upstream_check(
-            arg.want_in, upstream_problems, check_upstream
+        rv.await_upstream = self.__move_target_upstream_check(
+            arg.want_in, upstream_problems, await_upstream
         )
-        if v is not None:
-            rv.check_upstream = v
         return rv
 
     def _event_upstream_status(self, arg, move_target_arg, **kwargs):
-        rv = PKDict(check_upstream=False, upstream_problems=arg.problems)
+        rv = PKDict(await_upstream=False, upstream_problems=arg.problems)
         if arg.problems:
             self.worker.action(
                 "call_handler",
@@ -193,11 +188,11 @@ class _FSM:
         self.worker.action("move_target", move_target_arg)
         return rv
 
-    def __move_with_upstream_check(self, want_in, upstream_problems, check_upstream):
-        rv = None
+    def __move_target_upstream_check(self, want_in, upstream_problems, await_upstream):
+        rv = False
         if want_in and upstream_problems is None or upstream_problems:
             # Recheck the upstream
-            if not check_upstream:
+            if not await_upstream:
                 self.worker.action("check_upstream", None)
                 rv = True
         else:
