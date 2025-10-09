@@ -16,6 +16,8 @@ import time
 # Local so should connect quickly
 _SIM_DETECTOR_TIMEOUT = 5
 _LOG_BASE = "sim_detector.log"
+_CAM1_STATUS_PV = "13SIM1:cam1:ShutterMode"
+_CAM1_CONTROL_PV = "13SIM1:cam1:TriggerMode"
 
 
 def init_sim_detector():
@@ -37,6 +39,8 @@ def init_sim_detector():
         "13SIM1:cam1:SizeX": 1024,
         "13SIM1:cam1:SizeY": 768,
         "13SIM1:image1:EnableCallbacks": 1,
+        _CAM1_STATUS_PV: 1,
+        _CAM1_CONTROL_PV: 0,
     }.items():
         pv = epics.PV(name)
         v = pv.put(value, wait=True, timeout=_SIM_DETECTOR_TIMEOUT)
@@ -83,6 +87,30 @@ def sim_detector(ioc_sim_detector_dir=None):
             "rb"
         )
 
+    def _watch_target():
+        def _control_monitor(pvname, value, **kwargs):
+            nonlocal new_status
+            # control value: 0: move out, 1: move in
+            # status: 1: out, 2: in
+            new_status = value + 1
+
+        new_status = None
+        current_status = new_status
+        s = epics.PV(_CAM1_STATUS_PV)
+        epics.PV(_CAM1_CONTROL_PV).add_callback(_control_monitor)
+        try:
+            while True:
+                if current_status != new_status:
+                    # transition through the "0 moving" state
+                    if current_status == 0:
+                        current_status = new_status
+                    else:
+                        current_status = 0
+                    s.put(current_status, wait=True, timeout=3)
+                time.sleep(1)
+        except KeyboardInterrupt:
+            pass
+
     d = _dir()
     with _log() as o:
         p = subprocess.Popen(
@@ -100,6 +128,7 @@ def sim_detector(ioc_sim_detector_dir=None):
         time.sleep(2)
         pkdlog("initializing sim detector")
         init_sim_detector()
+        _watch_target()
         pkdlog("waiting for pid={} to exit", p.pid)
         p.wait()
     finally:
