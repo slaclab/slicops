@@ -163,7 +163,7 @@ def start_ioc(init_yaml, db_yaml=None):
             finally:
                 os._exit(0)
         try:
-            time.sleep(1)
+            time.sleep(2)
             yield None
         finally:
             os.kill(p, signal.SIGKILL)
