@@ -32,7 +32,7 @@ def device(name):
             accessor=PKDict(
                 {
                     r.accessor_name: PKDict(r)
-                    for r in s.select("device_pv", PKDict(device_name=name))
+                    for r in s.select("device_accessor", PKDict(device_name=name))
                 }
             ),
         )
@@ -77,8 +77,8 @@ def upstream_devices(device_type, required_accessor, beam_path, end_device):
                         s.t.beam_path.c.beam_area == s.t.device.c.beam_area,
                     )
                     .join(
-                        s.t.device_pv,
-                        s.t.device_pv.c.device_name == c,
+                        s.t.device_accessor,
+                        s.t.device_accessor.c.device_name == c,
                     )
                 )
                 .where(
@@ -87,7 +87,7 @@ def upstream_devices(device_type, required_accessor, beam_path, end_device):
                     s.t.device_meta_float.c.device_meta_value
                     < _device_meta(end_device, "sum_l_meters", s),
                     s.t.device.c.device_type == device_type,
-                    s.t.device_pv.c.accessor_name == required_accessor,
+                    s.t.device_accessor.c.accessor_name == required_accessor,
                 )
                 .order_by(s.t.device_meta_float.c.device_meta_value)
             )
@@ -165,10 +165,12 @@ class _Inserter:
                 device_name=d.name,
                 beam_area=d.metadata.area,
                 device_type=d.metadata.type,
-                pv_prefix=d.pv_prefix,
+                cs_name=d.cs_name,
             )
-            for k, v in d.pvs.items():
-                session.insert("device_pv", device_name=n, accessor_name=k, pv_name=v)
+            for k, v in d.device_accessors.items():
+                session.insert(
+                    "device_accessor", device_name=n, accessor_name=k, cs_name=v
+                )
             for k, v in d.metadata.items():
                 if k not in self._METADATA_SKIP:
                     session.insert(
@@ -199,12 +201,12 @@ def _init():
                 device_name=p,
                 beam_area=n + " foreign",
                 device_type=n,
-                pv_prefix=s,
+                cs_name=s,
             ),
-            device_pv=PKDict(
+            device_accessor=PKDict(
                 device_name=p + " foreign",
                 accessor_name=p,
-                pv_name=s,
+                cs_name=s,
             ),
             device_meta_float=PKDict(
                 device_name=p + " foreign",

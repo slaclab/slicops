@@ -17,19 +17,19 @@ class DeviceDbError(Exception):
 
 _ACCESSOR_META_DEFAULT = PKDict(
     py_type=float,
-    pv_writable=False,
+    writable=False,
 )
 
 _ACCESSOR_META = PKDict(
-    acquire=PKDict(py_type=bool, pv_writable=True),
-    enabled=PKDict(py_type=int, pv_writable=False),
-    image=PKDict(py_type=numpy.ndarray, pv_writable=False),
-    n_bits=PKDict(py_type=int, pv_writable=False),
-    n_col=PKDict(py_type=int, pv_writable=False),
-    n_row=PKDict(py_type=int, pv_writable=False),
-    start_scan=PKDict(py_type=int, pv_writable=True),
-    target_control=PKDict(py_type=int, pv_writable=True),
-    target_status=PKDict(py_type=int, pv_writable=False),
+    acquire=PKDict(py_type=bool, writable=True),
+    enabled=PKDict(py_type=int, writable=False),
+    image=PKDict(py_type=numpy.ndarray, writable=False),
+    n_bits=PKDict(py_type=int, writable=False),
+    n_col=PKDict(py_type=int, writable=False),
+    n_row=PKDict(py_type=int, writable=False),
+    start_scan=PKDict(py_type=int, writable=True),
+    target_control=PKDict(py_type=int, writable=True),
+    target_status=PKDict(py_type=int, writable=False),
 )
 
 
@@ -174,12 +174,12 @@ class DeviceMeta(PKDict):
     """Information about a device
 
     Attributes:
-        accessor (PKDict): name to PKDict(name, pv_name, pv_writable, py_type, ...)
+        accessor (PKDict): name to PKDict(name, cs_name, writable, py_type, ...)
         beam_area (str): area where device is located
         beam_path (tuple): which beam paths does it go through
         device_type (str): type device, e.g. "PROF"
         device_name (str): name of device
-        pv_prefix (str): prefix to all accessor PVs for device
+        cs_name (str): prefix to all accessors for device
     """
 
     pass
