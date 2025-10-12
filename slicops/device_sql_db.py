@@ -8,6 +8,7 @@ Use slicops.device_db for a stable interface.
 
 from pykern.pkcollections import PKDict
 from pykern.pkdebug import pkdc, pkdlog, pkdp
+import numpy
 import pykern.pkresource
 import pykern.sql_db
 import slicops.config
@@ -17,6 +18,12 @@ _BASE_PATH = "device_db.sqlite3"
 
 _meta = None
 
+_PY_TYPES = PKDict({
+    "bool": bool,
+    "float": float,
+    "int": int,
+    "numpy.ndarray": numpy.ndarray,
+})
 
 def beam_paths():
     with _session() as s:
@@ -27,11 +34,14 @@ def beam_paths():
 
 
 def device(name):
+    def _py_type(rec):
+        return rec.pkupdate(py_type=_PY_TYPES[rec.py_type])
+
     with _session() as s:
         return PKDict(s.select_one("device", PKDict(device_name=name))).pkupdate(
             accessor=PKDict(
                 {
-                    r.accessor_name: PKDict(r)
+                    r.accessor_name: _py_type(PKDict(r))
                     for r in s.select("device_accessor", PKDict(device_name=name))
                 }
             ),
@@ -131,17 +141,6 @@ def recreate(parser):
 
 
 class _Inserter:
-    _METADATA_SKIP = frozenset(
-        (
-            "area",
-            "beam_path",
-            "bpms_after_wire",
-            "bpms_before_wire",
-            "lblms",
-            "type",
-        ),
-    )
-
     def __init__(self, parser):
         self.counts = PKDict(beam_areas=0, beam_paths=0, devices=0)
         self.parser = parser
@@ -158,27 +157,15 @@ class _Inserter:
                 session.insert("beam_path", beam_area=a, beam_path=p)
 
     def _devices(self, session):
-        for n, d in self.parser.devices.items():
+        def _tuple(table, values):
+            for v in values:
+                session.insert(table, **v)
+
+        for d in self.parser.devices.values():
             self.counts.devices += 1
-            session.insert(
-                "device",
-                device_name=d.name,
-                beam_area=d.metadata.area,
-                device_type=d.metadata.type,
-                cs_name=d.cs_name,
-            )
-            for k, v in d.device_accessors.items():
-                session.insert(
-                    "device_accessor", device_name=n, accessor_name=k, cs_name=v
-                )
-            for k, v in d.metadata.items():
-                if k not in self._METADATA_SKIP:
-                    session.insert(
-                        "device_meta_float",
-                        device_name=n,
-                        device_meta_name=k,
-                        device_meta_value=float(v),
-                    )
+            session.insert("device", **d.device)
+            for t in "device_accessor", "device_meta_float":
+                _tuple(t, d[t])
 
 
 def _init():
@@ -207,6 +194,8 @@ def _init():
                 device_name=p + " foreign",
                 accessor_name=p,
                 cs_name=s,
+                py_type=s,
+                writable="bool",
             ),
             device_meta_float=PKDict(
                 device_name=p + " foreign",

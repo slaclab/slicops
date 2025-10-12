@@ -61,6 +61,36 @@ _KNOWN_KEYS = PKDict(
     ),
 )
 
+
+_ACCESSOR_META_DEFAULT = PKDict(
+    py_type="float",
+    writable=False,
+)
+
+_ACCESSOR_META = PKDict(
+    acquire=PKDict(py_type="bool", writable=True),
+    enabled=PKDict(py_type="int", writable=False),
+    image=PKDict(py_type="numpy.ndarray", writable=False),
+    n_bits=PKDict(py_type="int", writable=False),
+    n_col=PKDict(py_type="int", writable=False),
+    n_row=PKDict(py_type="int", writable=False),
+    start_scan=PKDict(py_type="int", writable=True),
+    target_control=PKDict(py_type="int", writable=True),
+    target_status=PKDict(py_type="int", writable=False),
+)
+
+_METADATA_SKIP = frozenset(
+    (
+        "area",
+        "beam_path",
+        "bpms_after_wire",
+        "bpms_before_wire",
+        "lblms",
+        "type",
+    ),
+)
+
+
 _TOP_LEVEL_KEYS = frozenset(_KNOWN_KEYS.keys())
 
 _AREAS_MISSING_BEAM_PATH = frozenset(
@@ -113,7 +143,7 @@ class _Parser(PKDict):
         self.devices = PKDict()
         self.ctl_keys = set()
         self.meta_keys = set()
-        self.device_accessors = PKDict()
+        self.accessors = PKDict()
         self.beam_paths = PKDict()
 
     def _parse(self):
@@ -131,12 +161,6 @@ class _Parser(PKDict):
             )
 
     def _parse_file(self, src, path):
-        def _assign(name, rec):
-            """Corrections to input data"""
-            if name in self.devices:
-                raise ValueError(f"duplicate device={name}")
-            self.devices[name] = rec
-
         def _input_fixups(name, rec):
             if not rec.controls_information.PVs:
                 # Also many don't have beam_path
@@ -180,7 +204,7 @@ class _Parser(PKDict):
                 if not m.get(k):
                     raise AssertionError(f"missing metadata.{k}")
             rv.metadata = PKDict({k: v for k, v in m.items() if v is not None})
-            rv.device_accessors = PKDict(_pvs(c.PVs, rv))
+            rv.accessors = PKDict(_pvs(c.PVs, rv))
             return rv
 
         def _pvs(pvs, rv):
@@ -207,8 +231,7 @@ class _Parser(PKDict):
         for k, x in src.items():
             for n, r in x.items():
                 try:
-
-                    _assign(
+                    self._to_sql_db(
                         n,
                         _meta(
                             *_validate(
@@ -223,3 +246,35 @@ class _Parser(PKDict):
                 except Exception:
                     pkdlog("ERROR device={} record={}", n, r)
                     raise
+
+
+        def _assign(name, rec):
+            """Corrections to input data"""
+
+    def _to_sql_db(self, name, rec):
+        def _accessor():
+            for k, v in rec.accessors.items():
+                yield PKDict(device_name=name, accessor_name=k, cs_name=v).pkupdate(
+                    _ACCESSOR_META.get(k, _ACCESSOR_META_DEFAULT),
+                )
+
+        def _device():
+            return PKDict(
+                device_name=name,
+                beam_area=rec.metadata.area,
+                device_type=rec.metadata.type,
+                cs_name=rec.cs_name,
+            )
+
+        def _meta_float():
+            for k, v in rec.metadata.items():
+                if k not in _METADATA_SKIP:
+                    yield PKDict(device_name=name, device_meta_name=k, device_meta_value=float(v))
+
+        if name in self.devices:
+            raise ValueError(f"duplicate device={name}")
+        self.devices[name] = PKDict(
+            device=_device(),
+            device_accessor=tuple(_accessor()),
+            device_meta_float=tuple(_meta_float()),
+        )
