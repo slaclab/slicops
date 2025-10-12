@@ -14,6 +14,7 @@ import slicops.device_sql_db
 class DeviceDbError(Exception):
     pass
 
+
 class DeviceMeta(PKDict):
     """Information about a device
 

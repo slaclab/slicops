@@ -18,12 +18,15 @@ _BASE_PATH = "device_db.sqlite3"
 
 _meta = None
 
-_PY_TYPES = PKDict({
-    "bool": bool,
-    "float": float,
-    "int": int,
-    "numpy.ndarray": numpy.ndarray,
-})
+_PY_TYPES = PKDict(
+    {
+        "bool": bool,
+        "float": float,
+        "int": int,
+        "numpy.ndarray": numpy.ndarray,
+    }
+)
+
 
 def beam_paths():
     with _session() as s:

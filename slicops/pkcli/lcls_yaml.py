@@ -247,7 +247,6 @@ class _Parser(PKDict):
                     pkdlog("ERROR device={} record={}", n, r)
                     raise
 
-
         def _assign(name, rec):
             """Corrections to input data"""
 
@@ -269,7 +268,9 @@ class _Parser(PKDict):
         def _meta_float():
             for k, v in rec.metadata.items():
                 if k not in _METADATA_SKIP:
-                    yield PKDict(device_name=name, device_meta_name=k, device_meta_value=float(v))
+                    yield PKDict(
+                        device_name=name, device_meta_name=k, device_meta_value=float(v)
+                    )
 
         if name in self.devices:
             raise ValueError(f"duplicate device={name}")

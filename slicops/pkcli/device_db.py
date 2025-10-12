@@ -8,6 +8,7 @@ from pykern.pkcollections import PKDict
 from pykern.pkdebug import pkdc, pkdlog, pkdp
 import slicops.device_db
 
+
 def query(func_name, *args):
     """Call func_name in `slicops.device_db`
 
