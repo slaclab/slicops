@@ -15,13 +15,13 @@ _TIMEOUT = 5
 
 
 class AccessorPutError(RuntimeError):
-    """The PV for this accessor is not writable"""
+    """This accessor is not writable"""
 
     pass
 
 
 class DeviceError(RuntimeError):
-    """Error communicating with PV"""
+    """Error communicating with accessor"""
 
     pass
 
@@ -45,9 +45,9 @@ class Device:
         """Get `_Accessor` for more complex operations
 
         Args:
-            accessor_name (str): friendly name for PV for this device
+            accessor_name (str): control system independent name
         Returns:
-            _Accessor: object holding PV state
+            _Accessor: object holding control system state
         """
         if self._destroyed:
             raise AssertionError(f"destroyed {self}")
@@ -56,7 +56,7 @@ class Device:
         )[accessor_name]
 
     def destroy(self):
-        """Disconnect from PV's and remove state about device"""
+        """Disconnect from accessors and remove state about device"""
         if self._destroyed:
             return
         self._destroyed = True
@@ -66,12 +66,12 @@ class Device:
             a.destroy()
 
     def get(self, accessor_name):
-        """Read from PV
+        """Read from accessor
 
         Args:
-            accessor_name (str): friendly name for PV for this device
+            accessor_name (str):
         Returns:
-            object: the value from the PV converted to a Python type
+            object: the value from the control system converted to a Python type
         """
         return self.accessor(accessor_name).get()
 
@@ -79,18 +79,18 @@ class Device:
         """Check whether device has accessor
 
         Args:
-            accessor_name (str): friendly name for PV for this device
+            accessor_name (str): control system independent name
         Returns:
             bool: True if accessor is found for device
         """
         return accessor_name in self.meta.accessor
 
     def put(self, accessor_name, value):
-        """Set PV to value
+        """Set accessor to value
 
         Args:
-            accessor_name (str): friendly name for PV for this device
-            value (object): Value to write to PV
+            accessor_name (str): control system independent name
+            value (object): Value to write to control system
         """
         return self.accessor(accessor_name).put(value)
 
@@ -99,11 +99,11 @@ class Device:
 
 
 class _Accessor:
-    """Container for a PV, metadata, and dynamic state
+    """Container for a control system value, metadata, and dynamic state
 
     Attributes:
         device (Device): object holding this accessor
-        meta (PKDict): meta data about the accessor, e.g. pv_name, pv_writable
+        meta (PKDict): meta data about the accessor, e.g. cs_name, writable
     """
 
     def __init__(self, device, accessor_name):
@@ -116,10 +116,10 @@ class _Accessor:
         self._initialized = threading.Event()
         self._initializing = False
         # Defer initialization
-        self._pv = None
+        self._cs = None
 
     def destroy(self):
-        """Stop all monitoring and disconnect from PV"""
+        """Stop all monitoring and disconnect from accessor"""
         if self._destroyed:
             return
         with self._lock:
@@ -128,9 +128,9 @@ class _Accessor:
             self._destroyed = True
             self._initializing = False
             self._callback = None
-            if (p := self._pv) is None:
+            if (p := self._cs) is None:
                 return
-            self._pv = None
+            self._cs = None
             self._initialized.set()
         try:
             # Clears all callbacks
@@ -139,12 +139,12 @@ class _Accessor:
             pkdlog("error={} {} stack={}", e, self, pkdexc())
 
     def get(self):
-        """Read from PV
+        """Read from control system
 
         Returns:
-            object: the value from the PV converted to a Python type
+            object: the value from the accessor converted to a Python type
         """
-        p = self.__pv()
+        p = self.__cs()
         if (rv := p.get(timeout=_TIMEOUT)) is None:
             raise DeviceError(f"unable to get {self}")
         if not p.connected:
@@ -152,13 +152,13 @@ class _Accessor:
         return self._fixup_value(rv)
 
     def monitor(self, callback):
-        """Monitor PV and call callback with updates and connection changes
+        """Monitor accessor and call callback with updates and connection changes
 
         The argument to the callback is a `PKDict` with one or more of:
             error : str
-                error occured in the values from the PV callback (unlikely)
+                error occured in the values from the callback (unlikely)
             value : object
-                PV reported this change
+                control system reported this change
             connected : bool
                 connection state changed: True if connected
 
@@ -169,25 +169,25 @@ class _Accessor:
             self._assert_not_destroyed()
             if self._callback:
                 raise AssertionError("may only call monitor once")
-            if self._pv or self._initializing:
+            if self._cs or self._initializing:
                 raise AssertionError("monitor must be called before get/put")
             self._callback = callback
-        self.__pv()
+        self.__cs()
 
     def monitor_stop(self):
-        """Stops monitoring PV"""
+        """Stops monitoring accessor"""
         with self._lock:
             if self._destroyed or not self._callback:
                 return
             self._callback = None
 
     def put(self, value):
-        """Set PV to value
+        """Set accessor to value
 
         Args:
-            value (object): Value to write to PV
+            value (object): Value to write to control system
         """
-        if not self.meta.pv_writable:
+        if not self.meta.writable:
             raise AccessorPutError(f"read-only {self}")
         if self.meta.py_type == bool:
             v = bool(value)
@@ -198,7 +198,7 @@ class _Accessor:
         else:
             raise AccessorPutError(f"unhandled py_type={self.meta.py_type} {self}")
         # ECA_NORMAL == 0 and None is normal, too, apparently
-        p = self.__pv()
+        p = self.__cs()
         if (e := p.put(v)) != 1:
             raise DeviceError(f"put error={e} value={v} {self}")
         if not p.connected:
@@ -244,11 +244,11 @@ class _Accessor:
             pkdlog("error={} {} stack={}", e, self, pkdexc())
             raise
 
-    def __pv(self):
+    def __cs(self):
         with self._lock:
             self._assert_not_destroyed()
-            if self._pv:
-                return self._pv
+            if self._cs:
+                return self._cs
             if not (i := self._initializing):
                 self._initializing = True
         if i:
@@ -260,21 +260,21 @@ class _Accessor:
                 else PKDict()
             )
             if self.accessor_name == "image":
-                # TODO(robnagler) this has to be done here, because you can't get pvs
+                # TODO(robnagler) this has to be done here, because you can't get accessor
                 # from within a monitor callback.
                 # TODO(robnagler) need a better way of dealing with this
                 self._image_shape = (self.device.get("n_row"), self.device.get("n_col"))
-            self._pv = epics.PV(
-                self.meta.pv_name,
+            self._cs = epics.PV(
+                self.meta.cs_name,
                 connection_callback=self._on_connection,
                 connection_timeout=_TIMEOUT,
                 **k,
             )
             self._initialized.set()
-        return self._pv
+        return self._cs
 
     def __repr__(self):
-        return f"<_Accessor {self.device.device_name}.{self.accessor_name} {self.meta.pv_name}>"
+        return f"<_Accessor {self.device.device_name}.{self.accessor_name} {self.meta.cs_name}>"
 
     def _run_callback(self, **kwargs):
         k = PKDict(accessor=self, **kwargs)

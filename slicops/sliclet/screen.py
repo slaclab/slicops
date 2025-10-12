@@ -33,15 +33,15 @@ _DEVICE_DISABLE = (
     ("plot.ui.visible", False),
     # Useful to avoid large ctx sends
     ("plot.value", None),
-    ("pv.ui.visible", False),
-    ("pv.value", None),
+    ("cs_name.ui.visible", False),
+    ("cs_name.value", None),
     ("single_button.ui.visible", False),
     ("start_button.ui.visible", False),
     ("stop_button.ui.visible", False),
 ) + _BUTTONS_DISABLE
 
 _DEVICE_ENABLE = (
-    ("pv.ui.visible", True),
+    ("cs_name.ui.visible", True),
     ("single_button.ui.visible", True),
     ("start_button.ui.visible", True),
     ("stop_button.ui.visible", True),
@@ -173,7 +173,7 @@ class Screen(slicops.sliclet.Base):
             self.__device_destroy(txn)
             self.__user_alert(txn, "unable to connect to camera={} error={}", camera, e)
             return
-        txn.multi_set(_DEVICE_ENABLE + (("pv.value", self.__device.meta.pv_prefix),))
+        txn.multi_set(_DEVICE_ENABLE + (("cs_name.value", self.__device.meta.cs_name),))
 
     def __handle_acquire(self, acquire):
         with self.lock_for_update() as txn:
