@@ -21,28 +21,6 @@ import slicops.const
 # What this test is doing is ensuring we understand the structure of a pv_base
 _PV_POSTFIX_RE = r"([\w.]{1,60}|\w{1,58}:[\w.]{1,58})"
 
-# Eventually would be canonical
-# TODO(robnagler) should be dynamic, but need to add to paths so easiest to add here for now
-_DEV_YAML = """
-screens:
-  DEV_CAMERA:
-    controls_information:
-      PVs:
-        acquire: 13SIM1:cam1:Acquire
-        image: 13SIM1:image1:ArrayData
-        n_col: 13SIM1:cam1:SizeX
-        n_row: 13SIM1:cam1:SizeY
-        n_bits: 13SIM1:cam1:N_OF_BITS
-      control_name: 13SIM1
-    metadata:
-      area: DEV_AREA
-      beam_path:
-      - DEV_BEAM_PATH
-      sum_l_meters: 0.614
-      type: PROF
-"""
-
-
 _KNOWN_KEYS = PKDict(
     controls_information=frozenset(("PVs", "control_name", "pv_cache")),
     metadata=frozenset(
@@ -143,7 +121,6 @@ class _Parser(PKDict):
         self.devices = PKDict()
         self.ctl_keys = set()
         self.meta_keys = set()
-        self.accessors = PKDict()
         self.beam_paths = PKDict()
 
     def _parse(self):
@@ -155,10 +132,6 @@ class _Parser(PKDict):
             except Exception:
                 pkdlog("ERROR file={}", p)
                 raise
-        if pykern.pkconfig.in_dev_mode():
-            self._parse_file(
-                pykern.pkyaml.load_str(_DEV_YAML), pykern.pkio.py_path(".")
-            )
 
     def _parse_file(self, src, path):
         def _input_fixups(name, rec):

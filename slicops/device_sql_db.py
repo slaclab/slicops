@@ -5,10 +5,10 @@ Use slicops.device_db for a stable interface.
 :copyright: Copyright (c) 2025 The Board of Trustees of the Leland Stanford Junior University, through SLAC National Accelerator Laboratory (subject to receipt of any required approvals from the U.S. Dept. of Energy).  All Rights Reserved.
 :license: http://github.com/slaclab/slicops/LICENSE
 """
-
 from pykern.pkcollections import PKDict
 from pykern.pkdebug import pkdc, pkdlog, pkdp
 import numpy
+import pykern.pkconfig
 import pykern.pkresource
 import pykern.sql_db
 import slicops.config
@@ -143,33 +143,80 @@ def recreate(parser):
     return _Inserter(parser).counts
 
 
+
+
 class _Inserter:
     def __init__(self, parser):
         self.counts = PKDict(beam_areas=0, beam_paths=0, devices=0)
-        self.parser = parser
+        if pykern.pkconfig.in_dev_mode():
+            # POSIT: modify parser in place since this is dev mode it'll break only in dev
+            # if the parser implementations change from PKDicts.
+            _update_dev(parser)
         with _session() as s:
-            self._beam_paths(s)
-            self._devices(s)
+            self._beam_paths(parser.beam_paths, s)
+            self._devices(devices.devices, s)
 
-    def _beam_paths(self, session):
-        for a, paths in self.parser.beam_paths.items():
+    def _beam_paths(self, parsed, session):
+        for a, paths in parsed.items():
             self.counts.beam_areas += 1
             session.insert("beam_area", beam_area=a)
             for p in paths:
                 self.counts.beam_paths += 1
                 session.insert("beam_path", beam_area=a, beam_path=p)
 
-    def _devices(self, session):
-        def _tuple(table, values):
+    def _devices(self, parsed, session):
+        def _insert(table, values):
             for v in values:
                 session.insert(table, **v)
 
-        for d in self.parser.devices.values():
+        for d in parsed.values():
             self.counts.devices += 1
             session.insert("device", **d.device)
             for t in "device_accessor", "device_meta_float":
-                _tuple(t, d[t])
+                _insert(t, d[t])
 
+    def _update_dev(parser):
+        def _dev_camera_accessors():
+            for x in (
+                ("acquire", "13SIM1:cam1:Acquire", "bool", 1),
+                ("image", "13SIM1:image1:ArrayData", "numpy.ndarray", 0),
+                ("n_bits", "13SIM1:cam1:N_OF_BITS", "int", 0),
+                ("n_col", "13SIM1:cam1:SizeX", "int", 0),
+                ("n_row", "13SIM1:cam1:SizeY", "int", 0),
+            ):
+                yield PKDict(
+                    ("device_name", "accessor_name", "cs_name", "py_type", "writable"),
+                    (("DEV_CAMERA",) + x),
+                )
+
+        parser.beam_paths.update(DEV_BEAM_PATH=["DEV_AREA"])
+        parser.devices.update(
+            device=PKDict(
+                device_name="DEV_CAMERA",
+	        beam_area="DEV_AREA",
+                device_type="PROF",
+                cs_name="13SIM1",f
+            ),
+            device_accessor=tuple(_dev_camera_accessors()),
+            device_meta_float=[
+                PKDict(
+                    device_name="DEV_CAMERA",
+                    device_meta_name="sum_l_meters",
+                    device_meta_value="0.614",
+                ),
+            ),
+        )
+
+
+
+class _DevParserWrapper:
+    def __init__(self, orig):
+        self.beam_paths = orig.beam_paths.pkupdate(self._beam_paths())
+        self.devices = orig.devices.pkupdate(
+
+    beam_paths
+        return list(values) + [
+            PKDict(
 
 def _init():
     global _meta
