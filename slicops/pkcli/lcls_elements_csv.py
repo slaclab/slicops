@@ -20,14 +20,15 @@ import re
 
 _BEAMPATH_RE = re.compile(" *, *")
 
+_PV_RE = re.compile("^(.+):(.+)$")
 
-def create_sql_db():
+def create_sql_db(meme_pvs):
     """Convert device yaml file to db"""
-    return slicops.device_sql_db.recreate(_Parser())
+    return slicops.device_sql_db.recreate(_Parser(meme_pvs))
 
 
 class _Parser(PKDict):
-    def __init__(self):
+    def __init__(self, meme_pvs):
         def _csv_path():
             return (
                 pykern.pkio.py_path(
@@ -42,8 +43,15 @@ class _Parser(PKDict):
                 for k in v.pkdel(keywords):
                     yield k, PKDict(device_type=t).pkupdate(v)
 
-        with lzma.open("pvs.txt.xz", "rt") as f:
-            self._pvs = set(x.strip() for x in f)
+        def _pv_split(lines):
+            for l in lines:
+                if not (m := _PV_RE.search(l)):
+                    continue
+                self._pvs.setdefault(m.group(0), set()).add(m.group(1))
+
+        self._pvs = PKDict()
+        with lzma.open(meme_pvs, "rt") as f:
+            _pvs(x.strip() for x in f)
         self._keywords = PKDict(_meta(pykern.pkyaml.load_resource("meta")))
         self.devices = PKDict()
         self.beam_paths = PKDict()
@@ -52,7 +60,22 @@ class _Parser(PKDict):
 
     def _parse(self, rows):
 
-        def _one(area, beam_paths, keyword, sum_l_meters):
+        def _accessors(accessors, pvs, cs_name, device_name):
+            if pvs:
+                return []
+            rv = []
+            for s, a in accessors.items():
+                if s.split(".")[0] not in pvs:
+                    continue
+                rv.append(
+                    PKDict(
+                        device_name=device_name,
+                        cs_name=cs_name + ": " + s,
+                    ),
+                )
+            return rv
+
+        def _one(device_name, area, beam_paths, keyword, cs_name, sum_l_meters):
             # areas that begin with a * are not yet released
             # area that contains a space is not legit and probably NO AREA
             # no beam path means no PVs
@@ -60,32 +83,43 @@ class _Parser(PKDict):
                 not beam_paths
                 or area.startswith("*")
                 or " " in area
-                or not (k := self._keywords.get(keyword))
+                or not (m := self._keywords.get(keyword))
             ):
                 return
             if area not in self.beam_paths:
                 # assumes that first area with beam_paths is correct
                 self.beam_paths[area] = tuple(beam_paths)
+            if not (a := _accessors(meta.accessors, self._pvs.get(cs_name), cs_name, device_name)):
+                return
+            return PKDict(
+                device=PKDict(
+                    device_name=device_name,
+                    device_type=meta.device_type,
+                    beam_area=area,
+                    cs_name=cs_name,
+                ),
+                device_accessors=a,
+                device_meta_float=[
+                    PKDict(
+                        device_name=device_name,
+                        device_meta_name="sum_l_meters",
+                        device_meta_value=sum_l_meters,
+                    )
+                ],
+            )
+
 
         for r in rows:
             _one(
+                r["Element"],
                 r["Area"],
                 _BEAMPATH_RE.split(r["Beampath"]),
-                f["Keyword"],
-                round(float(r["sum_l_meters"] or 0), 3),
+                r["Keyword"],
+                r["Control System Name"],
+                r["sum_l_meters"] and round(float(r["sum_l_meters"]), 3),
             )
 
     # def _input_fixups(name, rec):
-    #     if not rec.controls_information.PVs:
-    #         # Also many don't have beam_path
-    #         raise _Ignore()
-    #     # Save beam_paths for fixups and to return
-    #     if rec.metadata.area not in self.beam_paths:
-    #         self.beam_paths[rec.metadata.area] = tuple(rec.metadata.beam_path)
-    #     if not rec.metadata.beam_path:
-    #         if rec.metadata.area in _AREAS_MISSING_BEAM_PATH:
-    #             raise _Ignore()
-    #         rec.metadata.beam_path = self.beam_paths[rec.metadata.area]
     #     if "VCCB" == name:
     #         # Typo in MEME?
     #         rec.controls_information.PVs.resolution = "CAMR:LGUN:950:RESOLUTION"

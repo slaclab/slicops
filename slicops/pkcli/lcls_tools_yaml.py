@@ -39,23 +39,6 @@ _KNOWN_KEYS = PKDict(
     ),
 )
 
-_ACCESSOR_META_DEFAULT = PKDict(
-    py_type="float",
-    writable=False,
-)
-
-_ACCESSOR_META = PKDict(
-    acquire=PKDict(py_type="bool", writable=True),
-    enabled=PKDict(py_type="int", writable=False),
-    image=PKDict(py_type="numpy.ndarray", writable=False),
-    n_bits=PKDict(py_type="int", writable=False),
-    n_col=PKDict(py_type="int", writable=False),
-    n_row=PKDict(py_type="int", writable=False),
-    start_scan=PKDict(py_type="int", writable=True),
-    target_control=PKDict(py_type="int", writable=True),
-    target_status=PKDict(py_type="int", writable=False),
-)
-
 _METADATA_SKIP = frozenset(
     (
         "area",
@@ -210,9 +193,7 @@ class _Parser(PKDict):
     def _to_sql_db(self, name, rec):
         def _accessor():
             for k, v in rec.accessors.items():
-                yield PKDict(device_name=name, accessor_name=k, cs_name=v).pkupdate(
-                    _ACCESSOR_META.get(k, _ACCESSOR_META_DEFAULT),
-                )
+                yield PKDict(device_name=name, accessor_name=k, cs_name=v)
 
         def _device():
             return PKDict(

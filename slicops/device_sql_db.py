@@ -28,6 +28,23 @@ _PY_TYPES = PKDict(
 )
 
 
+_ACCESSOR_META_DEFAULT = PKDict(
+    py_type="float",
+    writable=False,
+)
+
+_ACCESSOR_META = PKDict(
+    acquire=PKDict(py_type="bool", writable=True),
+    enabled=PKDict(py_type="int", writable=False),
+    image=PKDict(py_type="numpy.ndarray", writable=False),
+    n_bits=PKDict(py_type="int", writable=False),
+    n_col=PKDict(py_type="int", writable=False),
+    n_row=PKDict(py_type="int", writable=False),
+    start_scan=PKDict(py_type="int", writable=True),
+    target_control=PKDict(py_type="int", writable=True),
+    target_status=PKDict(py_type="int", writable=False),
+)
+
 def beam_paths():
     with _session() as s:
         c = s.t.beam_path.c.beam_path
@@ -165,6 +182,11 @@ class _Inserter:
                 session.insert("beam_path", beam_area=a, beam_path=p)
 
     def _devices(self, parsed, session):
+        def _accessor_meta(accessors):
+            for a in accessors:
+                a.pksetdefault(_ACCESSOR_META.get(k, _ACCESSOR_META_DEFAULT))
+            return accessors
+
         def _insert(table, values):
             for v in values:
                 session.insert(table, **v)
@@ -172,8 +194,8 @@ class _Inserter:
         for d in parsed.values():
             self.counts.devices += 1
             session.insert("device", **d.device)
-            for t in "device_accessor", "device_meta_float":
-                _insert(t, d[t])
+            _insert("device_meta_float", d.device_meta_float)
+            _insert("device_accessor", _accessor_meta(d.device_accessor))
 
     def _update_dev(parser):
         def _dev_camera_accessors():
