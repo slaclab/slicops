@@ -55,8 +55,7 @@ def save_pvs():
         return rv
 
     rv = _pvs_path()
-    with lzma.open(rv, mode="wb", format=lzma.FORMAT_XZ, preset=9) as f:
-        f.write(pkjson.dump_bytes(obj()))
+    pykern.pkjson.dump_pretty(_obj(), pretty=False)
     return rv
 
 
