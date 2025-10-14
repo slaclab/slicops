@@ -16,6 +16,7 @@ import csv
 import lzma
 import pykern.pkcompat
 import pykern.pkio
+import pykern.pkjson
 import pykern.pkresource
 import pykern.pkyaml
 import re
@@ -49,13 +50,13 @@ def save_pvs():
 
     def _obj():
         rv = PKDict()
-        for p in names.list_pvs("%", sort_by="z"):
+        for l in pykern.pkio.open_text("pvs.txt"): # names.list_pvs("%", sort_by="z"):
             if m := _PV_RE.search(l):
                 rv.setdefault(m.group(0), list()).append(m.group(1))
         return rv
 
     rv = _pvs_path()
-    pykern.pkjson.dump_pretty(_obj(), pretty=False)
+    pykern.pkjson.dump_pretty(_obj(), filename=rv, pretty=False)
     return rv
 
 
@@ -67,9 +68,7 @@ class _Parser(PKDict):
                     yield k, PKDict(device_type=t).pkupdate(v)
 
         def _pvs_parse():
-            self._pvs = PKDict()
-            with lzma.open(_pvs_path(pvs_path), "rt") as f:
-                for l in f:
+            pass
 
         _pvs_parse(x.strip() for x in f)
         self._keywords = PKDict(_meta(pykern.pkyaml.load_resource("meta")))
@@ -175,6 +174,4 @@ def _csv_path(value):
 def _pvs_path(value=None):
     if value:
         return pykern.pkio.py_path(value)
-    return pykern.pkresource.file_path(".", caller_context=_pvs_resource_path).join(
-        "pvs.json.gz"
-    )
+    return pykern.pkresource.file_path(".", caller_context=_pvs_path).join("pvs.json.gz")
