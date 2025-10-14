@@ -1,0 +1,99 @@
+---
+bpm:
+  keywords: [ BPM ]
+  accessors:
+    TMIT: tmit
+    X: x
+    Y: y
+lblm:
+  keywords: [ LBLM ]
+  accessors:
+    FAST_AMP_BYP: bypass
+    FAST_AMP_GAIN: gain
+    GATED_INTEGRAL: gated_integral
+    I0_LOSS: i0_loss
+magnet:
+  keywords: [ SOLE, QUAD, XCOR, YCOR, BEND ]
+  accessors:
+    BACT: bact
+    BCON: bcon
+    BCTRL: bctrl
+    BDES: bdes
+    BMAX: bmax
+    BMIN: bmin
+    CTRL: ctrl
+# lcls_tools*yaml.generate has code for handling INST devices
+# that start with PMT, but none of those devices have PVs so
+# (or beampaths) there's no need to special check them here.
+# We just don't import them at all
+# pmt:
+#   keywords: [ INST ]
+#   accessors:
+#     QDCRAW: qdcraw
+screen:
+  keywords: [ PROF ]
+  accessors:
+    ArrayRate_RBV: ref_rate
+    FLT1_CTRL: filter_1_control
+    FLT1_STS: filter_1_status
+    FLT2_CTRL: filter_2_control
+    FLT2_STS: filter_2_status
+    FRAME_RATE: ref_rate_vme
+    IMAGE: image
+    Image:ArrayData: image
+    Image:ArraySize0_RBV: n_row
+    Image:ArraySize1_RBV: n_col
+    N_OF_BITS: n_bits
+    N_OF_COL: n_col
+    N_OF_ROW: n_row
+    PNEUMATIC: target_control
+    RESOLUTION: None,
+    SYS_TYPE: sys_type
+    TGT_LAMP_PWR: lamp_power
+    TGT_STS: target_status
+    X_ORIENT: orient_x
+    Y_ORIENT: orient_y
+tcav:
+  keywords: [ LCAV ]
+  accessors:
+    AFBENB: amplitude_fbenb
+    AFBST: amplitude_fbst
+    AMPL_W0CH0: amplitude_wocho
+    AREQ: amplitude
+    MODECFG: mode_config
+    PACT_AVGNT: phase_avgnt
+    PFBENB: phase_fbenb
+    PFBST: phase_fbst
+    PREQ: phase
+    RF_ENABLE: rf_enable
+wire:
+  keywords: [ WIRE ]
+  accessors:
+    BEAMRATE: beam_rate
+    MOTR.RBV: motor_rbv
+    MOTR.STOP: abort_scan
+    MOTR.VBAS: speed_min
+    MOTR.VELO: speed
+    MOTR.VMAX: speed_max
+    MOTR: motor
+    MOTR_ENABLED_STS: enabled
+    MOTR_HOMED_STS: homed
+    MOTR_INIT: initialize
+    MOTR_INIT_STS: initialize_status
+    MOTR_RETRACT: retract
+    MOTR_TIMEOUTEN: timeout
+    SCANPULSES: scan_pulses
+    STARTSCAN: start_scan
+    TEMP: temperature
+    USEUWIRE: use_u_wire
+    USEXWIRE: use_x_wire
+    USEYWIRE: use_y_wire
+    UWIREINNER: u_wire_inner
+    UWIREOUTER: u_wire_outer
+    UWIRESIZE: u_size
+    XWIREINNER: x_wire_inner
+    XWIREOUTER: x_wire_outer
+    XWIRESIZE: x_size
+    YWIREINNER: y_wire_inner
+    YWIREOUTER: y_wire_outer
+    YWIRESIZE: y_size
