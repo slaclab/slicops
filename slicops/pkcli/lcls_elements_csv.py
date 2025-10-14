@@ -12,50 +12,71 @@ TODO(robnagler): add machine and area_to_machine, beam_path_to_machine
 
 from pykern.pkcollections import PKDict
 from pykern.pkdebug import pkdc, pkdlog, pkdp
-import pykern.pkyaml
-import pykern.pkresource
-import lzma
 import csv
+import lzma
+import pykern.pkcompat
+import pykern.pkio
+import pykern.pkresource
+import pykern.pkyaml
 import re
 
 _BEAMPATH_RE = re.compile(" *, *")
 
 _PV_RE = re.compile("^(.+):(.+)$")
 
-def create_sql_db(meme_pvs):
-    """Convert device yaml file to db"""
-    return slicops.device_sql_db.recreate(_Parser(meme_pvs))
+
+def create_sql_db(csv_path, pvs_path):
+    """Convert device yaml file to db
+
+    Args:
+        csv_path (str or path-like): path to lcls_elements.csv [see `Parser`]
+        pvs_path (str or path-like): path to pvs.txt.xz [see `Parser`]
+    Returns:
+        PKDict: db stats, e.g. number of devices
+    """
+    return slicops.device_sql_db.recreate(_Parser(csv_path, pvs_path))
+
+
+def save_pvs():
+    """Converts all `meme.names.list_pvs` into pvs.txt.gz resource
+
+    For use with `create_sql_db`, pipe output to `xz -9` then to file.
+
+    Returns:
+        str: joined list of pvs
+    """
+    from meme import names
+
+    def _obj():
+        rv = PKDict()
+        for p in names.list_pvs("%", sort_by="z"):
+            if m := _PV_RE.search(l):
+                rv.setdefault(m.group(0), list()).append(m.group(1))
+        return rv
+
+    rv = _pvs_path()
+    with lzma.open(rv, mode="wb", format=lzma.FORMAT_XZ, preset=9) as f:
+        f.write(pkjson.dump_bytes(obj()))
+    return rv
 
 
 class _Parser(PKDict):
-    def __init__(self, meme_pvs):
-        def _csv_path():
-            return (
-                pykern.pkio.py_path(
-                    importlib.import_module("lcls_tools.common.devices.yaml").__file__,
-                )
-                .dirpath()
-                .join("lcls_element.csv")
-            )
-
+    def __init__(self, csv_path, pvs_path):
         def _meta(raw):
             for t, v in raw.items():
                 for k in v.pkdel(keywords):
                     yield k, PKDict(device_type=t).pkupdate(v)
 
-        def _pv_split(lines):
-            for l in lines:
-                if not (m := _PV_RE.search(l)):
-                    continue
-                self._pvs.setdefault(m.group(0), set()).add(m.group(1))
+        def _pvs_parse():
+            self._pvs = PKDict()
+            with lzma.open(_pvs_path(pvs_path), "rt") as f:
+                for l in f:
 
-        self._pvs = PKDict()
-        with lzma.open(meme_pvs, "rt") as f:
-            _pvs(x.strip() for x in f)
+        _pvs_parse(x.strip() for x in f)
         self._keywords = PKDict(_meta(pykern.pkyaml.load_resource("meta")))
         self.devices = PKDict()
         self.beam_paths = PKDict()
-        with _csv_path().open("r") as f:
+        with _csv_path(csv_path).open("r") as f:
             self._parse_csv(csv.DictReader(f))
 
     def _parse(self, rows):
@@ -89,7 +110,11 @@ class _Parser(PKDict):
             if area not in self.beam_paths:
                 # assumes that first area with beam_paths is correct
                 self.beam_paths[area] = tuple(beam_paths)
-            if not (a := _accessors(meta.accessors, self._pvs.get(cs_name), cs_name, device_name)):
+            if not (
+                a := _accessors(
+                    meta.accessors, self._pvs.get(cs_name), cs_name, device_name
+                )
+            ):
                 return
             return PKDict(
                 device=PKDict(
@@ -107,7 +132,6 @@ class _Parser(PKDict):
                     )
                 ],
             )
-
 
         for r in rows:
             _one(
@@ -135,3 +159,23 @@ class _Parser(PKDict):
     #         )
     #     # TODO(robnagler) parse pv_cache
     #     return rec
+
+
+def _csv_path(value):
+    if value:
+        return pykern.pkio.py_path(value)
+    return (
+        pykern.pkio.py_path(
+            importlib.import_module("lcls_tools.common.devices.yaml").__file__,
+        )
+        .dirpath()
+        .join("lcls_element.csv")
+    )
+
+
+def _pvs_path(value=None):
+    if value:
+        return pykern.pkio.py_path(value)
+    return pykern.pkresource.file_path(".", caller_context=_pvs_resource_path).join(
+        "pvs.json.gz"
+    )

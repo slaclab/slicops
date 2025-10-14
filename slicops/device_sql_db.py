@@ -88,6 +88,15 @@ def device_names(device_type, beam_path):
         )
 
 
+def recreate(parser):
+    """Recreates db"""
+    assert not _meta
+    # Don't remove unless we have valid data
+    assert parser.devices
+    pykern.pkio.unchecked_remove(_path())
+    pkdlog(_path())
+    return _Inserter(parser).counts
+
 def upstream_devices(device_type, required_accessor, beam_path, end_device):
     with _session() as s:
         # select device.device_name from device_meta_float, device where device_meta_name = 'sum_l_meters' and device_meta_value < 33 and device.device_type = 'PROF' and device.device_name = device_meta_float.device_name;
@@ -148,18 +157,6 @@ def _device_meta(device, meta, select):
     return select.select_one(
         "device_meta_float", PKDict(device_name=device, device_meta_name=meta)
     ).device_meta_value
-
-
-def recreate(parser):
-    """Recreates db"""
-    assert not _meta
-    # Don't remove unless we have valid data
-    assert parser.devices
-    pykern.pkio.unchecked_remove(_path())
-    pkdlog(_path())
-    return _Inserter(parser).counts
-
-
 
 
 class _Inserter:
