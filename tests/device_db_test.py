@@ -25,11 +25,11 @@ def test_basic():
         device_db.device_names("xyzzy", "SC_SXR")
 
     a = device_db.meta_for_device("VCCB")
-    pkunit.pkeq("CAMR:LGUN:950:Image:ArrayData", a.accessor.image.pv_name)
+    pkunit.pkeq("CAMR:LGUN:950:Image:ArrayData", a.accessor.image.cs_name)
     pkunit.pkeq(numpy.ndarray, a.accessor.image.py_type)
     pkunit.pkeq("GUNB", a.beam_area)
 
-    # YAG01B does not have any PVs so not in db
+    # YAG01B does not have any accessors so not in db
     with pkunit.pkexcept("NoRows"):
         device_db.meta_for_device("YAG01B")
 

@@ -8,6 +8,8 @@ Use slicops.device_db for a stable interface.
 
 from pykern.pkcollections import PKDict
 from pykern.pkdebug import pkdc, pkdlog, pkdp
+import numpy
+import pykern.pkconfig
 import pykern.pkresource
 import pykern.sql_db
 import slicops.config
@@ -16,6 +18,33 @@ import sqlalchemy
 _BASE_PATH = "device_db.sqlite3"
 
 _meta = None
+
+_PY_TYPES = PKDict(
+    {
+        "bool": bool,
+        "float": float,
+        "int": int,
+        "numpy.ndarray": numpy.ndarray,
+    }
+)
+
+
+_ACCESSOR_META_DEFAULT = PKDict(
+    py_type="float",
+    writable=False,
+)
+
+_ACCESSOR_META = PKDict(
+    acquire=PKDict(py_type="bool", writable=True),
+    enabled=PKDict(py_type="int", writable=False),
+    image=PKDict(py_type="numpy.ndarray", writable=False),
+    n_bits=PKDict(py_type="int", writable=False),
+    n_col=PKDict(py_type="int", writable=False),
+    n_row=PKDict(py_type="int", writable=False),
+    start_scan=PKDict(py_type="int", writable=True),
+    target_control=PKDict(py_type="int", writable=True),
+    target_status=PKDict(py_type="int", writable=False),
+)
 
 
 def beam_paths():
@@ -27,12 +56,15 @@ def beam_paths():
 
 
 def device(name):
+    def _py_type(rec):
+        return rec.pkupdate(py_type=_PY_TYPES[rec.py_type])
+
     with _session() as s:
         return PKDict(s.select_one("device", PKDict(device_name=name))).pkupdate(
             accessor=PKDict(
                 {
-                    r.accessor_name: PKDict(r)
-                    for r in s.select("device_pv", PKDict(device_name=name))
+                    r.accessor_name: _py_type(PKDict(r))
+                    for r in s.select("device_accessor", PKDict(device_name=name))
                 }
             ),
         )
@@ -58,6 +90,16 @@ def device_names(device_type, beam_path):
         )
 
 
+def recreate(parser):
+    """Recreates db"""
+    assert not _meta
+    # Don't remove unless we have valid data
+    assert parser.devices
+    pykern.pkio.unchecked_remove(_path())
+    pkdlog(_path())
+    return _Inserter(parser).counts
+
+
 def upstream_devices(device_type, required_accessor, beam_path, end_device):
     with _session() as s:
         # select device.device_name from device_meta_float, device where device_meta_name = 'sum_l_meters' and device_meta_value < 33 and device.device_type = 'PROF' and device.device_name = device_meta_float.device_name;
@@ -77,8 +119,8 @@ def upstream_devices(device_type, required_accessor, beam_path, end_device):
                         s.t.beam_path.c.beam_area == s.t.device.c.beam_area,
                     )
                     .join(
-                        s.t.device_pv,
-                        s.t.device_pv.c.device_name == c,
+                        s.t.device_accessor,
+                        s.t.device_accessor.c.device_name == c,
                     )
                 )
                 .where(
@@ -87,7 +129,7 @@ def upstream_devices(device_type, required_accessor, beam_path, end_device):
                     s.t.device_meta_float.c.device_meta_value
                     < _device_meta(end_device, "sum_l_meters", s),
                     s.t.device.c.device_type == device_type,
-                    s.t.device_pv.c.accessor_name == required_accessor,
+                    s.t.device_accessor.c.accessor_name == required_accessor,
                 )
                 .order_by(s.t.device_meta_float.c.device_meta_value)
             )
@@ -120,63 +162,82 @@ def _device_meta(device, meta, select):
     ).device_meta_value
 
 
-def recreate(parser):
-    """Recreates db"""
-    assert not _meta
-    # Don't remove unless we have valid data
-    assert parser.devices
-    pykern.pkio.unchecked_remove(_path())
-    pkdlog(_path())
-    return _Inserter(parser).counts
-
-
 class _Inserter:
-    _METADATA_SKIP = frozenset(
-        (
-            "area",
-            "beam_path",
-            "bpms_after_wire",
-            "bpms_before_wire",
-            "lblms",
-            "type",
-        ),
-    )
-
     def __init__(self, parser):
         self.counts = PKDict(beam_areas=0, beam_paths=0, devices=0)
-        self.parser = parser
+        if pykern.pkconfig.in_dev_mode():
+            # POSIT: modify parser in place since this is dev mode it'll break only in dev
+            # if the parser implementations change from PKDicts.
+            self._update_dev(parser)
         with _session() as s:
-            self._beam_paths(s)
-            self._devices(s)
+            self._beam_paths(parser.beam_paths, s)
+            self._devices(parser.devices, s)
 
-    def _beam_paths(self, session):
-        for a, paths in self.parser.beam_paths.items():
+    def _beam_paths(self, parsed, session):
+        for a, paths in parsed.items():
             self.counts.beam_areas += 1
             session.insert("beam_area", beam_area=a)
             for p in paths:
                 self.counts.beam_paths += 1
                 session.insert("beam_path", beam_area=a, beam_path=p)
 
-    def _devices(self, session):
-        for n, d in self.parser.devices.items():
+    def _devices(self, parsed, session):
+        def _accessor_meta(accessors):
+            for a in accessors:
+                a.pkupdate(_ACCESSOR_META.get(a.accessor_name, _ACCESSOR_META_DEFAULT))
+            return accessors
+
+        def _insert(table, values):
+            for v in values:
+                session.insert(table, **v)
+
+        for d in parsed.values():
             self.counts.devices += 1
-            session.insert(
-                "device",
-                device_name=d.name,
-                beam_area=d.metadata.area,
-                device_type=d.metadata.type,
-                pv_prefix=d.pv_prefix,
-            )
-            for k, v in d.pvs.items():
-                session.insert("device_pv", device_name=n, accessor_name=k, pv_name=v)
-            for k, v in d.metadata.items():
-                if k not in self._METADATA_SKIP:
-                    session.insert(
-                        "device_meta_float",
-                        device_name=n,
-                        device_meta_name=k,
-                        device_meta_value=float(v),
-                    )
+            if "device" not in d:
+                pkdp(d)
+            session.insert("device", **d.device)
+            _insert("device_meta_float", d.device_meta_float)
+            _insert("device_accessor", _accessor_meta(d.device_accessor))
+
+    def _update_dev(self, parser):
+        def _dev_camera_accessors():
+            for x in (
+                ("acquire", "13SIM1:cam1:Acquire", "bool", 1),
+                ("image", "13SIM1:image1:ArrayData", "numpy.ndarray", 0),
+                ("n_bits", "13SIM1:cam1:N_OF_BITS", "int", 0),
+                ("n_col", "13SIM1:cam1:SizeX", "int", 0),
+                ("n_row", "13SIM1:cam1:SizeY", "int", 0),
+            ):
+                yield PKDict(
+                    zip(
+                        (
+                            "device_name",
+                            "accessor_name",
+                            "cs_name",
+                            "py_type",
+                            "writable",
+                        ),
+                        (("DEV_CAMERA",) + x),
+                    ),
+                )
+
+        parser.beam_paths.pkupdate(DEV_AREA=["DEV_BEAM_PATH"])
+        parser.devices["DEV_CAMERA"] = PKDict(
+            device=PKDict(
+                device_name="DEV_CAMERA",
+                beam_area="DEV_AREA",
+                device_type="PROF",
+                cs_name="13SIM1",
+            ),
+            device_accessor=tuple(_dev_camera_accessors()),
+            device_meta_float=[
+                PKDict(
+                    device_name="DEV_CAMERA",
+                    device_meta_name="sum_l_meters",
+                    device_meta_value="0.614",
+                ),
+            ],
+        )
 
 
 def _init():
@@ -199,12 +260,14 @@ def _init():
                 device_name=p,
                 beam_area=n + " foreign",
                 device_type=n,
-                pv_prefix=s,
+                cs_name=s,
             ),
-            device_pv=PKDict(
+            device_accessor=PKDict(
                 device_name=p + " foreign",
                 accessor_name=p,
-                pv_name=s,
+                cs_name=s,
+                py_type=s,
+                writable="bool",
             ),
             device_meta_float=PKDict(
                 device_name=p + " foreign",

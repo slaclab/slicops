@@ -66,4 +66,4 @@ async def test_basic():
         # TODO(robnagler) better error handling await _put(ux, "camera", "DEV_CAMERA", Exception)
         await s.ctx_field_set(camera="YAG01")
         r = await s.ctx_update()
-        pkunit.pkeq("YAGS:IN20:211", r.fields.pv.value)
+        pkunit.pkeq("YAGS:IN20:211", r.fields.cs_name.value)
