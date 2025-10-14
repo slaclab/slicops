@@ -208,13 +208,13 @@ class _Inserter:
                     (("DEV_CAMERA",) + x),
                 )
 
-        parser.beam_paths.update(DEV_BEAM_PATH=["DEV_AREA"])
-        parser.devices.update(
+        parser.beam_paths.pkupdate(DEV_BEAM_PATH=["DEV_AREA"])
+        parser.devices.pkupdate(
             device=PKDict(
                 device_name="DEV_CAMERA",
 	        beam_area="DEV_AREA",
                 device_type="PROF",
-                cs_name="13SIM1",f
+                cs_name="13SIM1",
             ),
             device_accessor=tuple(_dev_camera_accessors()),
             device_meta_float=[
@@ -223,19 +223,9 @@ class _Inserter:
                     device_meta_name="sum_l_meters",
                     device_meta_value="0.614",
                 ),
-            ),
+            ],
         )
 
-
-
-class _DevParserWrapper:
-    def __init__(self, orig):
-        self.beam_paths = orig.beam_paths.pkupdate(self._beam_paths())
-        self.devices = orig.devices.pkupdate(
-
-    beam_paths
-        return list(values) + [
-            PKDict(
 
 def _init():
     global _meta

@@ -13,6 +13,7 @@ TODO(robnagler): add machine and area_to_machine, beam_path_to_machine
 from pykern.pkcollections import PKDict
 from pykern.pkdebug import pkdc, pkdlog, pkdp
 import csv
+import importlib
 import lzma
 import pykern.pkcompat
 import pykern.pkio
@@ -20,6 +21,7 @@ import pykern.pkjson
 import pykern.pkresource
 import pykern.pkyaml
 import re
+import slicops.device_sql_db
 
 _BEAMPATH_RE = re.compile(" *, *")
 
@@ -46,17 +48,21 @@ def save_pvs():
     Returns:
         str: joined list of pvs
     """
-    from meme import names
+    # from meme import names
 
     def _obj():
         rv = PKDict()
-        for l in pykern.pkio.open_text("pvs.txt"): # names.list_pvs("%", sort_by="z"):
+        for l in pykern.pkio.open_text("pvs.txt"):  # names.list_pvs("%", sort_by="z"):
             if m := _PV_RE.search(l):
                 rv.setdefault(m.group(0), list()).append(m.group(1))
         return rv
 
     rv = _pvs_path()
-    pykern.pkjson.dump_pretty(_obj(), filename=rv, pretty=False)
+    pkdlog("requesting all PVs...")
+    o = _obj()
+    pkdlog("writing compressed json...")
+    with lzma.open(rv, mode="wb", format=lzma.FORMAT_XZ) as f:
+        f.write(pykern.pkjson.dump_bytes(o))
     return rv
 
 
@@ -64,23 +70,21 @@ class _Parser(PKDict):
     def __init__(self, csv_path, pvs_path):
         def _meta(raw):
             for t, v in raw.items():
-                for k in v.pkdel(keywords):
+                for k in v.pkdel("keywords"):
                     yield k, PKDict(device_type=t).pkupdate(v)
 
-        def _pvs_parse():
-            pass
-
-        _pvs_parse(x.strip() for x in f)
-        self._keywords = PKDict(_meta(pykern.pkyaml.load_resource("meta")))
+        self._keywords = PKDict(_meta(pykern.pkyaml.load_file(_resource("meta.yaml"))))
+        with lzma.open(_pvs_path(pvs_path)) as f:
+            self._pvs = pykern.pkjson.load_any(f)
         self.devices = PKDict()
         self.beam_paths = PKDict()
         with _csv_path(csv_path).open("r") as f:
             self._parse_csv(csv.DictReader(f))
 
-    def _parse(self, rows):
+    def _parse_csv(self, rows):
 
         def _accessors(accessors, pvs, cs_name, device_name):
-            if pvs:
+            if not pvs:
                 return []
             rv = []
             for s, a in accessors.items():
@@ -110,10 +114,12 @@ class _Parser(PKDict):
                 self.beam_paths[area] = tuple(beam_paths)
             if not (
                 a := _accessors(
-                    meta.accessors, self._pvs.get(cs_name), cs_name, device_name
+                    m.accessors, self._pvs.get(cs_name), cs_name, device_name
                 )
             ):
                 return
+            pkdp(cs_name)
+            assert 0
             return PKDict(
                 device=PKDict(
                     device_name=device_name,
@@ -132,14 +138,16 @@ class _Parser(PKDict):
             )
 
         for r in rows:
-            _one(
+            d = _one(
                 r["Element"],
                 r["Area"],
                 _BEAMPATH_RE.split(r["Beampath"]),
                 r["Keyword"],
                 r["Control System Name"],
-                r["sum_l_meters"] and round(float(r["sum_l_meters"]), 3),
+                r["SumL (m)"] and round(float(r["SumL (m)"]), 3),
             )
+            if d:
+                self.devices.append(d)
 
     # def _input_fixups(name, rec):
     #     if "VCCB" == name:
@@ -167,11 +175,15 @@ def _csv_path(value):
             importlib.import_module("lcls_tools.common.devices.yaml").__file__,
         )
         .dirpath()
-        .join("lcls_element.csv")
+        .join("lcls_elements.csv")
     )
 
 
 def _pvs_path(value=None):
     if value:
         return pykern.pkio.py_path(value)
-    return pykern.pkresource.file_path(".", caller_context=_pvs_path).join("pvs.json.gz")
+    return _resource("pvs.json.xz")
+
+
+def _resource(basename):
+    return pykern.pkresource.file_path("lcls_elements_csv").join(basename)
