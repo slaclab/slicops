@@ -1,6 +1,6 @@
-"""Convert `lcls_tools.common.devices.yaml` to `slicops.device_meta_raw`
+"""Parse `lcls_tools/common/devices/yaml/*.yaml` for `slicops.device_sql_db.recreate`
 
-TODO(robnagler): document, correct types, add machine and area_to_machine, beam_path_to_machine
+TODO(robnagler): document, add machine and area_to_machine, beam_path_to_machine
 
 :copyright: Copyright (c) 2024 The Board of Trustees of the Leland Stanford Junior University, through SLAC National Accelerator Laboratory (subject to receipt of any required approvals from the U.S. Dept. of Energy).  All Rights Reserved.
 :license: http://github.com/slaclab/slicops/LICENSE
@@ -38,7 +38,6 @@ _KNOWN_KEYS = PKDict(
         )
     ),
 )
-
 
 _ACCESSOR_META_DEFAULT = PKDict(
     py_type="float",
@@ -84,21 +83,6 @@ _AREAS_MISSING_BEAM_PATH = frozenset(
 def create_sql_db():
     """Convert device yaml file to db"""
     return slicops.device_sql_db.recreate(_Parser())
-
-
-def parse():
-    from pykern import pkjson
-
-    p = _Parser()
-    return len(p.devices)
-    r = pykern.pkio.mkdir_parent("raw")
-    for d in p.devices.values():
-        pkjson.dump_pretty(
-            d,
-            filename=pykern.pkio.mkdir_parent(
-                r.join(d.metadata.type, d.metadata.area)
-            ).join(d.name + ".json"),
-        )
 
 
 class _Ignore(Exception):
