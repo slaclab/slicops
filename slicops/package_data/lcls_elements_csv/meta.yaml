@@ -47,7 +47,7 @@ screen:
     N_OF_COL: n_col
     N_OF_ROW: n_row
     PNEUMATIC: target_control
-    RESOLUTION: None,
+    RESOLUTION: resolution
     SYS_TYPE: sys_type
     TGT_LAMP_PWR: lamp_power
     TGT_STS: target_status

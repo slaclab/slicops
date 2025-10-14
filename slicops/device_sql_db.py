@@ -5,6 +5,7 @@ Use slicops.device_db for a stable interface.
 :copyright: Copyright (c) 2025 The Board of Trustees of the Leland Stanford Junior University, through SLAC National Accelerator Laboratory (subject to receipt of any required approvals from the U.S. Dept. of Energy).  All Rights Reserved.
 :license: http://github.com/slaclab/slicops/LICENSE
 """
+
 from pykern.pkcollections import PKDict
 from pykern.pkdebug import pkdc, pkdlog, pkdp
 import numpy
@@ -44,6 +45,7 @@ _ACCESSOR_META = PKDict(
     target_control=PKDict(py_type="int", writable=True),
     target_status=PKDict(py_type="int", writable=False),
 )
+
 
 def beam_paths():
     with _session() as s:
@@ -96,6 +98,7 @@ def recreate(parser):
     pykern.pkio.unchecked_remove(_path())
     pkdlog(_path())
     return _Inserter(parser).counts
+
 
 def upstream_devices(device_type, required_accessor, beam_path, end_device):
     with _session() as s:
@@ -165,10 +168,10 @@ class _Inserter:
         if pykern.pkconfig.in_dev_mode():
             # POSIT: modify parser in place since this is dev mode it'll break only in dev
             # if the parser implementations change from PKDicts.
-            _update_dev(parser)
+            self._update_dev(parser)
         with _session() as s:
             self._beam_paths(parser.beam_paths, s)
-            self._devices(devices.devices, s)
+            self._devices(parser.devices, s)
 
     def _beam_paths(self, parsed, session):
         for a, paths in parsed.items():
@@ -181,7 +184,7 @@ class _Inserter:
     def _devices(self, parsed, session):
         def _accessor_meta(accessors):
             for a in accessors:
-                a.pksetdefault(_ACCESSOR_META.get(k, _ACCESSOR_META_DEFAULT))
+                a.pkupdate(_ACCESSOR_META.get(a.accessor_name, _ACCESSOR_META_DEFAULT))
             return accessors
 
         def _insert(table, values):
@@ -190,11 +193,13 @@ class _Inserter:
 
         for d in parsed.values():
             self.counts.devices += 1
+            if "device" not in d:
+                pkdp(d)
             session.insert("device", **d.device)
             _insert("device_meta_float", d.device_meta_float)
             _insert("device_accessor", _accessor_meta(d.device_accessor))
 
-    def _update_dev(parser):
+    def _update_dev(self, parser):
         def _dev_camera_accessors():
             for x in (
                 ("acquire", "13SIM1:cam1:Acquire", "bool", 1),
@@ -204,15 +209,23 @@ class _Inserter:
                 ("n_row", "13SIM1:cam1:SizeY", "int", 0),
             ):
                 yield PKDict(
-                    ("device_name", "accessor_name", "cs_name", "py_type", "writable"),
-                    (("DEV_CAMERA",) + x),
+                    zip(
+                        (
+                            "device_name",
+                            "accessor_name",
+                            "cs_name",
+                            "py_type",
+                            "writable",
+                        ),
+                        (("DEV_CAMERA",) + x),
+                    ),
                 )
 
-        parser.beam_paths.pkupdate(DEV_BEAM_PATH=["DEV_AREA"])
-        parser.devices.pkupdate(
+        parser.beam_paths.pkupdate(DEV_AREA=["DEV_BEAM_PATH"])
+        parser.devices["DEV_CAMERA"] = PKDict(
             device=PKDict(
                 device_name="DEV_CAMERA",
-	        beam_area="DEV_AREA",
+                beam_area="DEV_AREA",
                 device_type="PROF",
                 cs_name="13SIM1",
             ),

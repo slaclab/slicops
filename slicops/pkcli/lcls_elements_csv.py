@@ -54,7 +54,7 @@ def save_pvs():
         rv = PKDict()
         for l in pykern.pkio.open_text("pvs.txt"):  # names.list_pvs("%", sort_by="z"):
             if m := _PV_RE.search(l):
-                rv.setdefault(m.group(0), list()).append(m.group(1))
+                rv.setdefault(m.group(1), list()).append(m.group(2))
         return rv
 
     rv = _pvs_path()
@@ -92,6 +92,7 @@ class _Parser(PKDict):
                     continue
                 rv.append(
                     PKDict(
+                        accessor_name=a,
                         device_name=device_name,
                         cs_name=cs_name + ": " + s,
                     ),
@@ -118,16 +119,14 @@ class _Parser(PKDict):
                 )
             ):
                 return
-            pkdp(cs_name)
-            assert 0
             return PKDict(
                 device=PKDict(
                     device_name=device_name,
-                    device_type=meta.device_type,
+                    device_type=m.device_type,
                     beam_area=area,
                     cs_name=cs_name,
                 ),
-                device_accessors=a,
+                device_accessor=a,
                 device_meta_float=[
                     PKDict(
                         device_name=device_name,
@@ -147,7 +146,7 @@ class _Parser(PKDict):
                 r["SumL (m)"] and round(float(r["SumL (m)"]), 3),
             )
             if d:
-                self.devices.append(d)
+                self.devices[d.device.device_name] = d
 
     # def _input_fixups(name, rec):
     #     if "VCCB" == name:
