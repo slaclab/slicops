@@ -14,7 +14,6 @@ import pykern.pkconfig
 import queue
 import slicops.device
 import slicops.device_db
-import threading
 
 # TODO(robnagler) these should be reused for both cases
 _MOVE_TARGET_IN = PKDict({False: 0, True: 1})
@@ -236,7 +235,6 @@ class _Upstream(pykern.pkasyncio.ActionLoop):
                 "PROF", "target_control", worker.beam_path, worker.device.device_name
             )
 
-        self.__is_ready = threading.Event()
         self.__worker = worker
         self.__problems = PKDict()
         self.__devices = PKDict({u: slicops.device.Device(u) for u in _names()})
