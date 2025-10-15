@@ -6,10 +6,12 @@
 
 from pykern.pkcollections import PKDict
 from pykern.pkdebug import pkdc, pkdexc, pkdlog, pkdp
+from slicops.device.screen import TargetStatus
 import pykern.pkconfig
 import pykern.util
 import queue
 import slicops.device
+import slicops.device.screen
 import slicops.device_db
 import slicops.plot
 import slicops.sliclet
@@ -20,35 +22,59 @@ _DEVICE_TYPE = "PROF"
 _cfg = None
 
 _BUTTONS_DISABLE = (
-    ("single_button.ui.enabled", False),
-    ("stop_button.ui.enabled", False),
     ("start_button.ui.enabled", False),
+    ("stop_button.ui.enabled", False),
+    ("single_button.ui.enabled", False),
 )
 
-_DEVICE_DISABLE = (
-    ("color_map.ui.enabled", False),
-    ("color_map.ui.visible", False),
-    ("curve_fit_method.ui.enabled", False),
-    ("curve_fit_method.ui.visible", False),
-    ("plot.ui.visible", False),
-    # Useful to avoid large ctx sends
-    ("plot.value", None),
-    ("pv.ui.visible", False),
-    ("pv.value", None),
+_TARGET_DISABLE = (
+    ("target_in_button.ui.enabled", False),
+    ("target_out_button.ui.enabled", False),
+)
+
+_TARGET_INVISIBLE = (
+    ("target_in_button.ui.visible", False),
+    ("target_out_button.ui.visible", False),
+    ("target_status.ui.visible", False),
+)
+
+_TARGET_VISIBLE = (
+    ("target_in_button.ui.visible", True),
+    ("target_out_button.ui.visible", True),
+    ("target_status.ui.visible", True),
+)
+
+_BUTTONS_INVISIBLE = (
     ("single_button.ui.visible", False),
     ("start_button.ui.visible", False),
     ("stop_button.ui.visible", False),
-) + _BUTTONS_DISABLE
+)
 
-_DEVICE_ENABLE = (
-    ("pv.ui.visible", True),
+_BUTTONS_VISIBLE = (
     ("single_button.ui.visible", True),
     ("start_button.ui.visible", True),
     ("stop_button.ui.visible", True),
-    ("single_button.ui.enabled", True),
-    ("stop_button.ui.enabled", False),
-    ("start_button.ui.enabled", True),
 )
+
+_DEVICE_DISABLE = (
+    (
+        ("color_map.ui.enabled", False),
+        ("color_map.ui.visible", False),
+        ("curve_fit_method.ui.enabled", False),
+        ("curve_fit_method.ui.visible", False),
+        ("plot.ui.visible", False),
+        # Useful to avoid large ctx sends
+        ("plot.value", None),
+        ("pv.ui.visible", False),
+        ("pv.value", None),
+    )
+    + _BUTTONS_DISABLE
+    + _BUTTONS_INVISIBLE
+    + _TARGET_DISABLE
+    + _TARGET_INVISIBLE
+)
+
+_DEVICE_ENABLE = (("pv.ui.visible", True),) + _BUTTONS_VISIBLE
 
 _PLOT_ENABLE = (
     ("color_map.ui.enabled", True),
@@ -60,11 +86,15 @@ _PLOT_ENABLE = (
 
 
 class Screen(slicops.sliclet.Base):
+    def __init__(self, *args):
+        self.__current_value = PKDict(acquire=None, image=None, target=None)
+        super().__init__(*args)
+
     def handle_destroy(self):
         self.__device_destroy()
 
     def on_change_camera(self, txn, value, **kwargs):
-        self.__device_change(txn, value)
+        self.__device_change(txn, txn.field_get("beam_path"), value)
 
     def on_change_beam_path(self, txn, value, **kwargs):
         self.__beam_path_change(txn, value)
@@ -74,21 +104,27 @@ class Screen(slicops.sliclet.Base):
 
     def on_click_single_button(self, txn, **kwargs):
         self.__single_button = True
-        self.__set_acquire(txn, True)
+        self.__set(txn, "acquire", True, _BUTTONS_DISABLE)
 
     def on_click_start_button(self, txn, **kwargs):
-        self.__set_acquire(txn, True)
+        self.__set(txn, "acquire", True, _BUTTONS_DISABLE)
 
     def on_click_stop_button(self, txn, **kwargs):
-        self.__set_acquire(txn, False)
+        self.__set(txn, "acquire", False, _BUTTONS_DISABLE)
+
+    def on_click_target_in_button(self, txn, **kwargs):
+        self.__set(txn, "target", True, _TARGET_DISABLE, method="move_target")
+
+    def on_click_target_out_button(self, txn, **kwargs):
+        self.__set(txn, "target", False, _TARGET_DISABLE, method="move_target")
 
     def handle_init(self, txn):
         self.__device = None
-        self.__monitors = PKDict()
+        self.__handler = None
         self.__single_button = False
         txn.multi_set(("beam_path.constraints.choices", slicops.device_db.beam_paths()))
         self.__beam_path_change(txn, None)
-        self.__device_change(txn, None)
+        self.__device_change(txn, None, None)
         b = c = None
         if pykern.pkconfig.in_dev_mode():
             b = _cfg.dev.beam_path
@@ -100,7 +136,7 @@ class Screen(slicops.sliclet.Base):
         txn.field_set("camera", c)
 
     def handle_start(self, txn):
-        self.__device_setup(txn, txn.field_get("camera"))
+        self.__device_setup(txn, txn.field_get("beam_path"), txn.field_get("camera"))
 
     def __beam_path_change(self, txn, value):
         def _choices():
@@ -128,20 +164,19 @@ class Screen(slicops.sliclet.Base):
             # Camera is the same so restore the value, no device change
             txn.field_set("camera", c)
         else:
-            self.__device_change(txn, None)
+            self.__device_change(txn, value, None)
 
-    def __device_change(self, txn, camera):
+    def __device_change(self, txn, beam_path, camera):
         self.__device_destroy(txn)
         txn.multi_set(_DEVICE_DISABLE)
-        self.__device_setup(txn, camera)
+        self.__device_setup(txn, beam_path, camera)
 
     def __device_destroy(self, txn=None):
         if not self.__device:
             return
         self.__single_button = False
-        for m in self.__monitors.values():
-            m.destroy()
-        self.__monitors = PKDict()
+        self.__handler.destroy()
+        self.__handler = None
         try:
             n = self.__device.device_name
         except Exception:
@@ -152,31 +187,38 @@ class Screen(slicops.sliclet.Base):
             pkdlog("destroy device={} error={}", n, e)
         self.__device = None
 
-    def __device_setup(self, txn, camera):
-        def _monitors():
-            for n, h in (
-                ("image", self.__handle_image),
-                ("acquire", self.__handle_acquire),
-            ):
-                a = self.__device.accessor(n)
-                m = self.__monitors[n] = _Monitor(a, h)
-                a.monitor(m)
+    def __device_setup(self, txn, beam_path, camera):
+        self.__handler = _Handler(
+            self.__handle_device_error,
+            PKDict(
+                image=self.__handle_image,
+                acquire=self.__handle_acquire,
+                target_status=self.__handle_target_status,
+            ),
+        )
 
         if camera is None:
             return
         try:
             # If there's an epics issues, we have to clear the device
-            self.__device = self.__device = slicops.device.Device(camera)
-            _monitors()
+            self.__device = slicops.device.screen.Screen(
+                beam_path,
+                camera,
+                self.__handler,
+            )
         except slicops.device.DeviceError as e:
             pkdlog("error={} setting up {}, clearing; stack={}", e, camera, pkdexc())
             self.__device_destroy(txn)
             self.__user_alert(txn, "unable to connect to camera={} error={}", camera, e)
             return
-        txn.multi_set(_DEVICE_ENABLE + (("pv.value", self.__device.meta.pv_prefix),))
+        s = PKDict(_DEVICE_ENABLE + (("pv.value", self.__device.meta.pv_prefix),))
+        if self.__device.has_accessor("target_status"):
+            s.update(_TARGET_VISIBLE)
+        txn.multi_set(s)
 
     def __handle_acquire(self, acquire):
         with self.lock_for_update() as txn:
+            self.__current_value["acquire"] = acquire
             n = not acquire
             # Leave plot alone
             txn.multi_set(
@@ -190,47 +232,54 @@ class Screen(slicops.sliclet.Base):
             if not acquire:
                 self.__single_button = False
 
+    def __handle_device_error(self, exc):
+        self.put_exception(exc)
+
     def __handle_image(self, image):
         with self.lock_for_update() as txn:
+            self.__current_value["image"] = image
             if self.__update_plot(txn) and self.__single_button:
                 # self.__single_button = False
-                self.__set_acquire(txn, False)
+                self.__set(txn, "acquire", False, _BUTTONS_DISABLE)
                 txn.multi_set(
                     ("single_button.ui.enabled", True),
                     ("start_button.ui.enabled", True),
                 )
 
-    def __set_acquire(self, txn, acquire):
-        if not self.__device:
+    def __handle_target_status(self, status):
+        with self.lock_for_update() as txn:
+            self.__current_value["target"] = status
+            txn.multi_set(
+                ("target_status", status.name),
+                ("target_in_button.ui.enabled", status == TargetStatus.OUT),
+                ("target_out_button.ui.enabled", status == TargetStatus.IN),
+            )
+
+    def __set(self, txn, accessor, value, txn_set, method=None):
+        if not self.__device or not self.__handler:
             # buttons already disabled
             return
-        v = self.__monitors.acquire.prev_value()
-        if v is not None and v == acquire:
+        v = self.__current_value[accessor]
+        if v is not None and v == value:
             # No button disable since nothing changed
             return
-        if txn:
-            # No presses until we get a response from device
-            txn.multi_set(_BUTTONS_DISABLE)
+        txn.multi_set(txn_set)
         try:
-            self.__device.put("acquire", acquire)
+            if method is None:
+                self.__device.put(accessor, value)
+            else:
+                m = getattr(self.__device, method)
+                m(value)
         except slicops.device.DeviceError as e:
             pkdlog(
                 "error={} on {}, clearing camera; stack={}", e, self.__device, pkdexc()
             )
             raise pykern.util.APIError(e)
 
-    #    def __target_moved(self, status):
-    #        if status is failed:
-    #            display error
-    #        if status is out:
-    #            disable buttons
-    #        if status is in:
-    #            enable buttons
-    #
     def __update_plot(self, txn):
-        if not self.__device:
+        if not self.__device or not self.__handler:
             return False
-        if (i := self.__monitors.image.prev_value()) is None or not i.size:
+        if (i := self.__current_value["image"]) is None or not i.size:
             return False
         if not txn.group_get("plot", "ui", "visible"):
             txn.multi_set(_PLOT_ENABLE)
@@ -247,80 +296,34 @@ class Screen(slicops.sliclet.Base):
 CLASS = Screen
 
 
-class _Monitor:
-    # TODO(robnagler) handle more values besides plot
-    def __init__(self, accessor, handler):
-        self.__name = str(accessor)
+class _Handler(slicops.device.screen.EventHandler):
+    def __init__(
+        self,
+        handle_device_error,
+        handle_device_update,
+    ):
         self.__destroyed = False
-        self.__handler = handler
-        self.__value = None
-        self.__change_q = queue.Queue(1)
         self.__lock = threading.Lock()
-        self.__thread = threading.Thread(
-            target=self.__dispatch,
-            daemon=True,
-            # Reduce the places where locking needs to occur
-            args=(self.__name, self.__change_q, self.__lock, self.__handler),
-        )
-        self.__thread.start()
+        self.__handle_device_error = handle_device_error
+        self.__handle_device_update = handle_device_update
 
     def destroy(self):
         with self.__lock:
             if self.__destroyed:
                 return
             self.__destroyed = True
-            try:
-                # if there is an exception, ignore it because the queue already has an item for wakeup dispatch
-                self.__change_q.put_nowait(False)
-            except Exception:
-                pass
-            # cause callers to crash
-            try:
-                delattr(self, "value")
-            except Exception:
-                pass
+            self.__handle_device_error = None
+            self.__handle_device_update = None
 
-    def prev_value(self):
-        with self.__lock:
-            if self.__destroyed:
-                return
-            return self.__value
+    def on_screen_device_error(self, exc):
+        self.__handle_device_error(exc)
 
-    def __call__(self, change):
-        with self.__lock:
-            if self.__destroyed:
-                return
-            if e := change.get("error"):
-                pkdlog("error={} on {}", e, change.get("accessor"))
-                return
-            if (v := change.get("value")) is None:
-                return
-            try:
-                self.__change_q.put_nowait(v)
-            except queue.Full:
-                if self.__change_q.get_nowait() is not None:
-                    self.__change_q.task_done()
-                # puts are locked
-                self.__change_q.put_nowait(v)
-
-    def __dispatch(self, name, change_q, lock, handler):
-        try:
-            while True:
-                v = change_q.get()
-                change_q.task_done()
-                with lock:
-                    if self.__destroyed:
-                        return
-                    self.__value = v
-                try:
-                    handler(v)
-                except Exception as e:
-                    # Touches self.__name which should not be modified
-                    pkdlog("handler error={} accessor={} stack={}", e, name, pkdexc())
-        except Exception as e:
-            pkdlog("error={} accessor={} stack={}", e, name, pkdexc())
-        finally:
-            self.destroy()
+    def on_screen_device_update(self, accessor_name, value):
+        # TODO move prev value to sliclet within txn
+        if not accessor_name in self.__handle_device_update:
+            raise AssertionError(f"unsupported accessor={n} {self}")
+        h = self.__handle_device_update[accessor_name]
+        h(value)
 
 
 def _init():

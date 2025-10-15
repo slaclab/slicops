@@ -11,11 +11,15 @@ import os
 import pykern.pkcli
 import pykern.pkio
 import subprocess
+import threading
 import time
 
 # Local so should connect quickly
 _SIM_DETECTOR_TIMEOUT = 5
 _LOG_BASE = "sim_detector.log"
+_CAM1_STATUS_PV = "13SIM1:cam1:ShutterMode"
+_CAM1_CONTROL_PV = "13SIM1:cam1:TriggerMode"
+_INITIAL_TARGET_STATUS = 1
 
 
 def init_sim_detector():
@@ -37,6 +41,8 @@ def init_sim_detector():
         "13SIM1:cam1:SizeX": 1024,
         "13SIM1:cam1:SizeY": 768,
         "13SIM1:image1:EnableCallbacks": 1,
+        _CAM1_STATUS_PV: _INITIAL_TARGET_STATUS,
+        _CAM1_CONTROL_PV: 0,
     }.items():
         pv = epics.PV(name)
         v = pv.put(value, wait=True, timeout=_SIM_DETECTOR_TIMEOUT)
@@ -83,6 +89,33 @@ def sim_detector(ioc_sim_detector_dir=None):
             "rb"
         )
 
+    def _watch_target():
+
+        def _control_monitor(pvname, value, **kwargs):
+            # control value: 0: move out, 1: move in
+            # status: 1: out, 2: in
+            state.new_status = value + 1
+            state.trigger.set()
+
+        def _watch_status():
+            while True:
+                state.trigger.wait()
+                state.trigger.clear()
+                if state.status != state.new_status:
+                    state.status_pv.put(0, wait=True, timeout=3)
+                    time.sleep(2)
+                    state.status = state.new_status
+                    state.status_pv.put(state.status, wait=True, timeout=3)
+
+        state = PKDict(
+            new_status=_INITIAL_TARGET_STATUS,
+            status=_INITIAL_TARGET_STATUS,
+            status_pv=epics.PV(_CAM1_STATUS_PV),
+            trigger=threading.Event(),
+        )
+        epics.PV(_CAM1_CONTROL_PV).add_callback(_control_monitor)
+        threading.Thread(target=_watch_status, daemon=True).start()
+
     d = _dir()
     with _log() as o:
         p = subprocess.Popen(
@@ -100,8 +133,11 @@ def sim_detector(ioc_sim_detector_dir=None):
         time.sleep(2)
         pkdlog("initializing sim detector")
         init_sim_detector()
+        _watch_target()
         pkdlog("waiting for pid={} to exit", p.pid)
         p.wait()
+    except KeyboardInterrupt:
+        pass
     finally:
         if p.poll() is not None:
             p.terminate()

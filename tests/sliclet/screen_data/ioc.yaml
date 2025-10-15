@@ -1,0 +1,10 @@
+---
+13SIM1:cam1:Acquire:
+  value: 0
+  dispatch:
+    13SIM1:image1:ArrayData:
+      0: empty_image()
+      1: gaussian_image()
+13SIM1:image1:ArrayData: empty_image()
+13SIM1:cam1:SizeY: size_y()
+13SIM1:cam1:SizeX: size_x()
