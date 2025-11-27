@@ -119,7 +119,7 @@ curl -L https://raw.githubusercontent.com/apptainer/apptainer/main/tools/install
     bash -s - ~/apptainer
 cat >> ~/.bashrc <<'"'EOF'"'
 if [[ ! :$PATH: =~ :$HOME/apptainer/bin: ]]; then
-    PATH=$HOME/apptainer/bin/apptainer:$PATH
+    PATH=$HOME/apptainer/bin:$PATH
 fi
 EOF
 source ~/.bashrc
