@@ -6,8 +6,113 @@
 
 from pykern.pkcollections import PKDict
 from pykern.pkdebug import pkdc, pkdexc, pkdlog, pkdp
+import h5py
 import numpy
+import pykern.pkio
 import scipy.optimize
+
+
+class ImageSet:
+    """Fits images, possibly averaging.
+
+    Can take arbitrary meta data, e.g. pv and it will be written by
+    `save_file`.
+
+    Args:
+        meta (PKDict): images_to_average, camera, curve_fit_method, pv
+
+    """
+
+    def __init__(self, meta):
+        self.meta = meta
+        self._frames = []
+        self._timestamps = []
+        self._prev = None
+
+    def add_frame(self, frame, timestamp):
+        """Add and update fit
+
+        Args:
+            frame (ndarray): new image
+            timestamp (datetime): time of frame
+        Returns:
+            PKDict: frame and fit or None if not enough frames
+        """
+
+        def _mean():
+            if self.meta.images_to_average == 1:
+                return self._frames[-1]
+            return numpy.mean(self._frames, axis=0)
+
+        self._frames.append(frame)
+        self._timestamps.append(timestamp)
+        if len(self._frames) != self.meta.images_to_average:
+            return None
+        self._prev = PKDict(
+            fit=fit_image(_mean(), self.meta.curve_fit_method),
+            frames=self._frames,
+            timestamps=self._timestamps,
+        )
+        self._frames = []
+        self._timestamps = []
+        return self._prev.fit
+
+    def save_file(self, dir_path):
+        # TODO(robnagler) the naming is a bit goofy, possibly frames/{images,timestamps} and analysis.
+        """Creates a hdf5 file with the structure::
+            /image Group
+              /frames Dataset {images_to_average, ysize, xsize}
+              /mean Dataset {ysize, xsize}
+              /timestamps Dataset {images_to_average}
+              /x Group
+                /fit Dataset {xsize}
+                /profile Dataset {xsize}
+              /y Group
+                /fit Dataset {ysize}
+                /profile Dataset {ysize}
+            /meta Group (camera, curve_fit_method, images_to_average, etc.)
+
+        Args:
+            dir_path (py.path): directory
+        """
+
+        def _image_dim(meta_group, dim):
+            g = meta_group.create_group(dim)
+            f = self._prev.fit[dim]
+            g.create_dataset("profile", data=f.lineout)
+            if not f.fit.results:
+                return
+            g.attrs.update(f.fit.results)
+            g.create_dataset("fit", data=f.fit.fit_line)
+
+        def _meta(h5_file):
+            g = h5_file.create_group("meta")
+            g.attrs.update(self.meta)
+            g.create_dataset("frames", data=self._prev.frames)
+            g.create_dataset(
+                "timestamps",
+                data=[d.timestamp() for d in self._prev.timestamps],
+            )
+
+        def _path():
+            # TODO(robnagler) centralize timestamp format
+            t = self._prev.timestamps[-1]
+            rv = dir_path.join(
+                t.strftime("%Y-%m"),
+                f"{t.strftime('%Y%m%dT%H%M%SZ')}-{self.meta.camera}.h5",
+            )
+            rv.dirpath().ensure(dir=True)
+            return rv
+
+        def _writer(path):
+            with h5py.File(path, "w") as f:
+                _meta(f)
+                g = f.create_group("image")
+                g.create_dataset("mean", data=self._prev.fit.raw_pixels)
+                _image_dim(g, "x")
+                _image_dim(g, "y")
+
+        pykern.pkio.atomic_write(_path(), writer=_writer)
 
 
 def fit_image(image, method):

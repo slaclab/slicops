@@ -40,7 +40,7 @@ def cfg():
             vue_port=(8008, pykern.pkasyncio.cfg_port, "port of Vue dev server"),
         ),
         package_path=(
-            tuple(["slicops"]),
+            ("slicops",),
             tuple,
             "Names of root packages that should be checked for codes and resources. Order is important, the first package with a matching code/resource will be used.",
         ),

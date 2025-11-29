@@ -24,6 +24,18 @@ fields:
         Gaussian: gaussian
         "Super Gaussian": super_gaussian
     value: gaussian
+  images_to_average:
+    prototype: Enum
+    constraints:
+      choices:
+        - 1
+        - 2
+        - 3
+        - 4
+        - 5
+    ui:
+      label: Images to average
+    value: 1
   plot:
     prototype: Dict
     ui:
@@ -50,25 +62,34 @@ fields:
     ui:
       css_kind: danger
       label: Stop
+  save_to_file:
+    prototype: Button
+    ui:
+      css_kind: outline-info
+      label: Save to File
 
 ui_layout:
   - cols:
-    - css: col-sm-3
+    - css: col-lg-3
       rows:
       - beam_path
       - camera
       - pv
+      - images_to_average
       - cell_group:
         - start_button
         - stop_button
         - single_button
-    - css: col-sm-9 col-xxl-7
+    - css: col-lg-9 col-xxl-7
       rows:
       - plot
       - cols:
-        - css: col-sm-3
+        - css: col-lg-3
           rows:
           - curve_fit_method
-        - css: col-sm-3
+        - css: col-lg-3
           rows:
           - color_map
+    # - css: col-md-1
+    #   rows:
+    #   - save_to_file

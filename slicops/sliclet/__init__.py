@@ -11,9 +11,15 @@ import contextlib
 import enum
 import importlib
 import inspect
+import itertools
+import pykern.pkconfig
+import pykern.pkconst
+import pykern.pkinspect
+import pykern.pkio
 import pykern.util
 import queue
 import re
+import slicops.config
 import slicops.ctx
 import slicops.field
 import threading
@@ -30,11 +36,50 @@ _ON_METHODS_RE = re.compile(r"^on_(click|change)_(\w+)$")
 
 _CTX_WRITE_ARGS = frozenset(["field_values"])
 
+_NAMES = None
+
 
 def instance(name, queue):
+    def _import(name):
+        # TODO(robnagler) move to pykern, copied from sirepo.util
+        # NOTE: fixed a bug (s = None)
+        s = None
+        for p in slicops.config.cfg().package_path:
+            n = None
+            try:
+                n = f"{p}.sliclet.{name}"
+                return importlib.import_module(n)
+            except ModuleNotFoundError as e:
+                if n is not None and n != e.name:
+                    # import is failing due to ModuleNotFoundError in a sub-import
+                    # not the module we are looking for
+                    raise
+                s = pkdexc()
+                pass
+        # gives more debugging info (perhaps more confusion)
+        if s:
+            pkdc(s)
+        raise AssertionError(
+            f"cannot find sliclet={name} in package_path={slicops.config.cfg().package_path}"
+        )
+
     if not name:
         name = _cfg.default
-    return importlib.import_module(f"slicops.sliclet.{name}").CLASS(name, queue)
+    return _import(name).CLASS(name, queue)
+
+
+def names():
+
+    def _find():
+        # TODO(robnagler) move to pykern, copied from sirepo
+        for p in slicops.config.cfg().package_path:
+            yield pykern.pkinspect.package_module_names(f"{p}.sliclet")
+
+    global _NAMES
+
+    if _NAMES is None:
+        _NAMES = tuple(sorted(itertools.chain.from_iterable(_find())))
+    return _NAMES
 
 
 class Base:
@@ -111,6 +156,9 @@ class Base:
                 pkdlog("stack={}", pkdexc())
             pkdlog("ERROR {}", d)
             self.__put_work(_Work.error, PKDict(desc=d))
+
+    def save_file_path(self):
+        return _cfg.save_file_root.join(self.__class__.__name__).ensure(dir=True)
 
     def session_end(self):
         self.__put_work(_Work.session_end, None)
@@ -207,12 +255,28 @@ class Base:
         return True
 
 
+def _cfg_py_path(value):
+    if isinstance(value, str):
+        if not os.path.isabs(value):
+            pykern.pkconfig.raise_error(f"not an absolute path={value}")
+        return pykern.pkio.py_path(value)
+    if not isinstance(value, pykern.pkconst.PY_PATH_LOCAL_TYPE):
+        pykern.pkconfig.raise_error(f"not a py.path type={type(value)} value={value}")
+    return value
+
+
 def _init():
     global _cfg
-    from pykern import pkconfig
 
-    _cfg = pkconfig.init(
+    def _path():
+        rv = (_cfg_py_path, "root path for screen save files")
+        if pykern.pkconfig.in_dev_mode():
+            return (pykern.util.dev_run_dir(_path).join("save").ensure(dir=True),) + rv
+        return pykern.pkconfig.Required(rv)
+
+    _cfg = pykern.pkconfig.init(
         default=("screen", str, "default sliclet"),
+        save_file_root=_path(),
     )
 
 
