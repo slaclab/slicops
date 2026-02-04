@@ -92,8 +92,8 @@
          document.title = result.sliclet_title;
          if (! props.sliclet) {
              const u = '/' + result.sliclet_name;
-             if (route.path !== u) {
-                 // avoid a possible redirect loop
+             // if default route or new app, just switch to it
+             if (route.path == '/' || ! (new RegExp(`^${u}(?:/|$)`)).test(route.path)) {
                  router.replace(u);
              }
          }

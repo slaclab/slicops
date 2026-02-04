@@ -6,7 +6,7 @@
 
 from pykern.pkcollections import PKDict
 from pykern.pkdebug import pkdc, pkdexc, pkdlog, pkdp
-from slicops.device.screen import TargetStatus
+import pykern.pkcompat
 import pykern.pkconfig
 import pykern.util
 import queue
@@ -22,9 +22,9 @@ _DEVICE_TYPE = "PROF"
 _cfg = None
 
 _BUTTONS_DISABLE = (
+    ("single_button.ui.enabled", False),
     ("start_button.ui.enabled", False),
     ("stop_button.ui.enabled", False),
-    ("single_button.ui.enabled", False),
 )
 
 _TARGET_DISABLE = (
@@ -51,6 +51,7 @@ _BUTTONS_INVISIBLE = (
 )
 
 _BUTTONS_VISIBLE = (
+    ("images_to_average.ui.visible", True),
     ("single_button.ui.visible", True),
     ("start_button.ui.visible", True),
     ("stop_button.ui.visible", True),
@@ -67,6 +68,8 @@ _DEVICE_DISABLE = (
         ("plot.value", None),
         ("pv.ui.visible", False),
         ("pv.value", None),
+        ("save_to_file.ui.enabled", False),
+        ("save_to_file.ui.visible", False),
     )
     + _BUTTONS_DISABLE
     + _BUTTONS_INVISIBLE
@@ -82,6 +85,8 @@ _PLOT_ENABLE = (
     ("curve_fit_method.ui.enabled", True),
     ("curve_fit_method.ui.visible", True),
     ("plot.ui.visible", True),
+    ("save_to_file.ui.enabled", True),
+    ("save_to_file.ui.visible", True),
 )
 
 
@@ -99,8 +104,16 @@ class Screen(slicops.sliclet.Base):
     def on_change_beam_path(self, txn, value, **kwargs):
         self.__beam_path_change(txn, value)
 
-    def on_change_curve_fit_method(self, txn, **kwargs):
-        self.__update_plot(txn)
+    def on_change_curve_fit_method(self, txn, value, **kwargs):
+        # TODO(robnagler) optimize with ImageSet.update_curve_fit_method()
+        self.__new_image_set(txn)
+
+    def on_change_images_to_average(self, txn, value, **kwargs):
+        # TODO(robnagler) optimize with ImageSet.update_images_to_average()
+        self.__new_image_set(txn)
+
+    def on_click_save_to_file(self, txn, **kwargs):
+        self.__image_set.save_file(self.save_file_path())
 
     def on_click_single_button(self, txn, **kwargs):
         self.__single_button = True
@@ -174,6 +187,7 @@ class Screen(slicops.sliclet.Base):
     def __device_destroy(self, txn=None):
         if not self.__device:
             return
+        self.__image_set = None
         self.__single_button = False
         self.__handler.destroy()
         self.__handler = None
@@ -246,13 +260,26 @@ class Screen(slicops.sliclet.Base):
                     ("start_button.ui.enabled", True),
                 )
 
+    def __new_image_set(self, txn):
+        self.__image_set = slicops.plot.ImageSet(
+            txn.multi_get(
+                ("beam_path", "camera", "curve_fit_method", "images_to_average", "pv")
+            ),
+        )
+
     def __handle_target_status(self, status):
         with self.lock_for_update() as txn:
             self.__current_value["target"] = status
             txn.multi_set(
                 ("target_status", status.name),
-                ("target_in_button.ui.enabled", status == TargetStatus.OUT),
-                ("target_out_button.ui.enabled", status == TargetStatus.IN),
+                (
+                    "target_in_button.ui.enabled",
+                    status == slicops.device.screen.TargetStatus.OUT,
+                ),
+                (
+                    "target_out_button.ui.enabled",
+                    status == slicops.device.screen.TargetStatus.IN,
+                ),
             )
 
     def __set(self, txn, accessor, value, txn_set, method=None):
