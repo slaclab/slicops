@@ -33,6 +33,23 @@ screens:
         n_col: 13SIM1:cam1:SizeX
         n_row: 13SIM1:cam1:SizeY
         n_bits: 13SIM1:cam1:N_OF_BITS
+        target_status: 13SIM1:cam1:ShutterMode
+        target_control: 13SIM1:cam1:TriggerMode
+      control_name: 13SIM1
+    metadata:
+      area: DEV_AREA
+      beam_path:
+      - DEV_BEAM_PATH
+      sum_l_meters: 0.614
+      type: PROF
+  DEV_CAMERA2:
+    controls_information:
+      PVs:
+        acquire: 13SIM1:cam1:Acquire
+        image: 13SIM1:image1:ArrayData
+        n_col: 13SIM1:cam1:SizeX
+        n_row: 13SIM1:cam1:SizeY
+        n_bits: 13SIM1:cam1:N_OF_BITS
       control_name: 13SIM1
     metadata:
       area: DEV_AREA

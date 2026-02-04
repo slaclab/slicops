@@ -16,9 +16,6 @@ _TIMEOUT = 2
 class SlicletSetup(pykern.api.unit_util.Setup):
     def __init__(self, sliclet, *args, **kwargs):
         self.__sliclet = sliclet
-        if c := kwargs.get("caproto"):
-            del kwargs["caproto"]
-        self.__caproto = c
         super().__init__(*args, **kwargs)
         self.__update_q = asyncio.Queue()
         self.__http_uri = (
@@ -79,13 +76,6 @@ class SlicletSetup(pykern.api.unit_util.Setup):
         return config.cfg().ui_api.copy()
 
     def _server_config(self, *args, **kwargs):
-        if self.__caproto:
-            self.__start_caproto()
-        else:
-            from slicops import mock_epics
-            from pykern import pkdebug
-
-            mock_epics.reset_state()
         return super()._server_config(*args, **kwargs)
 
     def _server_start(self, *args, **kwargs):
@@ -105,9 +95,6 @@ class SlicletSetup(pykern.api.unit_util.Setup):
         if m := re.search("^.*/(.+)", c):
             c = m.group(1)
         pkdebug.pkdlog("{} op={}", c, pkinspect.caller_func_name())
-
-    def __start_caproto(self):
-        pass
 
     async def __subscribe(self):
         from pykern import pkdebug
@@ -201,7 +188,7 @@ def start_ioc(init_yaml, db_yaml=None):
             finally:
                 os._exit(0)
         try:
-            time.sleep(1)
+            time.sleep(2)
             yield None
         finally:
             os.kill(p, signal.SIGKILL)
@@ -223,8 +210,8 @@ def _screen_handler():
                 }
             )
 
-        def on_screen_device_error(self, **kwargs):
-            self.event_q.error.put_nowait(PKDict(kwargs))
+        def on_screen_device_error(self, exc):
+            self.event_q.error.put_nowait(PKDict(exception=exc))
 
         def on_screen_device_update(self, **kwargs):
             self.event_q[kwargs["accessor_name"]].put_nowait(PKDict(kwargs))

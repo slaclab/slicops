@@ -151,11 +151,14 @@ class Base:
                 if log_op:
                     d += f" op={log_op}"
             except Exception as e2:
-                pkdlog("error={} during exception stack={}", e2, pkdexc())
+                pkdlog("error={} during exception stack={}", e2, pkdexc(simplify=True))
             if not isinstance(e, pykern.util.APIError):
-                pkdlog("stack={}", pkdexc())
+                pkdlog("stack={}", pkdexc(simplify=True))
             pkdlog("ERROR {}", d)
             self.__put_work(_Work.error, PKDict(desc=d))
+
+    def put_exception(self, exc):
+        self.__put_work(_Work.error, exc)
 
     def save_file_path(self):
         return _cfg.save_file_root.join(self.__class__.__name__).ensure(dir=True)
