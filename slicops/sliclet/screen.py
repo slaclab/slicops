@@ -250,23 +250,7 @@ class Screen(slicops.sliclet.Base):
         self.put_exception(exc)
 
     def __handle_image(self, image):
-        def _plot(txn):
-            if not self.__device:
-                return False
-            if (i := self.__monitors.image.prev_value()) is None or not i.size:
-                return False
-            if (
-                p := self.__image_set.add_frame(image, pykern.pkcompat.utcnow())
-            ) is None:
-                return False
-            if not txn.group_get("plot", "ui", "visible"):
-                txn.multi_set(_PLOT_ENABLE)
-            txn.field_set("plot", p)
-            return True
-
         with self.lock_for_update() as txn:
-            if _plot(txn) and self.__single_button:
-                self.__set_acquire(txn, False)
             self.__current_value["image"] = image
             if self.__update_plot(txn) and self.__single_button:
                 # self.__single_button = False

@@ -111,5 +111,5 @@ ui_layout:
           rows:
           - color_map
     - css: col-md-1
-       rows:
+      rows:
        - save_to_file
