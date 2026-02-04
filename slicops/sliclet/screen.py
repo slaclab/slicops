@@ -104,9 +104,6 @@ class Screen(slicops.sliclet.Base):
     def on_change_beam_path(self, txn, value, **kwargs):
         self.__beam_path_change(txn, value)
 
-    def on_change_camera(self, txn, value, **kwargs):
-        self.__device_change(txn, value)
-
     def on_change_curve_fit_method(self, txn, value, **kwargs):
         # TODO(robnagler) optimize with ImageSet.update_curve_fit_method()
         self.__new_image_set(txn)
