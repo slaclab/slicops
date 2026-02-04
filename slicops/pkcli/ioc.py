@@ -8,12 +8,21 @@ from pykern.pkcollections import PKDict
 from pykern.pkdebug import pkdc, pkdlog, pkdp, pkdexc
 import asyncio
 import caproto.server
+import numpy
+import pykern.fconf
 import pykern.pkio
 import pykern.pkyaml
-import numpy
 
 
 def run(init_yaml, db_yaml=None):
+    def _fconf():
+        p = pykern.pkio.py_path(init_yaml)
+        if p.check(dir=True):
+            return pykern.fconf.parse_all(p)
+        if p.check() and p.ext:
+            return pykern.fconf.Parser([p]).result
+        return pykern.fconf.parse_all(path=p.dirpath(), glob=p.basename + "*")
+
     def _normalize(raw):
         for k, v in raw.items():
             if not isinstance(v, dict):
@@ -31,11 +40,7 @@ def run(init_yaml, db_yaml=None):
             log_pv_names=False,
         )
 
-    caproto.server.run(
-        **_pvgroup(
-            PKDict(_normalize(pykern.pkyaml.load_file(init_yaml))),
-        ),
-    )
+    caproto.server.run(**_pvgroup(PKDict(_normalize(_fconf()))))
 
 
 class _PVGroup(caproto.server.PVGroup):

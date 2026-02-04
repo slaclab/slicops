@@ -8,9 +8,14 @@
 def test_upstream_blocked():
     from pykern import pkdebug, pkunit
     from slicops import unit_util
+    from slicops.device.screen import ScreenError, ErrorKind
 
     with unit_util.setup_screen("CU_HXR", "YAG03") as s:
         s.device.move_target(want_in=True)
         e = s.handler.test_get("error")
-        pkunit.pkeq("upstream", e.error_kind.name)
-        pkunit.pkeq("upstream target is in", e.error_msg.YAG02)
+        s = ScreenError(
+            device="YAG03",
+            error_kind=ErrorKind.upstream,
+            error_msg="{'YAG02': 'upstream target is IN'}",
+        )
+        pkunit.pkeq(repr(s), repr(e.exception))  # pkunit magic?
