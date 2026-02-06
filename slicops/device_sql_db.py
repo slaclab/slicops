@@ -220,12 +220,12 @@ def _init():
                 device_name=p,
                 beam_area=n + " foreign",
                 device_type=n,
-                cs_name=s,
+                csi_name=s,
             ),
             device_accessor=PKDict(
                 device_name=p + " foreign",
                 accessor_name=p,
-                cs_name=s,
+                csi_name=s,
                 py_type=s,
                 writable="bool",
             ),
@@ -266,7 +266,7 @@ def _update_dev(parser):
                     (
                         "device_name",
                         "accessor_name",
-                        "cs_name",
+                        "csi_name",
                         "py_type",
                         "writable",
                     ),
@@ -280,7 +280,7 @@ def _update_dev(parser):
             device_name="DEV_CAMERA",
             beam_area="DEV_AREA",
             device_type="PROF",
-            cs_name="13SIM1",
+            csi_name="13SIM1",
         ),
         device_accessor=tuple(_dev_camera_accessors()),
         device_meta_float=[

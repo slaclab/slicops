@@ -141,7 +141,7 @@ class _Parser(PKDict):
             self.ctl_keys.update(c.keys())
             rv = PKDict(
                 name=name,
-                cs_name=c.control_name,
+                csi_name=c.control_name,
             )
             for k in "area", "beam_path":
                 if not m.get(k):
@@ -151,7 +151,7 @@ class _Parser(PKDict):
             return rv
 
         def _pvs(pvs, rv):
-            p = re.compile(rf"^{re.escape(rv.cs_name)}:{_PV_POSTFIX_RE}$")
+            p = re.compile(rf"^{re.escape(rv.csi_name)}:{_PV_POSTFIX_RE}$")
             for k, v in pvs.items():
                 if not (x := p.search(v)):
                     raise ValueError(f"pv={v} does not match regex={p}")
@@ -196,14 +196,14 @@ class _Parser(PKDict):
     def _to_sql_db(self, name, rec):
         def _accessor():
             for k, v in rec.accessors.items():
-                yield PKDict(device_name=name, accessor_name=k, cs_name=v)
+                yield PKDict(device_name=name, accessor_name=k, csi_name=v)
 
         def _device():
             return PKDict(
                 device_name=name,
                 beam_area=rec.metadata.area,
                 device_type=rec.metadata.type,
-                cs_name=rec.cs_name,
+                csi_name=rec.csi_name,
             )
 
         def _meta_float():

@@ -83,7 +83,7 @@ class _Parser(PKDict):
 
     def _parse_csv(self, rows):
 
-        def _accessors(accessors, pvs, cs_name, device_name):
+        def _accessors(accessors, pvs, csi_name, device_name):
             if not pvs:
                 return []
             rv = []
@@ -94,12 +94,12 @@ class _Parser(PKDict):
                     PKDict(
                         accessor_name=a,
                         device_name=device_name,
-                        cs_name=cs_name + ": " + s,
+                        csi_name=csi_name + ": " + s,
                     ),
                 )
             return rv
 
-        def _one(device_name, area, beam_paths, keyword, cs_name, sum_l_meters):
+        def _one(device_name, area, beam_paths, keyword, csi_name, sum_l_meters):
             # areas that begin with a * are not yet released
             # area that contains a space is not legit and probably NO AREA
             # no beam path means no PVs
@@ -115,7 +115,7 @@ class _Parser(PKDict):
                 self.beam_paths[area] = tuple(beam_paths)
             if not (
                 a := _accessors(
-                    m.accessors, self._pvs.get(cs_name), cs_name, device_name
+                    m.accessors, self._pvs.get(csi_name), csi_name, device_name
                 )
             ):
                 return
@@ -124,7 +124,7 @@ class _Parser(PKDict):
                     device_name=device_name,
                     device_type=m.device_type,
                     beam_area=area,
-                    cs_name=cs_name,
+                    csi_name=csi_name,
                 ),
                 device_accessor=a,
                 device_meta_float=[

@@ -29,7 +29,7 @@ fields:
     ui:
       widget: heatmap_with_lineouts
       writable: false
-  cs_name:
+  csi_name:
     prototype: String
     ui:
       label: PV
@@ -57,7 +57,7 @@ ui_layout:
       rows:
       - beam_path
       - camera
-      - cs_name
+      - csi_name
       - cell_group:
         - start_button
         - stop_button

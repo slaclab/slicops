@@ -99,11 +99,11 @@ class Device:
 
 
 class _Accessor:
-    """Container for a control system value, metadata, and dynamic state
+    """Container for a control system interface (CSI): value, metadata, and dynamic state
 
     Attributes:
         device (Device): object holding this accessor
-        meta (PKDict): meta data about the accessor, e.g. cs_name, writable
+        meta (PKDict): meta data about the accessor, e.g. csi_name, writable
     """
 
     def __init__(self, device, accessor_name):
@@ -265,7 +265,7 @@ class _Accessor:
                 # TODO(robnagler) need a better way of dealing with this
                 self._image_shape = (self.device.get("n_row"), self.device.get("n_col"))
             self._cs = epics.PV(
-                self.meta.cs_name,
+                self.meta.csi_name,
                 connection_callback=self._on_connection,
                 connection_timeout=_TIMEOUT,
                 **k,
@@ -274,7 +274,7 @@ class _Accessor:
         return self._cs
 
     def __repr__(self):
-        return f"<_Accessor {self.device.device_name}.{self.accessor_name} {self.meta.cs_name}>"
+        return f"<_Accessor {self.device.device_name}.{self.accessor_name} {self.meta.csi_name}>"
 
     def _run_callback(self, **kwargs):
         k = PKDict(accessor=self, **kwargs)

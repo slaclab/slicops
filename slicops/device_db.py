@@ -19,12 +19,12 @@ class DeviceMeta(PKDict):
     """Information about a device
 
     Attributes:
-        accessor (PKDict): name to PKDict(name, cs_name, writable, py_type, ...)
+        accessor (PKDict): name to PKDict(name, csi_name, writable, py_type, ...)
         beam_area (str): area where device is located
         beam_path (tuple): which beam paths does it go through
         device_type (str): type device, e.g. "PROF"
         device_name (str): name of device
-        cs_name (str): prefix to all accessors for device
+        csi_name (str): prefix to all accessors for device
     """
 
     pass
