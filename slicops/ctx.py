@@ -10,6 +10,7 @@ import copy
 import pykern.fconf
 import pykern.pkresource
 import pykern.util
+import slicops.config
 import slicops.field
 import slicops.ui_layout
 
@@ -32,10 +33,19 @@ class Ctx:
 
         step = "yaml"
         try:
-            r = pykern.fconf.parse_all(
-                path or pykern.pkresource.file_path("sliclet"),
-                glob=f"{name}*",
-            )
+            n = f"sliclet/{name}.yaml"
+            r = pykern.fconf.Parser(
+                [
+                    (
+                        path.join(n)
+                        if path
+                        else pykern.pkresource.file_path(
+                            n,
+                            packages=slicops.config.cfg().package_path,
+                        )
+                    )
+                ]
+            ).result
             _check_raw(r)
             step = "fields"
             self.fields = self.__parse(r[step], PKDict(), slicops.field.prototypes())
@@ -165,17 +175,22 @@ class Txn:
     def group_get(self, field, group, attr=None):
         return self.__ctx.fields[field].group_get(group, attr)
 
+    def multi_get(self, fields):
+        return PKDict((k, self.__field(k).value_get()) for k in fields)
+
     def multi_set(self, *args):
         def _args():
             if len(args) > 1:
+                # (("a", 1), ("b", 2), ..)
                 return args
             if len(args) == 0:
                 raise AssetionError("must be at list one update")
-            if isinstance(args[0][0], str):
-                # (("a", 1))
-                return args
-            # ((("a", 1), ("b", 2), ..)) or a dict
-            return args[0]
+            rv = args[0]
+            # ({"a": 1, "b": 2, ...})
+            if isinstance(rv, dict):
+                return rv.items()
+            # else ((("a", 1), ("b", 2), ..))
+            return args if isinstance(rv[0], str) else rv
 
         def _parse():
             rv = PKDict()
@@ -184,6 +199,8 @@ class Txn:
             return rv
 
         for k, v in _parse().items():
+            if not isinstance(v, PKDict):
+                v = PKDict(value=v)
             self.__field_update(k, self.__field(k), v)
 
     def rollback(self):

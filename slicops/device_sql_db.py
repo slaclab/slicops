@@ -253,13 +253,15 @@ def _session():
 def _update_dev(parser):
     """Add in DEV_CAMERA which is 13SIM1:cam1"""
 
-    def _dev_camera_accessors():
+    def _dev_camera_accessors(name):
         for x in (
             ("acquire", "13SIM1:cam1:Acquire", "bool", 1),
             ("image", "13SIM1:image1:ArrayData", "numpy.ndarray", 0),
             ("n_bits", "13SIM1:cam1:N_OF_BITS", "int", 0),
             ("n_col", "13SIM1:cam1:SizeX", "int", 0),
             ("n_row", "13SIM1:cam1:SizeY", "int", 0),
+            ("target_status", "13SIM1:cam1:ShutterMode", "int", 0),
+            ("target_control", "13SIM1:cam1:TriggerMode", "int", 0),
         ):
             yield PKDict(
                 zip(
@@ -270,24 +272,27 @@ def _update_dev(parser):
                         "py_type",
                         "writable",
                     ),
-                    (("DEV_CAMERA",) + x),
+                    ((name,) + x),
                 ),
             )
 
-    parser.beam_paths.pkupdate(DEV_AREA=["DEV_BEAM_PATH"])
-    parser.devices["DEV_CAMERA"] = PKDict(
-        device=PKDict(
-            device_name="DEV_CAMERA",
-            beam_area="DEV_AREA",
-            device_type="PROF",
-            csi_name="13SIM1",
-        ),
-        device_accessor=tuple(_dev_camera_accessors()),
-        device_meta_float=[
-            PKDict(
-                device_name="DEV_CAMERA",
-                device_meta_name="sum_l_meters",
-                device_meta_value="0.614",
+    def _dev_camera_insert(name):
+        parser.devices[name] = PKDict(
+            device=PKDict(
+                device_name=name,
+                beam_area="DEV_AREA",
+                device_type="PROF",
+                csi_name="13SIM1",
             ),
-        ],
-    )
+            device_accessor=tuple(_dev_camera_accessors(name)),
+            device_meta_float=[
+                PKDict(
+                    device_name=name,
+                    device_meta_name="sum_l_meters",
+                    device_meta_value="0.614",
+                ),
+            ],
+        )
+    parser.beam_paths.pkupdate(DEV_AREA=["DEV_BEAM_PATH"])
+    _dev_camera_insert("DEV_CAMERA")
+    _dev_camera_insert("DEV_CAMERA2")
