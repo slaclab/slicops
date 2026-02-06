@@ -21,35 +21,30 @@ import slicops.const
 # What this test is doing is ensuring we understand the structure of a pv_base
 _PV_POSTFIX_RE = r"([\w.]{1,60}|\w{1,58}:[\w.]{1,58})"
 
-_KNOWN_KEYS = PKDict(
-    controls_information=frozenset(("PVs", "control_name", "pv_cache")),
-    metadata=frozenset(
-        (
-            "area",
-            "beam_path",
-            "bpms_after_wire",
-            "bpms_before_wire",
-            "l_eff",
-            "lblms",
-            "hardware",
-            "rf_freq",
-            "sum_l_meters",
-            "type",
-        )
-    ),
-)
-
 _METADATA_SKIP = frozenset(
     (
         "area",
         "beam_path",
         "bpms_after_wire",
         "bpms_before_wire",
+        "detectors",
         "lblms",
         "type",
     ),
 )
 
+
+_KNOWN_KEYS = PKDict(
+    controls_information=frozenset(("PVs", "control_name", "pv_cache")),
+    metadata=frozenset(
+        (
+            "l_eff",
+            "hardware",
+            "rf_freq",
+            "sum_l_meters",
+        )
+    ).union(_METADATA_SKIP),
+)
 
 _TOP_LEVEL_KEYS = frozenset(_KNOWN_KEYS.keys())
 
@@ -61,6 +56,12 @@ _AREAS_MISSING_BEAM_PATH = frozenset(
         "LI28",
     ),
 )
+
+# PMT types are not well formed
+_TYPES_TO_IGNORE = frozenset(("INST",))
+
+# wire_lblms.yaml is invalid
+_BASENAMES_TO_IGNORE = frozenset(("beampaths", "wire_lblms", "wire_metadata"))
 
 
 def create_sql_db():
@@ -92,7 +93,7 @@ class _Parser(PKDict):
 
     def _parse(self):
         for p in pykern.pkio.sorted_glob(self._yaml_glob):
-            if p.basename == "beampaths.yaml":
+            if p.purebasename in _BASENAMES_TO_IGNORE:
                 continue
             try:
                 self._parse_file(pykern.pkyaml.load_file(p), p)
@@ -102,6 +103,8 @@ class _Parser(PKDict):
 
     def _parse_file(self, src, path):
         def _input_fixups(name, rec):
+            if rec.metadata.get("type") in _TYPES_TO_IGNORE:
+                raise _Ignore()
             if not rec.controls_information.PVs:
                 # Also many don't have beam_path
                 raise _Ignore()

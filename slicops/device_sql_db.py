@@ -168,7 +168,7 @@ class _Inserter:
         if pykern.pkconfig.in_dev_mode():
             # POSIT: modify parser in place since this is dev mode it'll break only in dev
             # if the parser implementations change from PKDicts.
-            self._update_dev(parser)
+            _update_dev(parser)
         with _session() as s:
             self._beam_paths(parser.beam_paths, s)
             self._devices(parser.devices, s)
@@ -198,46 +198,6 @@ class _Inserter:
             session.insert("device", **d.device)
             _insert("device_meta_float", d.device_meta_float)
             _insert("device_accessor", _accessor_meta(d.device_accessor))
-
-    def _update_dev(self, parser):
-        def _dev_camera_accessors():
-            for x in (
-                ("acquire", "13SIM1:cam1:Acquire", "bool", 1),
-                ("image", "13SIM1:image1:ArrayData", "numpy.ndarray", 0),
-                ("n_bits", "13SIM1:cam1:N_OF_BITS", "int", 0),
-                ("n_col", "13SIM1:cam1:SizeX", "int", 0),
-                ("n_row", "13SIM1:cam1:SizeY", "int", 0),
-            ):
-                yield PKDict(
-                    zip(
-                        (
-                            "device_name",
-                            "accessor_name",
-                            "cs_name",
-                            "py_type",
-                            "writable",
-                        ),
-                        (("DEV_CAMERA",) + x),
-                    ),
-                )
-
-        parser.beam_paths.pkupdate(DEV_AREA=["DEV_BEAM_PATH"])
-        parser.devices["DEV_CAMERA"] = PKDict(
-            device=PKDict(
-                device_name="DEV_CAMERA",
-                beam_area="DEV_AREA",
-                device_type="PROF",
-                cs_name="13SIM1",
-            ),
-            device_accessor=tuple(_dev_camera_accessors()),
-            device_meta_float=[
-                PKDict(
-                    device_name="DEV_CAMERA",
-                    device_meta_name="sum_l_meters",
-                    device_meta_value="0.614",
-                ),
-            ],
-        )
 
 
 def _init():
@@ -288,3 +248,46 @@ def _session():
     if _meta is None:
         _init()
     return _meta.session()
+
+
+def _update_dev(parser):
+    """Add in DEV_CAMERA which is 13SIM1:cam1"""
+
+    def _dev_camera_accessors():
+        for x in (
+            ("acquire", "13SIM1:cam1:Acquire", "bool", 1),
+            ("image", "13SIM1:image1:ArrayData", "numpy.ndarray", 0),
+            ("n_bits", "13SIM1:cam1:N_OF_BITS", "int", 0),
+            ("n_col", "13SIM1:cam1:SizeX", "int", 0),
+            ("n_row", "13SIM1:cam1:SizeY", "int", 0),
+        ):
+            yield PKDict(
+                zip(
+                    (
+                        "device_name",
+                        "accessor_name",
+                        "cs_name",
+                        "py_type",
+                        "writable",
+                    ),
+                    (("DEV_CAMERA",) + x),
+                ),
+            )
+
+    parser.beam_paths.pkupdate(DEV_AREA=["DEV_BEAM_PATH"])
+    parser.devices["DEV_CAMERA"] = PKDict(
+        device=PKDict(
+            device_name="DEV_CAMERA",
+            beam_area="DEV_AREA",
+            device_type="PROF",
+            cs_name="13SIM1",
+        ),
+        device_accessor=tuple(_dev_camera_accessors()),
+        device_meta_float=[
+            PKDict(
+                device_name="DEV_CAMERA",
+                device_meta_name="sum_l_meters",
+                device_meta_value="0.614",
+            ),
+        ],
+    )
