@@ -193,8 +193,6 @@ class _Inserter:
 
         for d in parsed.values():
             self.counts.devices += 1
-            if "device" not in d:
-                pkdp(d)
             session.insert("device", **d.device)
             _insert("device_meta_float", d.device_meta_float)
             _insert("device_accessor", _accessor_meta(d.device_accessor))
@@ -293,6 +291,7 @@ def _update_dev(parser):
                 ),
             ],
         )
+
     parser.beam_paths.pkupdate(DEV_AREA=["DEV_BEAM_PATH"])
     _dev_camera_insert("DEV_CAMERA")
     _dev_camera_insert("DEV_CAMERA2")
