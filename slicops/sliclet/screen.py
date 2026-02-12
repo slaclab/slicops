@@ -113,7 +113,7 @@ class Screen(slicops.sliclet.Base):
         self.__new_image_set(txn)
 
     def on_click_save_to_file(self, txn, **kwargs):
-        #TODO(pjm) provide UI notice with file info, download link
+        # TODO(pjm) provide UI notice with file info, download link
         self.__image_set.save_file(self.save_file_path())
 
     def on_click_single_button(self, txn, **kwargs):
