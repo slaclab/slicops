@@ -323,9 +323,7 @@ class Screen(slicops.sliclet.Base):
             return False
         if (i := self.__current_value["image"]) is None or not i.size:
             return False
-        if (
-            p := self.__image_set.add_frame(i, pykern.pkcompat.utcnow())
-        ) is None:
+        if (p := self.__image_set.add_frame(i, pykern.pkcompat.utcnow())) is None:
             return False
         if not txn.group_get("plot", "ui", "visible"):
             txn.multi_set(_PLOT_ENABLE)

@@ -291,9 +291,12 @@ def _update_dev(parser):
         )
 
     parser.beam_paths.pkupdate(DEV_AREA=["DEV_BEAM_PATH"])
-    _dev_camera_insert("DEV_CAMERA", (
-        ("target_status", "13SIM1:cam1:ShutterMode", "int", 0),
-        ("target_control", "13SIM1:cam1:TriggerMode", "int", 0),
-    ))
+    _dev_camera_insert(
+        "DEV_CAMERA",
+        (
+            ("target_status", "13SIM1:cam1:ShutterMode", "int", 0),
+            ("target_control", "13SIM1:cam1:TriggerMode", "int", 0),
+        ),
+    )
     # DEV_CAMERA2 has no target control
     _dev_camera_insert("DEV_CAMERA2", ())
