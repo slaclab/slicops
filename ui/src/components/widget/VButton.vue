@@ -4,7 +4,7 @@
 <template>
     <button
         type="button"
-        :class="'btn btn-' + ctx[field].ui.css_kind"
+        :class="'slicops-button btn btn-' + ctx[field].ui.css_kind"
         :disabled="! ctx[field].ui.enabled"
         @click="onClick()"
     >{{ ctx[field].ui.label }}</button>
