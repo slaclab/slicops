@@ -3,9 +3,8 @@
  -->
 <template>
     <div :style="'column-count:' + cells.length">
-        <div v-for="cell of cells" style="display: inline">
+        <div v-for="cell of cells">
             <!-- TODO(robnagler) need error if not layout cell -->
-            <!-- TODO(robnagler) seems like VCell should look at field -->
             <VCell
                 :field="cell.field"
                 :ctx="ctx"
