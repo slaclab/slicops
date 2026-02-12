@@ -12,6 +12,7 @@ DEVICE_KINDS_TO_TYPES = PKDict(
     bpms=frozenset(("BPM",)),
     lblms=frozenset(("LBLM",)),
     magnets=frozenset(("XCOR", "QUAD", "SOLE", "YCOR", "BEND")),
+    pmts=frozenset(("INST",)),
     screens=frozenset(("PROF",)),
     tcavs=frozenset(("LCAV",)),
     wires=frozenset(("WIRE",)),

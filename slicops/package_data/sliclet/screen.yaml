@@ -41,7 +41,7 @@ fields:
     ui:
       widget: heatmap_with_lineouts
       writable: false
-  pv:
+  csi_name:
     prototype: String
     ui:
       label: PV
@@ -90,7 +90,7 @@ ui_layout:
       rows:
       - beam_path
       - camera
-      - pv
+      - csi_name
       - images_to_average
       - cell_group:
         - start_button
@@ -110,6 +110,6 @@ ui_layout:
         - css: col-lg-3
           rows:
           - color_map
-    - css: col-md-1
-      rows:
-       - save_to_file
+        - css: col-lg-3 text-end pt-4
+          rows:
+          - save_to_file

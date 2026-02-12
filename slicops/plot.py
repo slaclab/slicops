@@ -102,6 +102,7 @@ class ImageSet:
                 f"{t.strftime('%Y%m%dT%H%M%SZ')}-{self.meta.camera}.h5",
             )
             rv.dirpath().ensure(dir=True)
+            pkdlog("Saving image set to {}", rv)
             return rv
 
         def _writer(path):

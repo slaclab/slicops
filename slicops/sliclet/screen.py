@@ -66,8 +66,8 @@ _DEVICE_DISABLE = (
         ("plot.ui.visible", False),
         # Useful to avoid large ctx sends
         ("plot.value", None),
-        ("pv.ui.visible", False),
-        ("pv.value", None),
+        ("csi_name.ui.visible", False),
+        ("csi_name.value", None),
         ("save_to_file.ui.enabled", False),
         ("save_to_file.ui.visible", False),
     )
@@ -77,7 +77,7 @@ _DEVICE_DISABLE = (
     + _TARGET_INVISIBLE
 )
 
-_DEVICE_ENABLE = (("pv.ui.visible", True),) + _BUTTONS_VISIBLE
+_DEVICE_ENABLE = (("csi_name.ui.visible", True),) + _BUTTONS_VISIBLE
 
 _PLOT_ENABLE = (
     ("color_map.ui.enabled", True),
@@ -113,6 +113,7 @@ class Screen(slicops.sliclet.Base):
         self.__new_image_set(txn)
 
     def on_click_save_to_file(self, txn, **kwargs):
+        # TODO(pjm) provide UI notice with file info, download link
         self.__image_set.save_file(self.save_file_path())
 
     def on_click_single_button(self, txn, **kwargs):
@@ -129,6 +130,7 @@ class Screen(slicops.sliclet.Base):
         self.__set(txn, "target", True, _TARGET_DISABLE, method="move_target")
 
     def on_click_target_out_button(self, txn, **kwargs):
+        self.__set(txn, "acquire", False, _BUTTONS_DISABLE)
         self.__set(txn, "target", False, _TARGET_DISABLE, method="move_target")
 
     def handle_init(self, txn):
@@ -225,10 +227,11 @@ class Screen(slicops.sliclet.Base):
             self.__device_destroy(txn)
             self.__user_alert(txn, "unable to connect to camera={} error={}", camera, e)
             return
-        s = PKDict(_DEVICE_ENABLE + (("pv.value", self.__device.meta.pv_prefix),))
+        s = PKDict(_DEVICE_ENABLE + (("csi_name.value", self.__device.meta.csi_name),))
         if self.__device.has_accessor("target_status"):
             s.update(_TARGET_VISIBLE)
         txn.multi_set(s)
+        self.__new_image_set(txn)
 
     def __handle_acquire(self, acquire):
         with self.lock_for_update() as txn:
@@ -253,7 +256,6 @@ class Screen(slicops.sliclet.Base):
         with self.lock_for_update() as txn:
             self.__current_value["image"] = image
             if self.__update_plot(txn) and self.__single_button:
-                # self.__single_button = False
                 self.__set(txn, "acquire", False, _BUTTONS_DISABLE)
                 txn.multi_set(
                     ("single_button.ui.enabled", True),
@@ -263,7 +265,13 @@ class Screen(slicops.sliclet.Base):
     def __new_image_set(self, txn):
         self.__image_set = slicops.plot.ImageSet(
             txn.multi_get(
-                ("beam_path", "camera", "curve_fit_method", "images_to_average", "pv")
+                (
+                    "beam_path",
+                    "camera",
+                    "curve_fit_method",
+                    "images_to_average",
+                    "csi_name",
+                )
             ),
         )
 
@@ -275,6 +283,14 @@ class Screen(slicops.sliclet.Base):
                 (
                     "target_in_button.ui.enabled",
                     status == slicops.device.screen.TargetStatus.OUT,
+                ),
+                (
+                    "start_button.ui.enabled",
+                    status == slicops.device.screen.TargetStatus.IN,
+                ),
+                (
+                    "single_button.ui.enabled",
+                    status == slicops.device.screen.TargetStatus.IN,
                 ),
                 (
                     "target_out_button.ui.enabled",
@@ -308,12 +324,11 @@ class Screen(slicops.sliclet.Base):
             return False
         if (i := self.__current_value["image"]) is None or not i.size:
             return False
+        if (p := self.__image_set.add_frame(i, pykern.pkcompat.utcnow())) is None:
+            return False
         if not txn.group_get("plot", "ui", "visible"):
             txn.multi_set(_PLOT_ENABLE)
-        txn.field_set(
-            "plot",
-            slicops.plot.fit_image(i, txn.field_get("curve_fit_method")),
-        )
+        txn.field_set("plot", p)
         return True
 
     def __user_alert(self, txn, fmt, *args):
