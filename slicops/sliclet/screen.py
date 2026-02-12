@@ -129,6 +129,7 @@ class Screen(slicops.sliclet.Base):
         self.__set(txn, "target", True, _TARGET_DISABLE, method="move_target")
 
     def on_click_target_out_button(self, txn, **kwargs):
+        self.__set(txn, "acquire", False, _BUTTONS_DISABLE)
         self.__set(txn, "target", False, _TARGET_DISABLE, method="move_target")
 
     def handle_init(self, txn):
@@ -229,6 +230,7 @@ class Screen(slicops.sliclet.Base):
         if self.__device.has_accessor("target_status"):
             s.update(_TARGET_VISIBLE)
         txn.multi_set(s)
+        self.__new_image_set(txn)
 
     def __handle_acquire(self, acquire):
         with self.lock_for_update() as txn:
@@ -253,7 +255,6 @@ class Screen(slicops.sliclet.Base):
         with self.lock_for_update() as txn:
             self.__current_value["image"] = image
             if self.__update_plot(txn) and self.__single_button:
-                # self.__single_button = False
                 self.__set(txn, "acquire", False, _BUTTONS_DISABLE)
                 txn.multi_set(
                     ("single_button.ui.enabled", True),
@@ -281,6 +282,14 @@ class Screen(slicops.sliclet.Base):
                 (
                     "target_in_button.ui.enabled",
                     status == slicops.device.screen.TargetStatus.OUT,
+                ),
+                (
+                    "start_button.ui.enabled",
+                    status == slicops.device.screen.TargetStatus.IN,
+                ),
+                (
+                    "single_button.ui.enabled",
+                    status == slicops.device.screen.TargetStatus.IN,
                 ),
                 (
                     "target_out_button.ui.enabled",
@@ -314,12 +323,13 @@ class Screen(slicops.sliclet.Base):
             return False
         if (i := self.__current_value["image"]) is None or not i.size:
             return False
+        if (
+            p := self.__image_set.add_frame(i, pykern.pkcompat.utcnow())
+        ) is None:
+            return False
         if not txn.group_get("plot", "ui", "visible"):
             txn.multi_set(_PLOT_ENABLE)
-        txn.field_set(
-            "plot",
-            slicops.plot.fit_image(i, txn.field_get("curve_fit_method")),
-        )
+        txn.field_set("plot", p)
         return True
 
     def __user_alert(self, txn, fmt, *args):

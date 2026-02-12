@@ -251,16 +251,14 @@ def _session():
 def _update_dev(parser):
     """Add in DEV_CAMERA which is 13SIM1:cam1"""
 
-    def _dev_camera_accessors(name):
+    def _dev_camera_accessors(name, extra_accessors):
         for x in (
             ("acquire", "13SIM1:cam1:Acquire", "bool", 1),
             ("image", "13SIM1:image1:ArrayData", "numpy.ndarray", 0),
             ("n_bits", "13SIM1:cam1:N_OF_BITS", "int", 0),
             ("n_col", "13SIM1:cam1:SizeX", "int", 0),
             ("n_row", "13SIM1:cam1:SizeY", "int", 0),
-            ("target_status", "13SIM1:cam1:ShutterMode", "int", 0),
-            ("target_control", "13SIM1:cam1:TriggerMode", "int", 0),
-        ):
+        ) + extra_accessors:
             yield PKDict(
                 zip(
                     (
@@ -274,7 +272,7 @@ def _update_dev(parser):
                 ),
             )
 
-    def _dev_camera_insert(name):
+    def _dev_camera_insert(name, extra_accessors):
         parser.devices[name] = PKDict(
             device=PKDict(
                 device_name=name,
@@ -282,7 +280,7 @@ def _update_dev(parser):
                 device_type="PROF",
                 csi_name="13SIM1",
             ),
-            device_accessor=tuple(_dev_camera_accessors(name)),
+            device_accessor=tuple(_dev_camera_accessors(name, extra_accessors)),
             device_meta_float=[
                 PKDict(
                     device_name=name,
@@ -293,5 +291,9 @@ def _update_dev(parser):
         )
 
     parser.beam_paths.pkupdate(DEV_AREA=["DEV_BEAM_PATH"])
-    _dev_camera_insert("DEV_CAMERA")
-    _dev_camera_insert("DEV_CAMERA2")
+    _dev_camera_insert("DEV_CAMERA", (
+        ("target_status", "13SIM1:cam1:ShutterMode", "int", 0),
+        ("target_control", "13SIM1:cam1:TriggerMode", "int", 0),
+    ))
+    # DEV_CAMERA2 has no target control
+    _dev_camera_insert("DEV_CAMERA2", ())

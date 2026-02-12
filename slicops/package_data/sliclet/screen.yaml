@@ -110,6 +110,6 @@ ui_layout:
         - css: col-lg-3
           rows:
           - color_map
-    - css: col-md-1
-      rows:
-       - save_to_file
+        - css: col-lg-3 text-end pt-4
+          rows:
+          - save_to_file
