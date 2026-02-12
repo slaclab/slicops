@@ -13,23 +13,16 @@ build_vars() {
 }
 
 build_as_root() {
-    # re2c is for synapps; rpcgen and libtirpc-devel is for asyn
     install_yum_install \
         libXt-devel \
-        libtirpc-devel \
         motif-devel \
         nodejs \
-        perl-ExtUtils-Command \
-        perl-FindBin \
-        re2c \
-        rpcgen
+        perl-FindBin
 }
 
 build_as_run_user() {
-    set -x
     _slicops_bashrc
-    # sets epics_synapps_dir
-    source epics-install.sh
+    install_repo_eval epics-area-detector
     _slicops_pkg_install
     _slicops_bin
 }
