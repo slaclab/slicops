@@ -26,7 +26,7 @@ declare -A _port_map=(
     [vue]=1
 )
 _bashrc=$_run_dir/bashrc.sh
-_python_version=3.12.11
+_python_version=3.13.9
 _sif=${SLICOPS_APPTAINER_SIF:-$_run_dir/slicops.sif}
 _sim_dir=/home/vagrant/.local/epics/extensions/synApps/support/areaDetector-R3-12-1/ADSimDetector/iocs/simDetectorIOC/iocBoot/iocSimDetector
 _vue_dir=$_root_dir/ui
@@ -228,7 +228,7 @@ _env_sif() {
     fi
     _msg "Building $_sif from $_docker_image. This will take about 45 minutes..."
     declare f=$_run_dir/image.log
-    if ! TMPDIR=$_run_dir apptainer build --quiet "$_sif" $_docker_image &> "$f"; then
+    if ! TMPDIR=$_run_dir apptainer --quiet build "$_sif" $_docker_image &> "$f"; then
         tail --lines=50 "$f"
         _err "build image=$_sif failed. Full log: $f"
     fi
