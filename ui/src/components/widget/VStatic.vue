@@ -7,12 +7,9 @@
         :ctx="ctx"
     />
     <div>
-        <input
-            v-model="ctx[field].value"
-            class="form-control form-control-sm form-control-plaintext"
-            :id="field"
-            readonly
-        />
+        <div class="form-control form-control-sm form-control-plaintext">
+            {{ ctx[field].value }}
+        </div>
     </div>
 </template>
 
