@@ -204,10 +204,7 @@ def _screen_handler():
         def __init__(self, *args, **kwargs):
             super().__init__(*args, **kwargs)
             self.event_q = PKDict(
-                {
-                    k: queue.Queue()
-                    for k in ("acquire", "image", "error")
-                }
+                {k: queue.Queue() for k in ("acquire", "image", "error")}
             )
 
         def on_screen_device_error(self, exc):
