@@ -11,6 +11,7 @@ import enum
 import pykern.pkasyncio
 import slicops.device
 
+
 class Screen(slicops.device.Device):
     """Augment `Device` with screen specific operations"""
 
@@ -103,7 +104,6 @@ class _Worker(pykern.pkasyncio.ActionLoop):
         if n not in self._MONITORS:
             raise AssertionError(f"unsupported accessor={n} {self}")
         self.action("call_handler", PKDict(accessor_name=n, value=arg.value))
-
 
     def req_action(self, method, arg):
         """Called by DeviceScreen which has separate life cycle"""
