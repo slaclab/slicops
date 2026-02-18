@@ -11,7 +11,6 @@ import enum
 import pykern.pkasyncio
 import slicops.device
 
-
 class Screen(slicops.device.Device):
     """Augment `Device` with screen specific operations"""
 
