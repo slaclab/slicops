@@ -27,23 +27,6 @@ _BUTTONS_DISABLE = (
     ("stop_button.ui.enabled", False),
 )
 
-_TARGET_DISABLE = (
-    ("target_in_button.ui.enabled", False),
-    ("target_out_button.ui.enabled", False),
-)
-
-_TARGET_INVISIBLE = (
-    ("target_in_button.ui.visible", False),
-    ("target_out_button.ui.visible", False),
-    ("target_status.ui.visible", False),
-)
-
-_TARGET_VISIBLE = (
-    ("target_in_button.ui.visible", True),
-    ("target_out_button.ui.visible", True),
-    ("target_status.ui.visible", True),
-)
-
 _BUTTONS_INVISIBLE = (
     ("single_button.ui.visible", False),
     ("start_button.ui.visible", False),
@@ -73,8 +56,6 @@ _DEVICE_DISABLE = (
     )
     + _BUTTONS_DISABLE
     + _BUTTONS_INVISIBLE
-    + _TARGET_DISABLE
-    + _TARGET_INVISIBLE
 )
 
 _DEVICE_ENABLE = (("csi_name.ui.visible", True),) + _BUTTONS_VISIBLE
@@ -92,7 +73,7 @@ _PLOT_ENABLE = (
 
 class Screen(slicops.sliclet.Base):
     def __init__(self, *args):
-        self.__current_value = PKDict(acquire=None, image=None, target=None)
+        self.__current_value = PKDict(acquire=None, image=None)
         super().__init__(*args)
 
     def handle_destroy(self):
@@ -125,13 +106,6 @@ class Screen(slicops.sliclet.Base):
 
     def on_click_stop_button(self, txn, **kwargs):
         self.__set(txn, "acquire", False, _BUTTONS_DISABLE)
-
-    def on_click_target_in_button(self, txn, **kwargs):
-        self.__set(txn, "target", True, _TARGET_DISABLE, method="move_target")
-
-    def on_click_target_out_button(self, txn, **kwargs):
-        self.__set(txn, "acquire", False, _BUTTONS_DISABLE)
-        self.__set(txn, "target", False, _TARGET_DISABLE, method="move_target")
 
     def handle_init(self, txn):
         self.__device = None
@@ -215,7 +189,6 @@ class Screen(slicops.sliclet.Base):
             PKDict(
                 image=self.__handle_image,
                 acquire=self.__handle_acquire,
-                target_status=self.__handle_target_status,
             ),
         )
 
@@ -234,8 +207,6 @@ class Screen(slicops.sliclet.Base):
             self.__user_alert(txn, "unable to connect to camera={} error={}", camera, e)
             return
         s = PKDict(_DEVICE_ENABLE + (("csi_name.value", self.__device.meta.csi_name),))
-        if self.__device.has_accessor("target_status"):
-            s.update(_TARGET_VISIBLE)
         txn.multi_group_attr_set(s)
         self.__new_image_set(txn)
 
@@ -280,29 +251,6 @@ class Screen(slicops.sliclet.Base):
                 )
             ),
         )
-
-    def __handle_target_status(self, status):
-        with self.lock_for_update() as txn:
-            self.__current_value["target"] = status
-            txn.multi_group_attr_set(
-                ("target_status", status.name),
-                (
-                    "target_in_button.ui.enabled",
-                    status == slicops.device.screen.TargetStatus.OUT,
-                ),
-                (
-                    "start_button.ui.enabled",
-                    status == slicops.device.screen.TargetStatus.IN,
-                ),
-                (
-                    "single_button.ui.enabled",
-                    status == slicops.device.screen.TargetStatus.IN,
-                ),
-                (
-                    "target_out_button.ui.enabled",
-                    status == slicops.device.screen.TargetStatus.IN,
-                ),
-            )
 
     def __set(self, txn, accessor, value, txn_set, method=None):
         if not self.__device or not self.__handler:

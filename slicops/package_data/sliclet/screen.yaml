@@ -46,11 +46,6 @@ fields:
     ui:
       label: PV
       writable: false
-  target_status:
-    prototype: String
-    ui:
-      label: Target Status
-      writable: false
   single_button:
     prototype: Button
     ui:
@@ -71,16 +66,6 @@ fields:
     ui:
       css_kind: outline-info
       label: Save to File
-  target_in_button:
-    prototype: Button
-    ui:
-      css_kind: primary
-      label: In
-  target_out_button:
-    prototype: Button
-    ui:
-      css_kind: primary
-      label: Out
 
 ui_layout:
   - cols:
@@ -94,10 +79,6 @@ ui_layout:
         - start_button
         - stop_button
         - single_button
-      - cell_group:
-        - target_in_button
-        - target_out_button
-        - target_status
     - css: col-lg-9 col-xxl-7
       rows:
       - plot

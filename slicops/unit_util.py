@@ -206,7 +206,7 @@ def _screen_handler():
             self.event_q = PKDict(
                 {
                     k: queue.Queue()
-                    for k in ("acquire", "image", "target_status", "error")
+                    for k in ("acquire", "image", "error")
                 }
             )
 
