@@ -1,0 +1,9 @@
+fields:
+  message:
+    prototype: String
+    ui:
+      writable: false
+    value: Hello World!
+
+ui_layout:
+  - message
