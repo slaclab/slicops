@@ -6,7 +6,9 @@
 
 import slicops.sliclet
 
+
 class Hello(slicops.sliclet.Base):
     pass
+
 
 CLASS = Hello
