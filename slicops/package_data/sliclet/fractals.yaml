@@ -32,7 +32,6 @@ fields:
     prototype: String
     ui:
       label: Fractal Status
-      widget: static
       writable: false
   plot:
     prototype: Dict
@@ -46,7 +45,6 @@ fields:
   plot_file:
     prototype: String
     ui:
-      widget: static
       writable: false
   #TODO(robnagler) need a "base.yaml" or something
   revert:

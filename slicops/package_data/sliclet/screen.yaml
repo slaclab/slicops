@@ -46,13 +46,11 @@ fields:
     ui:
       label: PV
       writable: false
-      widget: static
   target_status:
     prototype: String
     ui:
       label: Target Status
       writable: false
-      widget: static
   single_button:
     prototype: Button
     ui:

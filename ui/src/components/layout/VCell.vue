@@ -18,7 +18,7 @@
                 :ctx="ctx"
             />
         </div>
-        <div v-else-if="['text', 'float', 'integer'].includes(ctx[field].ui.widget)">
+        <div v-else-if="['string', 'float', 'integer'].includes(ctx[field].ui.widget)">
             <div v-if="ctx[field].ui.writable === false">
                 <VStatic
                     :field="field"
@@ -31,12 +31,6 @@
                     :ctx="ctx"
                 />
             </div>
-        </div>
-        <div v-else-if="ctx[field].ui.widget == 'static'">
-            <VStatic
-                :field="field"
-                :ctx="ctx"
-            />
         </div>
         <div v-else-if="ctx[field].ui.widget == 'button'">
             <VButton
