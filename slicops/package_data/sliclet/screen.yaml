@@ -46,6 +46,23 @@ fields:
     ui:
       label: PV
       writable: false
+  something:
+    prototype: String
+    ui:
+      label: Something
+    value: hello
+  something3:
+    prototype: Enum
+    constraints:
+      choices:
+        - abc
+        - def
+        - ghi
+        - jkl
+        - mno
+    ui:
+      label: Something3
+    value: def
   target_status:
     prototype: String
     ui:
@@ -89,6 +106,8 @@ ui_layout:
       - beam_path
       - camera
       - csi_name
+      - something
+      - something3
       - images_to_average
       - cell_group:
         - start_button

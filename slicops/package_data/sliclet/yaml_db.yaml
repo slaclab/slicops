@@ -45,6 +45,11 @@ fields:
         - No
         - Yes
     value: false
+  something2:
+    prototype: String
+    ui:
+      label: Something2
+    value: hello2
 
 ui_layout:
   - cols:
@@ -54,6 +59,7 @@ ui_layout:
       - optimize
       - increment
       - divisor
+      - something2
       - cols:
         - css: col-sm-6
           rows:
