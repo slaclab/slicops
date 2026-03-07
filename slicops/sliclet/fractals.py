@@ -14,7 +14,7 @@ class Fractals(slicops.sliclet.yaml_db.YAMLDb):
 
     def on_change_mode(self, txn, value, **kwargs):
         j = value == "Julia"
-        txn.multi_set(
+        txn.multi_group_attr_set(
             ("density_i.ui.visible", j),
             ("density_r.ui.visible", j),
         )

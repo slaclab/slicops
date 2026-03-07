@@ -42,7 +42,7 @@ async def test_basic():
             pkunit.pkeq("DEV_BEAM_PATH", r.fields.beam_path.value)
             pkunit.pkeq("DEV_CAMERA", r.fields.camera.value)
             await _buttons(s, (True, False, True), "start/single enabled")
-            await s.ctx_field_set(start_button=None)
+            await s.ctx_field_value_set(start_button=None)
             await _buttons(s, (False, False, False), "all disabled after start")
             await _buttons(s, (False, True, False), "acquire should fire")
             p = (await s.ctx_update()).fields.plot.value
@@ -51,7 +51,7 @@ async def test_basic():
             # x fit should be 10
             pkunit.pkeq(10.00, round(p.x.fit.results.sig, 2))
             pkunit.pkeq(13.00, round(p.y.fit.results.sig, 2))
-            await s.ctx_field_set(
+            await s.ctx_field_value_set(
                 beam_path="CU_SPEC",
                 curve_fit_method="super_gaussian",
                 stop_button=None,
@@ -61,8 +61,8 @@ async def test_basic():
             # there's no device so buttons on not visible
             pkunit.pkeq(False, r.fields.start_button.ui.visible)
             with pkunit.pkexcept("unknown choice"):
-                await s.ctx_field_set(camera="DEV_CAMERA")
+                await s.ctx_field_value_set(camera="DEV_CAMERA")
             # TODO(robnagler) better error handling await _put(ux, "camera", "DEV_CAMERA", Exception)
-            await s.ctx_field_set(camera="YAG01")
+            await s.ctx_field_value_set(camera="YAG01")
             r = await s.ctx_update()
             pkunit.pkeq("YAGS:IN20:211", r.fields.csi_name.value)

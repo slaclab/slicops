@@ -76,7 +76,7 @@ class YAMLDb(slicops.sliclet.Base):
         p = PKDict(raw_pixels=None)
         v = False
         try:
-            if not (l := txn.field_get(n)):
+            if not (l := txn.field_value(n)):
                 return None
             p.raw_pixels = numpy.load(l)
             v = True
@@ -84,13 +84,13 @@ class YAMLDb(slicops.sliclet.Base):
         except Exception as e:
             pkdlog("numpy.load error={} path={} link={} stack={}", e, l, n, pkdexc())
         finally:
-            txn.field_set(plot, p)
-            txn.multi_set(tuple(_visibility(v)))
+            txn.field_value_set(plot, p)
+            txn.multi_group_attr_set(tuple(_visibility(v)))
 
     def __read_db(self, txn):
         def _numpy_files():
             for k in txn.field_names():
-                if l := txn.group_get(k, "links"):
+                if l := txn.group_attr(k, "links"):
                     if v := self.__numpy_file(txn, k, l):
                         yield k, v
 
@@ -107,7 +107,7 @@ class YAMLDb(slicops.sliclet.Base):
                 # If cache (read/wrote last time) is unchanged,
                 # there will be no updates. Avoids churn
                 if k in db and db[k] != self.__db_cache.get(k):
-                    txn.field_set(k, db[k])
+                    txn.field_value_set(k, db[k])
                     yield k, db[k]
 
         if not (r := slicops.pkcli.yaml_db.read(self.name)):
@@ -120,13 +120,13 @@ class YAMLDb(slicops.sliclet.Base):
     def __write(self, txn):
         def _keys():
             for k in txn.field_names():
-                g = txn.group_get(k, "ui")
+                g = txn.group_attr(k, "ui")
                 if g.get("clickable") or not g.get("writable"):
                     continue
                 yield k
 
         # TODO(robnagler) work: maybe should happen outside lock
-        self.__db_cache = PKDict((k, txn.field_get(k)) for k in _keys())
+        self.__db_cache = PKDict((k, txn.field_value(k)) for k in _keys())
         slicops.pkcli.yaml_db.write(self.name, self.__db_cache)
 
 

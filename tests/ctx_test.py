@@ -27,8 +27,8 @@ def test_txn():
     c = ctx.Ctx("input", "Input", path=pkunit.data_dir().join("simple.in"))
     txn = ctx.Txn(c)
     with pkunit.pkexcept(ValueError):
-        txn.field_set("increment", 0)
-    txn.multi_set(
+        txn.field_value_set("increment", 0)
+    txn.multi_group_attr_set(
         ("run_mode.constraints.choices", ("a", "b", "c")),
         ("run_mode.value", None),
     )

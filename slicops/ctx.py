@@ -129,29 +129,29 @@ class Txn:
             self.__field(name).value_check(value), slicops.field.InvalidFieldValue
         )
 
-    def field_get(self, name):
-        return self.__field(name).value_get()
-
     def field_names(self):
         # keys are always the same
         return tuple(self.__ctx.fields.keys())
 
-    def field_set(self, name, value):
+    def field_value(self, name):
+        return self.__field(name).value()
+
+    def field_value_set(self, name, value):
         # TODO(robnagler) optimize this case to not validate constraints/ui
         #   could possibly optimize the ui and constraints parts when a copy
         #   vs new with _defaults() (which should get validated first time)
         self.__field_update(name, self.__field(name), PKDict(value=value))
 
-    def field_set_via_api(self, name, value, on_method):
+    def field_value_set_via_api(self, name, value, on_method):
         def _update(old, new):
             rv = PKDict(field_name=name, on_method=on_method, txn=self)
             if on_method.kind == "click":
-                if new.group_get("ui", "clickable"):
+                if new.group_attr("ui", "clickable"):
                     return rv
                 pkdlog("on_click_{} exists and clickable=False", c.field_name)
                 return None
             if on_method.kind == "change":
-                rv.pkupdate(value=n.value_get(), old_value=o.value_get())
+                rv.pkupdate(value=n.value(), old_value=o.value())
                 if rv.value == rv.old_value:
                     return None
                 return rv
@@ -161,7 +161,7 @@ class Txn:
 
         try:
             o = self.__field(name)
-            if not o.group_get("ui", "writable"):
+            if not o.group_attr("ui", "writable"):
                 raise pykern.util.APIError(
                     "field={} is not writable value={}", name, value
                 )
@@ -172,13 +172,13 @@ class Txn:
                 raise
             raise pykern.util.APIError("invalid value for field={} error={}", name, e)
 
-    def group_get(self, field, group, attr=None):
-        return self.__ctx.fields[field].group_get(group, attr)
+    def group_attr(self, field, group, attr=None):
+        return self.__ctx.fields[field].group_attr(group, attr)
 
-    def multi_get(self, fields):
-        return PKDict((k, self.__field(k).value_get()) for k in fields)
+    def multi_field_value(self, fields):
+        return PKDict((k, self.__field(k).value()) for k in fields)
 
-    def multi_set(self, *args):
+    def multi_group_attr_set(self, *args):
         def _args():
             if len(args) > 1:
                 # (("a", 1), ("b", 2), ..)
