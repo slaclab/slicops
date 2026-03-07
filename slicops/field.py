@@ -225,7 +225,7 @@ class Button(Base):
         return super()._defaults(
             PKDict(
                 name="Button",
-                ui=PKDict(widget="button", clickable=True),
+                ui=PKDict(widget="button", css_kind="primary", clickable=True),
                 # value is always None
                 value=None,
             ),
