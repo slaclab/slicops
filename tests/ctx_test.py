@@ -29,9 +29,12 @@ def test_txn():
     with pkunit.pkexcept(ValueError):
         txn.field_value_set("increment", 0)
     txn.multi_group_attr_set(
-        ("run_mode.constraints.choices", ("a", "b", "c")),
+        ("run_mode.constraints.choices", v := ("a", "b", "c")),
         ("run_mode.value", None),
     )
+    v = PKDict(zip(v, v))
+    pkunit.pkeq(v, txn.group_attr("run_mode.constraints.choices"))
+    pkunit.pkeq(v, txn.group_attr("run_mode", "constraints", "choices"))
     r = PKDict()
     txn.commit(lambda x: r.pkupdate(fields=x.fields))
     pkunit.pkeq(None, r.fields.run_mode.value)

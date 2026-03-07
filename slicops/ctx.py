@@ -172,8 +172,16 @@ class Txn:
                 raise
             raise pykern.util.APIError("invalid value for field={} error={}", name, e)
 
-    def group_attr(self, field, group, attr=None):
-        return self.__ctx.fields[field].group_attr(group, attr)
+    def group_attr(self, field_or_dotted, group=None, attr=None):
+        if group is None:
+            p = field_or_dotted.split(".")
+            (f, group, attr) = tuple(p + [None] * (3 - len(p)))
+        else:
+            f = field_or_dotted
+        return self.__field(f).group_attr(group, attr)
+
+    def group_attr_set(self, dotted, value):
+        self.multi_group_attr_set((dotted, value))
 
     def multi_field_value(self, fields):
         return PKDict((k, self.__field(k).value()) for k in fields)
