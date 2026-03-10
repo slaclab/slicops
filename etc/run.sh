@@ -16,24 +16,7 @@
 set -eou pipefail
 shopt -s nullglob
 
-_root_dir=$(cd "$(dirname "$0")/.." && pwd)
-_run_dir=$_root_dir/run
-_docker_image=docker://radiasoft/slicops
-declare -A _port_map=(
-    [api]=0
-    [repeater]=2
-    [server]=3
-    [vue]=1
-)
-_bashrc=$_run_dir/bashrc.sh
-_python_version=3.13.9
-_sif=${SLICOPS_APPTAINER_SIF:-$_run_dir/slicops.sif}
-_sim_dir=/home/vagrant/.local/epics/extensions/synApps/support/areaDetector-R3-12-1/ADSimDetector/iocs/simDetectorIOC/iocBoot/iocSimDetector
-_vue_dir=$_root_dir/ui
-_start_msg="To develop, start the servers in this order in separate terminals:
-bash etc/run.sh sim # sim-detector for DEV_CAMERA
-bash etc/run.sh vue # vue server for javascript
-bash etc/run.sh api # tornado for business logic and main server"
+declare -A _port_map
 
 _dispatch_op() {
     declare op=$1
@@ -251,12 +234,42 @@ _err() {
     exit 1
 }
 
+_globals() {
+    declare r=$(cd "$(dirname "$0")/.." && pwd)
+    _run_dir=$r/run
+    _bashrc=$_run_dir/bashrc.sh
+    _docker_image=docker://radiasoft/slicops
+    _port_map=(
+        [api]=0
+        [repeater]=2
+        [server]=3
+        [vue]=1
+    )
+    _python_version=3.13.9
+    _sif=${SLICOPS_APPTAINER_SIF:-}
+    if [[ ! $_sif ]]; then
+        # POSIT: path defined by SLAC
+        _sif=/sdf/group/ad/org/lfd/hla/apptainer/slicops.sif
+        if [[ ! -r $_sif ]]; then
+            _sif=$_run_dir/slicops.sif
+        fi
+    fi
+    # POSIT: same as radiasoft/download/installers/epics-area-detector
+    _sim_dir=/home/vagrant/.local/epics/extensions/synApps/support/areaDetector-R3-12-1/ADSimDetector/iocs/simDetectorIOC/iocBoot/iocSimDetector
+    _vue_dir=$r/ui
+    _start_msg="To develop, start the servers in this order in separate terminals:
+bash etc/run.sh sim # sim-detector for DEV_CAMERA (for dev only)
+bash etc/run.sh vue # vue/vite server for javascript (for dev only)
+bash etc/run.sh api # tornado serving vue/vite and APIs"
+}
+
 _log() {
     _msg $(date +%H%M%S) "$@"
 }
 
 _main() {
     declare op=${1:-<not set>}
+    _globals
     _env_check
     _dispatch_op "$op" "${@:2}"
 }
