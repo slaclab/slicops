@@ -60,10 +60,10 @@ def device(name):
         return rec.pkupdate(py_type=_PY_TYPES[rec.py_type])
 
     with _session() as s:
-        return PKDict(s.select_one("device", PKDict(device_name=name))).pkupdate(
+        return PKDict(s.select_one("device", PKDict(device_name=name))._mapping).pkupdate(
             accessor=PKDict(
                 {
-                    r.accessor_name: _py_type(PKDict(r))
+                    r.accessor_name: _py_type(PKDict(r._mapping))
                     for r in s.select("device_accessor", PKDict(device_name=name))
                 }
             ),
