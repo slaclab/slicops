@@ -99,7 +99,7 @@ class Screen(slicops.sliclet.Base):
         self.__device_destroy()
 
     def on_change_camera(self, txn, value, **kwargs):
-        self.__device_change(txn, txn.field_get("beam_path"), value)
+        self.__device_change(txn, txn.field_value("beam_path"), value)
 
     def on_change_beam_path(self, txn, value, **kwargs):
         self.__beam_path_change(txn, value)
@@ -137,7 +137,9 @@ class Screen(slicops.sliclet.Base):
         self.__device = None
         self.__handler = None
         self.__single_button = False
-        txn.multi_set(("beam_path.constraints.choices", slicops.device_db.beam_paths()))
+        txn.multi_group_attr_set(
+            ("beam_path.constraints.choices", slicops.device_db.beam_paths())
+        )
         self.__beam_path_change(txn, None)
         self.__device_change(txn, None, None)
         b = c = None
@@ -146,12 +148,14 @@ class Screen(slicops.sliclet.Base):
             c = _cfg.dev.camera
         # the values are None by default, but this initializes
         # the state of the choices, buttons and fields appropriately
-        txn.field_set("beam_path", b)
+        txn.field_value_set("beam_path", b)
         self.__beam_path_change(txn, b)
-        txn.field_set("camera", c)
+        txn.field_value_set("camera", c)
 
     def handle_start(self, txn):
-        self.__device_setup(txn, txn.field_get("beam_path"), txn.field_get("camera"))
+        self.__device_setup(
+            txn, txn.field_value("beam_path"), txn.field_value("camera")
+        )
 
     def __beam_path_change(self, txn, value):
         def _choices():
@@ -159,31 +163,33 @@ class Screen(slicops.sliclet.Base):
                 return ()
             return slicops.device_db.device_names(_DEVICE_TYPE, value)
 
-        txn.multi_set(
+        txn.multi_group_attr_set(
             ("camera.constraints.choices", _choices()),
             ("camera.value", None),
         )
         # This technically shouldn't happen
         if value is None:
-            txn.multi_set(
+            txn.multi_group_attr_set(
                 _DEVICE_DISABLE
                 + (("camera.ui.enabled", False), ("camera.ui.visible", False))
             )
         else:
-            txn.multi_set((("camera.ui.enabled", True), ("camera.ui.visible", True)))
+            txn.multi_group_attr_set(
+                (("camera.ui.enabled", True), ("camera.ui.visible", True))
+            )
         if not self.__device:
             # No device change
             return
         c = self.__device.device_name
         if txn.is_field_value_valid("camera", c):
             # Camera is the same so restore the value, no device change
-            txn.field_set("camera", c)
+            txn.field_value_set("camera", c)
         else:
             self.__device_change(txn, value, None)
 
     def __device_change(self, txn, beam_path, camera):
         self.__device_destroy(txn)
-        txn.multi_set(_DEVICE_DISABLE)
+        txn.multi_group_attr_set(_DEVICE_DISABLE)
         self.__device_setup(txn, beam_path, camera)
 
     def __device_destroy(self, txn=None):
@@ -230,7 +236,7 @@ class Screen(slicops.sliclet.Base):
         s = PKDict(_DEVICE_ENABLE + (("csi_name.value", self.__device.meta.csi_name),))
         if self.__device.has_accessor("target_status"):
             s.update(_TARGET_VISIBLE)
-        txn.multi_set(s)
+        txn.multi_group_attr_set(s)
         self.__new_image_set(txn)
 
     def __handle_acquire(self, acquire):
@@ -238,7 +244,7 @@ class Screen(slicops.sliclet.Base):
             self.__current_value["acquire"] = acquire
             n = not acquire
             # Leave plot alone
-            txn.multi_set(
+            txn.multi_group_attr_set(
                 ("single_button.ui.enabled", n),
                 ("start_button.ui.enabled", n),
                 (
@@ -257,14 +263,14 @@ class Screen(slicops.sliclet.Base):
             self.__current_value["image"] = image
             if self.__update_plot(txn) and self.__single_button:
                 self.__set(txn, "acquire", False, _BUTTONS_DISABLE)
-                txn.multi_set(
+                txn.multi_group_attr_set(
                     ("single_button.ui.enabled", True),
                     ("start_button.ui.enabled", True),
                 )
 
     def __new_image_set(self, txn):
         self.__image_set = slicops.plot.ImageSet(
-            txn.multi_get(
+            txn.multi_field_value(
                 (
                     "beam_path",
                     "camera",
@@ -278,7 +284,7 @@ class Screen(slicops.sliclet.Base):
     def __handle_target_status(self, status):
         with self.lock_for_update() as txn:
             self.__current_value["target"] = status
-            txn.multi_set(
+            txn.multi_group_attr_set(
                 ("target_status", status.name),
                 (
                     "target_in_button.ui.enabled",
@@ -306,7 +312,7 @@ class Screen(slicops.sliclet.Base):
         if v is not None and v == value:
             # No button disable since nothing changed
             return
-        txn.multi_set(txn_set)
+        txn.multi_group_attr_set(txn_set)
         try:
             if method is None:
                 self.__device.put(accessor, value)
@@ -326,9 +332,9 @@ class Screen(slicops.sliclet.Base):
             return False
         if (p := self.__image_set.add_frame(i, pykern.pkcompat.utcnow())) is None:
             return False
-        if not txn.group_get("plot", "ui", "visible"):
-            txn.multi_set(_PLOT_ENABLE)
-        txn.field_set("plot", p)
+        if not txn.group_attr("plot", "ui", "visible"):
+            txn.multi_group_attr_set(_PLOT_ENABLE)
+        txn.field_value_set("plot", p)
         return True
 
     def __user_alert(self, txn, fmt, *args):

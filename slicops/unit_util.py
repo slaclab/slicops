@@ -32,7 +32,7 @@ class SlicletSetup(pykern.api.unit_util.Setup):
             pkunit.pkfail("subscription ended unexpectedly")
         return r
 
-    async def ctx_field_set(self, **kwargs):
+    async def ctx_field_value_set(self, **kwargs):
         from pykern.pkcollections import PKDict
         from pykern import pkdebug
 

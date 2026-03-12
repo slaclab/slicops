@@ -59,7 +59,7 @@ class Base:
     def as_dict(self):
         return PKDict((k, copy.deepcopy(self._attrs[k])) for k in self.__TOP_ATTRS)
 
-    def group_get(self, group, attr=None):
+    def group_attr(self, group, attr=None):
         if group not in self.__GROUP_ATTRS:
             raise AssertionError(f"invalid group={group} must be {self.__GROUP_ATTRS}")
         g = self._attrs[group]
@@ -77,6 +77,9 @@ class Base:
         # Updating an instance inherits everything
         return self.__class__(self, overrides)
 
+    def value(self):
+        return self._attrs.value
+
     def value_check(self, value):
         if value is None or hasattr(value, "__len__") and len(value) == 0:
             if self._attrs.constraints.nullable:
@@ -89,9 +92,6 @@ class Base:
             rv = v
         rv.kwargs.field_name = self._attrs.name
         return rv
-
-    def value_get(self):
-        return self._attrs.value
 
     def value_set(self, value):
         v = self.value_check(value)
@@ -225,7 +225,7 @@ class Button(Base):
         return super()._defaults(
             PKDict(
                 name="Button",
-                ui=PKDict(widget="button", clickable=True),
+                ui=PKDict(widget="button", css_kind="primary", clickable=True),
                 # value is always None
                 value=None,
             ),

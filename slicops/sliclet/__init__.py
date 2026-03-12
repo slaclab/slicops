@@ -241,7 +241,7 @@ class Base:
         def _updates():
             m = self.__on_methods
             for k, v in field_values.items():
-                if c := txn.field_set_via_api(k, v, m.get(k)):
+                if c := txn.field_value_set_via_api(k, v, m.get(k)):
                     yield c
 
         with self.lock_for_update(log_op="ctx_write") as txn:
