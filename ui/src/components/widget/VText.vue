@@ -48,6 +48,9 @@
      if ($event.key == 'Enter' && ! isInvalid.value) {
          props.ctx[props.field].value = parsedValue.value;
          props.ctx.serverAction(props.field, parsedValue.value);
+         // prevent default HTML behavior: a form with a single text input field
+         // will automatically submit when the user presses the Enter key in that field
+         $event.preventDefault();
      }
  };
 
