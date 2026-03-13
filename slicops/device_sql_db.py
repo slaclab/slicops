@@ -100,42 +100,6 @@ def recreate(parser):
     return _Inserter(parser).counts
 
 
-def upstream_devices(device_type, required_accessor, beam_path, end_device):
-    with _session() as s:
-        # select device.device_name from device_meta_float, device where device_meta_name = 'sum_l_meters' and device_meta_value < 33 and device.device_type = 'PROF' and device.device_name = device_meta_float.device_name;
-        c = s.t.device_meta_float.c.device_name
-        _assert_on_beampath(end_device, beam_path, s)
-        return tuple(
-            r.device_name
-            for r in s.select(
-                sqlalchemy.select(c)
-                .select_from(
-                    s.t.device_meta_float.join(
-                        s.t.device,
-                        s.t.device.c.device_name == c,
-                    )
-                    .join(
-                        s.t.beam_path,
-                        s.t.beam_path.c.beam_area == s.t.device.c.beam_area,
-                    )
-                    .join(
-                        s.t.device_accessor,
-                        s.t.device_accessor.c.device_name == c,
-                    )
-                )
-                .where(
-                    s.t.beam_path.c.beam_path == beam_path,
-                    s.t.device_meta_float.c.device_meta_name == "sum_l_meters",
-                    s.t.device_meta_float.c.device_meta_value
-                    < _device_meta(end_device, "sum_l_meters", s),
-                    s.t.device.c.device_type == device_type,
-                    s.t.device_accessor.c.accessor_name == required_accessor,
-                )
-                .order_by(s.t.device_meta_float.c.device_meta_value)
-            )
-        )
-
-
 def _assert_on_beampath(device, beam_path, select):
     c = select.t.device.c.device_name
     v = select.select_one_or_none(

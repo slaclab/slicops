@@ -32,13 +32,3 @@ def test_basic():
     # YAG01B does not have any accessors so not in db
     with pkunit.pkexcept("NoRows"):
         device_db.meta_for_device("YAG01B")
-
-
-def test_upstream():
-    from pykern import pkdebug, pkunit
-    from slicops import device_db
-
-    a = device_db.upstream_devices("PROF", "target_control", "CU_HXR", "OTR11")
-    pkunit.pkeq(9, len(a))
-    pkunit.pkeq("YAG01", a[0], "Lowest Z Prof")
-    pkunit.pkeq("OTR4", a[-1], "Closest Z Prof")
