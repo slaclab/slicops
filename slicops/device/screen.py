@@ -60,18 +60,18 @@ class ScreenError(Exception):
 class _StateMachine:
     def __init__(self, worker):
         self.worker = worker
-        self.acquire = None
+        self.curr = PKDict(acquire=None)
 
     def event(self, name, arg):
-        if (u := getattr(self, f"_event_{name}")(arg)) is not None:
-            self.acquire = u
+        if u := getattr(self, f"_event_{name}")(arg):
+            self.curr.pkupdate(u)
 
     def _event_acquire(self, arg):
         self.worker.action(
             "call_handler",
             PKDict(accessor_name=arg.accessor.accessor_name, value=arg.value),
         )
-        return arg.value
+        return PKDict({arg.accessor.accessor_name: arg.value})
 
 
 class _Worker(pykern.pkasyncio.ActionLoop):
