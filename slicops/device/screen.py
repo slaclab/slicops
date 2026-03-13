@@ -31,7 +31,6 @@ class ErrorKind(enum.Enum):
     """Errors passed to on_screen_device_error"""
 
     monitor = enum.auto()
-    state_machine = enum.auto()
 
 
 class EventHandler:
@@ -58,46 +57,21 @@ class ScreenError(Exception):
 
 
 class _StateMachine:
-    _STATES = ("initial", "stop", "acquire", "check_upstream")
-
-    def __init__(self):
-        self.curr = _STATE[0]
+    def __init__(self, worker):
+        self.worker = worker
+        self.acquire = None
 
     def event(self, name, arg):
-        if u := getattr(self, f"_event_{name}")(arg):
-            self.curr = u
+        if (u := getattr(self, f"_event_{name}")(arg)) is not None:
+            self.acquire = u
 
     def _event_acquire(self, arg):
-        if self.curr in ("initial", "stop", "acquire"):
-            pass
-        elif self.curr in ("check_upstream",):
-            self.worker.action(
-                "call_handler",
-                ScreenError(
-                    device=self.device.device_name,
-                    error_kind=ErrorKind.state_machine,
-                    error_msg="invalid event=acquire in state=check_upstream",
-                ),
-            )
-        else:
-            raise AssertionError(f"unknown current state={self.curr}")
-        return "acquire" if arg.value else "stop"
+        self.worker.action(
+            "call_handler",
+            PKDict(accessor_name=arg.accessor.accessor_name, value=arg.value),
+        )
+        return arg.value
 
-    def _event_acquire(self, arg):
-        if self.curr in ("initial", "stop", "acquire"):
-            return "acquire"
-        if self.curr in ("check_upstream",):
-            self.worker.action(
-                "call_handler",
-                ScreenError(
-                    device=self.device.device_name,
-                    error_kind=
-                    error_kind=ErrorKind.state_machine,
-                    error_msg="invalid event=acquire in state=check_upstream",
-                ),
-            )
-            return "acquire"
-        raise AssertionError(f"unknown current state={self.curr}")
 
 class _Worker(pykern.pkasyncio.ActionLoop):
     """Action loop for Screen
@@ -114,6 +88,7 @@ class _Worker(pykern.pkasyncio.ActionLoop):
         self.__handler = handler
         self.__status = None
         self._loop_timeout_secs = 0
+        self.__state_machine = _StateMachine(self)
         super().__init__()
 
     def action_call_handler(self, arg):
