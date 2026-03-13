@@ -22,6 +22,9 @@ class Screen(slicops.device.Device):
             )
         self.__worker = _Worker(beam_path, handler, self)
 
+    def start_acquire(self, arg):
+        self.__worker.action("event", PKDict(event="start_acquire", arg=None))
+
     def destroy(self):
         self.__worker.destroy()
         super().destroy()
@@ -59,7 +62,7 @@ class ScreenError(Exception):
 class _StateMachine:
     def __init__(self, worker):
         self.worker = worker
-        self.curr = PKDict(acquire=None)
+        self.curr = PKDict(acquire=None, acquire_started=False)
 
     def event(self, name, arg):
         if u := getattr(self, f"_event_{name}")(arg):
@@ -70,7 +73,13 @@ class _StateMachine:
             "call_handler",
             PKDict(accessor_name=arg.accessor.accessor_name, value=arg.value),
         )
-        return PKDict({arg.accessor.accessor_name: arg.value})
+        return PKDict(acquire=arg.value, acquire_started=arg.value)
+
+    def _event_start_acquire(self, arg):
+        if self.curr.acquire_started:
+            return None
+        self.worker.action("device_put", PKDict(accessor_name="acquire", value=True))
+        return PKDict(acquire_started=True)
 
 
 class _Worker(pykern.pkasyncio.ActionLoop):
@@ -102,6 +111,13 @@ class _Worker(pykern.pkasyncio.ActionLoop):
             return lambda: m(**arg)
         else:
             return lambda: m(arg)
+
+    def action_device_put(self, arg):
+        self.device.put(**arg)
+        return None
+
+    def action_event(self, arg):
+        self.__state_machine.event(arg.event, arg.arg)
 
     def action_handle_monitor(self, arg):
         n = arg.accessor.accessor_name
