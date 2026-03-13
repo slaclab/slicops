@@ -32,6 +32,7 @@ class ErrorKind(enum.Enum):
     """Errors passed to on_screen_device_error"""
 
     monitor = enum.auto()
+    state_machine = enum.auto()
 
 
 class EventHandler:
@@ -56,6 +57,48 @@ class ScreenError(Exception):
 
         super().__init__(_arg_str())
 
+
+class _StateMachine:
+    _STATES = ("initial", "stop", "acquire", "check_upstream")
+
+    def __init__(self):
+        self.curr = _STATE[0]
+
+    def event(self, name, arg):
+        if u := getattr(self, f"_event_{name}")(arg):
+            self.curr = u
+
+    def _event_acquire(self, arg):
+        if self.curr in ("initial", "stop", "acquire"):
+            pass
+        elif self.curr in ("check_upstream",):
+            self.worker.action(
+                "call_handler",
+                ScreenError(
+                    device=self.device.device_name,
+                    error_kind=ErrorKind.state_machine,
+                    error_msg="invalid event=acquire in state=check_upstream",
+                ),
+            )
+        else:
+            raise AssertionError(f"unknown current state={self.curr}")
+        return "acquire" if arg.value else "stop"
+
+    def _event_acquire(self, arg):
+        if self.curr in ("initial", "stop", "acquire"):
+            return "acquire"
+        if self.curr in ("check_upstream",):
+            self.worker.action(
+                "call_handler",
+                ScreenError(
+                    device=self.device.device_name,
+                    error_kind=
+                    error_kind=ErrorKind.state_machine,
+                    error_msg="invalid event=acquire in state=check_upstream",
+                ),
+            )
+            return "acquire"
+        raise AssertionError(f"unknown current state={self.curr}")
 
 class _Worker(pykern.pkasyncio.ActionLoop):
     """Action loop for Screen
@@ -98,12 +141,15 @@ class _Worker(pykern.pkasyncio.ActionLoop):
                     error_msg=arg.error,
                 ),
             )
-            return
-        if "connected" in arg:
-            return
-        if n not in self._MONITORS:
+        elif "connected" in arg:
+            pass
+        elif "image" == n:
+            self.action("call_handler", PKDict(accessor_name=n, value=arg.value))
+        elif "acquire" == n:
+            self.__state_machine.event("acquire", arg)
+        else:
             raise AssertionError(f"unsupported accessor={n} {self}")
-        self.action("call_handler", PKDict(accessor_name=n, value=arg.value))
+        return None
 
     def req_action(self, method, arg):
         """Called by DeviceScreen which has separate life cycle"""
