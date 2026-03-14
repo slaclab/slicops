@@ -1,0 +1,16 @@
+"""Test slicops.device.screen
+
+:copyright: Copyright (c) 2025 The Board of Trustees of the Leland Stanford Junior University, through SLAC National Accelerator Laboratory (subject to receipt of any required approvals from the U.S. Dept. of Energy).  All Rights Reserved.
+:license: http://github.com/slaclab/slicops/LICENSE
+"""
+
+
+def test_upstream_blocked():
+    from pykern import pkdebug, pkunit
+    from slicops import unit_util
+    from slicops.device.screen import ScreenError, ErrorKind
+    import time
+
+    with unit_util.setup_screen("CU_HXR", "YAG03") as s:
+        s.device.start_acquire(None)
+        pkunit.pkre("YAG02.*targets in", repr(s.handler.test_get("error").exception))
