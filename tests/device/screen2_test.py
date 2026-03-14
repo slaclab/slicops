@@ -8,8 +8,6 @@
 def test_upstream_blocked():
     from pykern import pkdebug, pkunit
     from slicops import unit_util
-    from slicops.device.screen import ScreenError, ErrorKind
-    import time
 
     with unit_util.setup_screen("CU_HXR", "YAG03") as s:
         s.device.start_acquire(None)
