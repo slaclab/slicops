@@ -7,11 +7,9 @@
 from pykern.pkcollections import PKDict
 from pykern.pkdebug import pkdc, pkdexc, pkdlog, pkdp, pkdformat
 import abc
-import contextlib
 import enum
 import pykern.pkasyncio
 import slicops.device
-import slicops.device_db
 
 class Screen(slicops.device.Device):
     """Augment `Device` with screen specific operations"""
@@ -36,7 +34,6 @@ class ErrorKind(enum.Enum):
     """Errors passed to on_screen_device_error"""
 
     monitor = enum.auto()
-    upstream = enum.auto()
 
 
 class EventHandler:
@@ -65,7 +62,7 @@ class ScreenError(Exception):
 class _StateMachine:
     def __init__(self, worker):
         self.worker = worker
-        self.curr = PKDict(acquire=None, acquire_started=False, upstream_check=False)
+        self.curr = PKDict(acquire=None, acquire_started=False)
 
     def event(self, name, arg):
         if u := getattr(self, f"_event_{name}")(arg):
@@ -79,30 +76,10 @@ class _StateMachine:
         return PKDict(acquire=arg.value, acquire_started=arg.value)
 
     def _event_start_acquire(self, arg):
-        if self.curr.acquire_started or self.curr.upstream_check:
+        if self.curr.acquire_started:
             return None
-        self.worker.action("check_upstream", None)
-        return PKDict(acquire_started=True, upstream_check=True)
-
-    def _event_upstream_check_done(self, arg):
-        if not self.curr.upstream_check:
-            return None
-        if arg:
-            self.worker.action(
-                "call_handler",
-                ScreenError(
-                    blocking=arg,
-                    device=self.worker.device.device_name,
-                    error_kind=ErrorKind.upstream,
-                    error_msg="upstream screens targets are in",
-                ),
-            )
-        elif self.curr.acquire_started:
-            self.worker.action(
-                "device_put",
-                PKDict(accessor_name="acquire", value=True),
-            )
-        return PKDict(upstream_check=False)
+        self.worker.action("device_put", PKDict(accessor_name="acquire", value=True))
+        return PKDict(acquire_started=True)
 
 
 class _Worker(pykern.pkasyncio.ActionLoop):
@@ -134,27 +111,6 @@ class _Worker(pykern.pkasyncio.ActionLoop):
             return lambda: m(**arg)
         else:
             return lambda: m(arg)
-
-    def action_check_upstream(self, arg):
-        def _blocking():
-            for n in _names():
-                if not _is_out(slicops.device.Device(n)):
-                    yield n
-
-        @contextlib.contextmanager
-        def _is_out(upstream):
-            try:
-                yield upstream.get("target_control") == _TARGET_OUT
-            finally:
-                upstream.destroy()
-
-        def _names():
-            return slicops.device_db.upstream_devices(
-                "PROF", "target_control", self.beam_path, self.device.device_name
-            )
-
-        self.__state_machine.event("upstream_check_done", list(_blocking()))
-        return None
 
     def action_device_put(self, arg):
         self.device.put(**arg)
