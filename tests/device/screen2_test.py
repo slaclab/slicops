@@ -11,4 +11,4 @@ def test_upstream_blocked():
 
     with unit_util.setup_screen("CU_HXR", "YAG03") as s:
         s.device.start_acquire(None)
-        pkunit.pkre("YAG02.*targets in", repr(s.handler.test_get("error").exception))
+        pkunit.pkre("YAG02.*targets in", s.handler.test_get("error").exception)

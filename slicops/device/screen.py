@@ -89,6 +89,7 @@ class _StateMachine:
     def _event_upstream_check_done(self, arg):
         if not self.curr.upstream_check:
             return None
+        rv = PKDict(upstream_check=False)
         if arg:
             self.worker.action(
                 "call_handler",
@@ -99,12 +100,14 @@ class _StateMachine:
                     error_msg="upstream screen targets in",
                 ),
             )
+            if not self.curr.acquire:
+                rv.acquire_started = False
         elif self.curr.acquire_started:
             self.worker.action(
                 "device_put",
                 PKDict(accessor_name="acquire", value=True),
             )
-        return PKDict(upstream_check=False)
+        return rv
 
 
 class _Worker(pykern.pkasyncio.ActionLoop):
