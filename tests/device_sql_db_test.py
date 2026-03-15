@@ -28,3 +28,14 @@ def test_screens_for_a_beampath():
         "Missing OTR2 screen: {}",
         d,
     )
+
+
+def test_screens_with_target_control_by_position():
+    from pykern import pkdebug, pkunit
+    from slicops import device_sql_db
+
+    d = device_sql_db.screens_with_target_control_by_position("CU_HXR")
+    pkunit.pkok(
+        d[0] == ("YAG01", 0.614),
+        "Expect YAG01 first at position 0.614",
+    )

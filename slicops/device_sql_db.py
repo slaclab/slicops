@@ -100,6 +100,43 @@ def recreate(parser):
     return _Inserter(parser).counts
 
 
+def screens_with_target_control_by_position(beam_path):
+    with _session() as s:
+        d = s.t.device
+        bp = s.t.beam_path
+        mf = s.t.device_meta_float
+        da = s.t.device_accessor
+
+        return tuple(
+            (r.device_name, r.device_meta_value)
+            for r in s.select(
+                sqlalchemy.select(
+                    d.c.device_name,
+                    mf.c.device_meta_value,
+                )
+                .join(
+                    bp,
+                    bp.c.beam_area == d.c.beam_area,
+                )
+                .join(
+                    mf,
+                    mf.c.device_name == d.c.device_name,
+                )
+                .join(
+                    da,
+                    da.c.device_name == d.c.device_name,
+                )
+                .where(
+                    bp.c.beam_path == beam_path,
+                    d.c.device_type == "PROF",
+                    mf.c.device_meta_name == "sum_l_meters",
+                    da.c.accessor_name == "target_control",
+                )
+                .order_by(mf.c.device_meta_value)
+            )
+        )
+
+
 def screens_by_position(beam_path):
     """
     AI prompt:
