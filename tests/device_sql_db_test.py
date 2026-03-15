@@ -1,3 +1,22 @@
+def test_screens_by_position():
+    from pykern import pkdebug, pkunit
+    from slicops import device_sql_db
+
+    d = device_sql_db.screens_by_position("CU_HXR")
+
+    pkunit.pkok(
+        d[0] == ("VCC", 0.0),
+        "Expected VCC and first at position 0",
+    )
+    pkunit.pkok(
+        d[-1][0] == "OTRDMP",
+        "Expect OTRDMP to be last",
+    )
+    pkunit.pkok(
+        ("OTR2", 14.241) in d,
+        "Expect OTR2 in the results",
+    )
+
 
 def test_screens_for_a_beampath():
     from pykern import pkdebug, pkunit

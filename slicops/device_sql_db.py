@@ -100,6 +100,43 @@ def recreate(parser):
     return _Inserter(parser).counts
 
 
+def screens_by_position(beam_path):
+    """
+    AI prompt:
+    Write a function which returns the name and sum_l_meters device_meta_float value for
+    all PROF device types on a specified beam_path.
+    Order the results by sum_l_meters.
+    """
+    with _session() as s:
+        d = s.t.device
+        bp = s.t.beam_path
+        mf = s.t.device_meta_float
+
+        return tuple(
+            (r.device_name, r.device_meta_value)
+            for r in s.select(
+                sqlalchemy.select(
+                    d.c.device_name,
+                    mf.c.device_meta_value,
+                )
+                .join(
+                    bp,
+                    bp.c.beam_area == d.c.beam_area,
+                )
+                .join(
+                    mf,
+                    mf.c.device_name == d.c.device_name,
+                )
+                .where(
+                    bp.c.beam_path == beam_path,
+                    d.c.device_type == "PROF",
+                    mf.c.device_meta_name == "sum_l_meters",
+                )
+                .order_by(mf.c.device_meta_value)
+            )
+        )
+
+
 def _assert_on_beampath(device, beam_path, select):
     c = select.t.device.c.device_name
     v = select.select_one_or_none(
