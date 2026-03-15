@@ -180,11 +180,16 @@ def screens_by_position(beam_path):
 
 def upstream_screens(beam_path, device_name):
     """
-    AI Prompt
-    Rename the method to upstream_screens(beam_path, device_name) and update
-    the query so it only returns devices with a sum_l_meters less than the
-    supplied device_name.
-    Convert the query to sqlalchemy select_from.
+    Return PROF screen device names upstream of a reference device on a beam path.
+    Results are ordered by increasing ``sum_l_meters`` (furthest upstream first).
+
+    Args:
+        beam_path (str): Beam path used to determine the beam area to search.
+        device_name (str): Reference device which defines the upstream cutoff.
+
+    Returns:
+        tuple[str, ...]: Device names of upstream PROF screens ordered by
+        increasing ``sum_l_meters``.
     """
     with _session() as s:
         d = s.t.device
@@ -194,34 +199,32 @@ def upstream_screens(beam_path, device_name):
 
         mf_ref = sqlalchemy.alias(mf)
 
-        stmt = (
-            sqlalchemy.select(
-                d.c.device_name,
-                mf.c.device_meta_value,
-            )
-            .select_from(
-                d.join(bp, bp.c.beam_area == d.c.beam_area)
-                .join(mf, mf.c.device_name == d.c.device_name)
-                .join(da, da.c.device_name == d.c.device_name)
-                .join(
-                    mf_ref,
-                    sqlalchemy.and_(
-                        mf_ref.c.device_name == device_name,
-                        mf_ref.c.device_meta_name == "sum_l_meters",
-                    ),
+        return tuple(
+            r.device_name
+            for r in s.select(
+                sqlalchemy.select(d.c.device_name)
+                .select_from(
+                    d.join(bp, bp.c.beam_area == d.c.beam_area)
+                    .join(mf, mf.c.device_name == d.c.device_name)
+                    .join(da, da.c.device_name == d.c.device_name)
+                    .join(
+                        mf_ref,
+                        sqlalchemy.and_(
+                            mf_ref.c.device_name == device_name,
+                            mf_ref.c.device_meta_name == "sum_l_meters",
+                        ),
+                    )
                 )
+                .where(
+                    bp.c.beam_path == beam_path,
+                    d.c.device_type == "PROF",
+                    mf.c.device_meta_name == "sum_l_meters",
+                    da.c.accessor_name == "target_control",
+                    mf.c.device_meta_value < mf_ref.c.device_meta_value,
+                )
+                .order_by(mf.c.device_meta_value)
             )
-            .where(
-                bp.c.beam_path == beam_path,
-                d.c.device_type == "PROF",
-                mf.c.device_meta_name == "sum_l_meters",
-                da.c.accessor_name == "target_control",
-                mf.c.device_meta_value < mf_ref.c.device_meta_value,
-            )
-            .order_by(mf.c.device_meta_value)
         )
-
-        return tuple((r.device_name, r.device_meta_value) for r in s.select(stmt))
 
 
 def _assert_on_beampath(device, beam_path, select):

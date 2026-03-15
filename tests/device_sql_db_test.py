@@ -47,10 +47,8 @@ def test_upstream_screens():
 
     d = device_sql_db.upstream_screens("CU_HXR", "OTR2")
     pkdebug.pkdp(d)
+    pkunit.pkok("OTR2" not in d, "OTR2 should not be in the result list")
     pkunit.pkok(
-        "OTR2" not in [v[0] for v in d], "OTR2 should not be in the result list"
-    )
-    pkunit.pkok(
-        d[-1][0] == "OTR1",
+        d[-1] == "OTR1",
         "OTR1 should be the last screen",
     )
