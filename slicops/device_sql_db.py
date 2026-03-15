@@ -101,6 +101,10 @@ def recreate(parser):
 
 
 def screens_with_target_control_by_position(beam_path):
+    """
+    AI prompt:
+    Update the query so that only devices which have a accessor named "target_control"
+    """
     with _session() as s:
         d = s.t.device
         bp = s.t.beam_path
