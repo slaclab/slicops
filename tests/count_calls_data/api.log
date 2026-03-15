@@ -1,0 +1,850 @@
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:267:_do name=None ip=0.0.0.0 port=16590
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:33364 uri=/hello status=304 ms=54.21
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:33368 uri=/src/main.js status=304 ms=15.34
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:33364 uri=/@vite/client status=200 ms=104.58
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:33368 uri=/src/services/router.js status=304 ms=42.61
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:33364 uri=/node_modules/.vite/deps/bootstrap5-toggle.js?v=d65ddd9f status=304 ms=24.28
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:33382 uri=/node_modules/.vite/deps/vue.js?v=d65ddd9f status=304 ms=19.23
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:33368 uri=/node_modules/bootstrap/dist/css/bootstrap.min.css status=304 ms=23.71
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:33390 uri=/src/App.vue status=304 ms=25.40
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:33394 uri=/node_modules/bootstrap5-toggle/css/bootstrap5-toggle.min.css status=304 ms=25.80
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:33404 uri=/node_modules/.vite/deps/bootstrap.js?v=d65ddd9f status=304 ms=28.52
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:33364 uri=/src/style.css status=304 ms=7.17
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:33368 uri=/node_modules/vite/dist/client/env.mjs status=304 ms=28.74
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:33382 uri=/src/components/VApp.vue status=304 ms=28.34
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:33390 uri=/node_modules/.vite/deps/vue-router.js?v=d65ddd9f status=304 ms=24.00
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:33394 uri=/node_modules/.vite/deps/chunk-HKJ2B2AA.js?v=d65ddd9f status=304 ms=24.75
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:33404 uri=/@id/__x00__plugin-vue:export-helper status=304 ms=20.62
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:33364 uri=/node_modules/.vite/deps/chunk-XCYU7YRO.js?v=d65ddd9f status=304 ms=11.12
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:33368 uri=/src/services/log.js status=304 ms=24.76
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:33382 uri=/src/services/api.js status=304 ms=19.81
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:33390 uri=/src/components/layout/VRows.vue status=304 ms=20.37
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:33394 uri=/node_modules/.vite/deps/@msgpack_msgpack.js?v=d65ddd9f status=304 ms=12.24
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:33404 uri=/src/components/layout/VCellGroup.vue status=304 ms=22.19
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:33364 uri=/src/components/layout/VCell.vue status=304 ms=18.28
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:33368 uri=/src/components/layout/VCols.vue status=304 ms=18.40
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:33382 uri=/src/components/widget/VButton.vue status=304 ms=30.01
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:33390 uri=/src/components/plot/VHeatmap.vue status=304 ms=33.33
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:33394 uri=/src/components/widget/VStatic.vue status=304 ms=32.66
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:33368 uri=/src/components/widget/VText.vue status=304 ms=25.26
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:33364 uri=/src/components/plot/VHeatmapWithLineouts.vue status=304 ms=26.81
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:33404 uri=/src/components/widget/VSelect.vue status=304 ms=27.26
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:33382 uri=/src/components/widget/VToggle.vue status=304 ms=11.75
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:33364 uri=/src/components/plot/VHeatmapWithLineouts.vue?vue&type=style&index=0&scoped=cfebf58b&lang.css status=304 ms=20.71
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:33368 uri=/src/components/plot/VHeatmapCanvas.vue status=304 ms=23.53
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:33390 uri=/src/components/widget/VLabel.vue status=304 ms=20.47
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:33394 uri=/src/components/widget/validation/useValidation.js status=304 ms=20.50
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:33404 uri=/src/components/widget/validation/useNumberValidation.js status=304 ms=21.49
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:33382 uri=/node_modules/.vite/deps/d3.js?v=d65ddd9f status=304 ms=30.78
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:33364 uri=/src/components/plot/VHeatmap.vue?vue&type=style&index=0&scoped=6126aa51&lang.css status=304 ms=11.71
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log ws-get ip=127.0.0.1:33410 uri=/api-v1
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log ws-end ip=127.0.0.1:33410 uri=/api-v1
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log ws-open ip=127.0.0.1:0 ws=1 None
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log call ip=127.0.0.1:0 ws=1 <call#1 authenticate_connection>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log reply ip=127.0.0.1:0 ws=1 <call#1 authenticate_connection>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log end ip=127.0.0.1:0 ws=1 <call#1 authenticate_connection>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log subscribe ip=127.0.0.1:0 ws=1 <subscribe#2 ui_ctx_update>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log reply ip=127.0.0.1:0 ws=1 <subscribe#2 ui_ctx_update>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:267:_do name=None ip=0.0.0.0 port=16590
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log ws-get ip=127.0.0.1:44162 uri=/api-v1
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log ws-end ip=127.0.0.1:44162 uri=/api-v1
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log ws-open ip=127.0.0.1:0 ws=1 None
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log call ip=127.0.0.1:0 ws=1 <call#3 authenticate_connection>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log reply ip=127.0.0.1:0 ws=1 <call#3 authenticate_connection>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log end ip=127.0.0.1:0 ws=1 <call#3 authenticate_connection>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log subscribe ip=127.0.0.1:0 ws=1 <subscribe#4 ui_ctx_update>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:338:_do_call exception=<subscribe#4 ui_ctx_update> name 'txn' is not defined stack=Traceback (most recent call last):
+  File "/home/vagrant/.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py", line 334, in _do_call
+    return await getattr(c, self._api.func_name)(self._call.api_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/vagrant/src/slaclab/slicops/slicops/ui_api.py", line 38, in api_ui_ctx_update
+    _SLICLET_KEY: slicops.sliclet.instance(api_args.sliclet, q),
+                  ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/home/vagrant/src/slaclab/slicops/slicops/sliclet/__init__.py", line 68, in instance
+    return _import(name).CLASS(name, queue)
+           ~~~~~~~^^^^^^
+  File "/home/vagrant/src/slaclab/slicops/slicops/sliclet/__init__.py", line 51, in _import
+    return importlib.import_module(n)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^
+  File "/home/vagrant/.pyenv/versions/3.13.9/lib/python3.13/importlib/__init__.py", line 88, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap>", line 1387, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1360, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1331, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 935, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 1027, in exec_module
+  File "<frozen importlib._bootstrap>", line 488, in _call_with_frames_removed
+  File "/home/vagrant/src/radiasoft/hello/hello/sliclet/hello.py", line 10, in <module>
+    class Hello(slicops.sliclet.Base):
+        txn.field_value_set("message", _MESSAGE[l])
+  File "/home/vagrant/src/radiasoft/hello/hello/sliclet/hello.py", line 11, in Hello
+    txn.field_value_set("message", _MESSAGE[l])
+    ^^^
+NameError: name 'txn' is not defined
+
+Exception was printed at:
+
+NameError: name 'txn' is not defined
+  File "/home/vagrant/.pyenv/versions/py3/bin/slicops", line 7, in <module>
+    sys.exit(main())
+  File "/home/vagrant/src/slaclab/slicops/slicops/slicops_console.py", line 14, in main
+    return pykern.pkcli.main("slicops")
+  File "/home/vagrant/.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkcli/__init__.py", line 167, in main
+    res = argh.dispatch(parser, argv=argv)
+  File "/home/vagrant/.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/argh/dispatching.py", line 199, in dispatch
+    return run_endpoint_function(
+  File "/home/vagrant/.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/argh/dispatching.py", line 270, in run_endpoint_function
+    return _process_command_output(lines, output_file, raw_output, always_flush)
+  File "/home/vagrant/.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/argh/dispatching.py", line 290, in _process_command_output
+    for line in lines:
+  File "/home/vagrant/.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/argh/dispatching.py", line 415, in _execute_command
+    for line in result:
+  File "/home/vagrant/.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/argh/dispatching.py", line 395, in _call
+    result = function(*positional_values, **values_by_name)
+  File "/home/vagrant/src/slaclab/slicops/slicops/pkcli/service.py", line 73, in ui_api
+    server.start(
+  File "/home/vagrant/.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py", line 66, in start
+    l.start()
+  File "/home/vagrant/.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py", line 325, in start
+    asyncio.run(_do(), debug=_cfg.debug)
+  File "/home/vagrant/.pyenv/versions/3.13.9/lib/python3.13/asyncio/runners.py", line 195, in run
+    return runner.run(main)
+  File "/home/vagrant/.pyenv/versions/3.13.9/lib/python3.13/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+  File "/home/vagrant/.pyenv/versions/3.13.9/lib/python3.13/asyncio/base_events.py", line 712, in run_until_complete
+    self.run_forever()
+  File "/home/vagrant/.pyenv/versions/3.13.9/lib/python3.13/asyncio/base_events.py", line 683, in run_forever
+    self._run_once()
+  File "/home/vagrant/.pyenv/versions/3.13.9/lib/python3.13/asyncio/base_events.py", line 2042, in _run_once
+    handle._run()
+  File "/home/vagrant/.pyenv/versions/3.13.9/lib/python3.13/asyncio/events.py", line 89, in _run
+    self._context.run(self._callback, *self._args)
+  File "/home/vagrant/.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py", line 197, in handle_on_message
+    if not await m.process(msg):
+  File "/home/vagrant/.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py", line 294, in process
+    r = await self._do_call(Subscription(self))
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log reply ip=127.0.0.1:0 ws=1 <subscribe#4 ui_ctx_update>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log end ip=127.0.0.1:0 ws=1 <subscribe#4 ui_ctx_update>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:60310 uri=/hello status=200 ms=25.12
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:60310 uri=/src/main.js status=304 ms=15.53
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:60312 uri=/@vite/client status=304 ms=47.05
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:60310 uri=/node_modules/.vite/deps/vue.js?v=d65ddd9f status=304 ms=14.05
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:60312 uri=/src/style.css status=304 ms=13.20
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:60328 uri=/src/App.vue status=304 ms=24.30
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:60342 uri=/src/services/router.js status=304 ms=23.57
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:60356 uri=/node_modules/.vite/deps/bootstrap.js?v=d65ddd9f status=304 ms=25.37
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:60364 uri=/node_modules/bootstrap/dist/css/bootstrap.min.css status=304 ms=23.64
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:60312 uri=/node_modules/bootstrap5-toggle/css/bootstrap5-toggle.min.css status=304 ms=12.81
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:60310 uri=/node_modules/.vite/deps/bootstrap5-toggle.js?v=d65ddd9f status=304 ms=29.67
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:60328 uri=/node_modules/vite/dist/client/env.mjs status=304 ms=7.82
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:60342 uri=/node_modules/.vite/deps/chunk-HKJ2B2AA.js?v=d65ddd9f status=304 ms=21.54
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:60356 uri=/node_modules/.vite/deps/chunk-XCYU7YRO.js?v=d65ddd9f status=304 ms=22.20
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:60364 uri=/@id/__x00__plugin-vue:export-helper status=304 ms=17.92
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:60312 uri=/src/components/VApp.vue status=304 ms=17.10
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:60310 uri=/node_modules/.vite/deps/vue-router.js?v=d65ddd9f status=304 ms=12.28
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:60328 uri=/src/services/log.js status=304 ms=20.45
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:60342 uri=/src/components/layout/VRows.vue status=304 ms=19.91
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:60312 uri=/src/services/api.js status=304 ms=16.48
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:60356 uri=/node_modules/.vite/deps/@msgpack_msgpack.js?v=d65ddd9f status=304 ms=30.29
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:60310 uri=/src/components/layout/VCellGroup.vue status=304 ms=25.11
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:60328 uri=/src/components/layout/VCols.vue status=304 ms=24.36
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:60364 uri=/src/components/layout/VCell.vue status=304 ms=23.98
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:60312 uri=/src/components/widget/VButton.vue status=304 ms=33.96
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:60342 uri=/src/components/plot/VHeatmap.vue status=304 ms=35.79
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:60310 uri=/src/components/widget/VStatic.vue status=304 ms=30.42
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:60328 uri=/src/components/widget/VText.vue status=304 ms=30.56
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:60356 uri=/src/components/plot/VHeatmapWithLineouts.vue status=304 ms=31.75
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:60364 uri=/src/components/widget/VSelect.vue status=304 ms=29.72
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:60312 uri=/src/components/widget/VToggle.vue status=304 ms=11.71
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:60310 uri=/src/components/widget/VLabel.vue status=304 ms=29.00
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:60328 uri=/src/components/widget/validation/useValidation.js status=304 ms=25.31
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:60342 uri=/src/components/widget/validation/useNumberValidation.js status=304 ms=26.34
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:60356 uri=/src/components/plot/VHeatmapCanvas.vue status=304 ms=25.13
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:60364 uri=/src/components/plot/VHeatmap.vue?vue&type=style&index=0&scoped=6126aa51&lang.css status=304 ms=26.08
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:60312 uri=/src/components/plot/VHeatmapWithLineouts.vue?vue&type=style&index=0&scoped=cfebf58b&lang.css status=304 ms=7.07
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:60310 uri=/node_modules/.vite/deps/d3.js?v=d65ddd9f status=304 ms=29.03
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log ws-get ip=127.0.0.1:60378 uri=/api-v1
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log ws-end ip=127.0.0.1:60378 uri=/api-v1
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log ws-open ip=127.0.0.1:0 ws=2 None
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log call ip=127.0.0.1:0 ws=2 <call#1 authenticate_connection>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log reply ip=127.0.0.1:0 ws=2 <call#1 authenticate_connection>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log end ip=127.0.0.1:0 ws=2 <call#1 authenticate_connection>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log subscribe ip=127.0.0.1:0 ws=2 <subscribe#2 ui_ctx_update>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log reply ip=127.0.0.1:0 ws=2 <subscribe#2 ui_ctx_update>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log call ip=127.0.0.1:0 ws=2 <call#3 ui_ctx_write>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log reply ip=127.0.0.1:0 ws=2 <call#3 ui_ctx_write>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log end ip=127.0.0.1:0 ws=2 <call#3 ui_ctx_write>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log reply ip=127.0.0.1:0 ws=2 <subscribe#2 ui_ctx_update>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log call ip=127.0.0.1:0 ws=2 <call#4 ui_ctx_write>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log reply ip=127.0.0.1:0 ws=2 <call#4 ui_ctx_write>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log end ip=127.0.0.1:0 ws=2 <call#4 ui_ctx_write>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log reply ip=127.0.0.1:0 ws=2 <subscribe#2 ui_ctx_update>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:267:_do name=None ip=0.0.0.0 port=16590
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log ws-get ip=127.0.0.1:51824 uri=/api-v1
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log ws-end ip=127.0.0.1:51824 uri=/api-v1
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log ws-open ip=127.0.0.1:0 ws=1 None
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log call ip=127.0.0.1:0 ws=1 <call#5 authenticate_connection>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log reply ip=127.0.0.1:0 ws=1 <call#5 authenticate_connection>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log end ip=127.0.0.1:0 ws=1 <call#5 authenticate_connection>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log subscribe ip=127.0.0.1:0 ws=1 <subscribe#6 ui_ctx_update>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log reply ip=127.0.0.1:0 ws=1 <subscribe#6 ui_ctx_update>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:51840 uri=/hello status=200 ms=23.25
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:51840 uri=/src/main.js status=304 ms=16.01
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:51846 uri=/@vite/client status=304 ms=26.21
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:51840 uri=/node_modules/.vite/deps/vue.js?v=d65ddd9f status=304 ms=17.01
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:51846 uri=/node_modules/.vite/deps/bootstrap.js?v=d65ddd9f status=304 ms=15.80
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:51854 uri=/src/App.vue status=304 ms=21.07
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:51866 uri=/src/services/router.js status=304 ms=20.31
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:51880 uri=/node_modules/bootstrap5-toggle/css/bootstrap5-toggle.min.css status=304 ms=21.56
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:51840 uri=/node_modules/.vite/deps/bootstrap5-toggle.js?v=d65ddd9f status=304 ms=24.96
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:51894 uri=/src/style.css status=304 ms=25.53
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:51846 uri=/node_modules/bootstrap/dist/css/bootstrap.min.css status=304 ms=20.82
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:51854 uri=/node_modules/vite/dist/client/env.mjs status=304 ms=11.14
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:51840 uri=/node_modules/.vite/deps/chunk-HKJ2B2AA.js?v=d65ddd9f status=304 ms=21.12
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:51866 uri=/node_modules/.vite/deps/chunk-XCYU7YRO.js?v=d65ddd9f status=304 ms=21.01
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:51880 uri=/@id/__x00__plugin-vue:export-helper status=304 ms=21.70
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:51846 uri=/node_modules/.vite/deps/vue-router.js?v=d65ddd9f status=304 ms=17.09
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:51854 uri=/src/components/VApp.vue status=304 ms=17.93
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:51894 uri=/src/services/log.js status=304 ms=22.32
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:51840 uri=/src/services/api.js status=304 ms=22.00
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:51866 uri=/src/components/layout/VRows.vue status=304 ms=17.02
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:51880 uri=/node_modules/.vite/deps/@msgpack_msgpack.js?v=d65ddd9f status=304 ms=24.51
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:51846 uri=/src/components/layout/VCellGroup.vue status=304 ms=20.30
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:51854 uri=/src/components/layout/VCell.vue status=304 ms=20.12
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:51894 uri=/src/components/layout/VCols.vue status=304 ms=20.22
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:51840 uri=/src/components/widget/VButton.vue status=304 ms=34.36
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:51866 uri=/src/components/plot/VHeatmap.vue status=304 ms=32.82
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:51880 uri=/src/components/plot/VHeatmapWithLineouts.vue status=304 ms=33.12
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:51846 uri=/src/components/widget/VSelect.vue status=304 ms=31.64
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:51854 uri=/src/components/widget/VStatic.vue status=304 ms=31.80
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:51894 uri=/src/components/widget/VText.vue status=304 ms=32.81
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:51840 uri=/src/components/widget/VToggle.vue status=304 ms=11.86
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:51854 uri=/src/components/widget/VLabel.vue status=304 ms=26.00
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:51846 uri=/src/components/plot/VHeatmap.vue?vue&type=style&index=0&scoped=6126aa51&lang.css status=304 ms=23.93
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:51866 uri=/src/components/plot/VHeatmapCanvas.vue status=304 ms=23.42
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:51880 uri=/node_modules/.vite/deps/d3.js?v=d65ddd9f status=304 ms=31.56
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:51894 uri=/src/components/plot/VHeatmapWithLineouts.vue?vue&type=style&index=0&scoped=cfebf58b&lang.css status=304 ms=32.51
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:51840 uri=/src/components/widget/validation/useValidation.js status=304 ms=5.56
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:51854 uri=/src/components/widget/validation/useNumberValidation.js status=304 ms=13.34
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log ws-get ip=127.0.0.1:51896 uri=/api-v1
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log ws-end ip=127.0.0.1:51896 uri=/api-v1
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log ws-open ip=127.0.0.1:0 ws=2 None
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log call ip=127.0.0.1:0 ws=2 <call#1 authenticate_connection>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log reply ip=127.0.0.1:0 ws=2 <call#1 authenticate_connection>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log end ip=127.0.0.1:0 ws=2 <call#1 authenticate_connection>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log subscribe ip=127.0.0.1:0 ws=2 <subscribe#2 ui_ctx_update>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log reply ip=127.0.0.1:0 ws=2 <subscribe#2 ui_ctx_update>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log call ip=127.0.0.1:0 ws=2 <call#3 ui_ctx_write>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log reply ip=127.0.0.1:0 ws=2 <call#3 ui_ctx_write>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log end ip=127.0.0.1:0 ws=2 <call#3 ui_ctx_write>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log reply ip=127.0.0.1:0 ws=2 <subscribe#2 ui_ctx_update>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log call ip=127.0.0.1:0 ws=2 <call#4 ui_ctx_write>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log reply ip=127.0.0.1:0 ws=2 <call#4 ui_ctx_write>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log end ip=127.0.0.1:0 ws=2 <call#4 ui_ctx_write>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log reply ip=127.0.0.1:0 ws=2 <subscribe#2 ui_ctx_update>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log call ip=127.0.0.1:0 ws=2 <call#5 ui_ctx_write>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log reply ip=127.0.0.1:0 ws=2 <call#5 ui_ctx_write>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log end ip=127.0.0.1:0 ws=2 <call#5 ui_ctx_write>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log reply ip=127.0.0.1:0 ws=2 <subscribe#2 ui_ctx_update>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log call ip=127.0.0.1:0 ws=2 <call#6 ui_ctx_write>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log reply ip=127.0.0.1:0 ws=2 <call#6 ui_ctx_write>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log end ip=127.0.0.1:0 ws=2 <call#6 ui_ctx_write>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log reply ip=127.0.0.1:0 ws=2 <subscribe#2 ui_ctx_update>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log call ip=127.0.0.1:0 ws=2 <call#7 ui_ctx_write>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log reply ip=127.0.0.1:0 ws=2 <call#7 ui_ctx_write>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log end ip=127.0.0.1:0 ws=2 <call#7 ui_ctx_write>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log reply ip=127.0.0.1:0 ws=2 <subscribe#2 ui_ctx_update>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:267:_do name=None ip=0.0.0.0 port=16590
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log ws-get ip=127.0.0.1:37502 uri=/api-v1
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log ws-end ip=127.0.0.1:37502 uri=/api-v1
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log ws-open ip=127.0.0.1:0 ws=1 None
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log call ip=127.0.0.1:0 ws=1 <call#8 authenticate_connection>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log reply ip=127.0.0.1:0 ws=1 <call#8 authenticate_connection>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log end ip=127.0.0.1:0 ws=1 <call#8 authenticate_connection>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log subscribe ip=127.0.0.1:0 ws=1 <subscribe#9 ui_ctx_update>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log reply ip=127.0.0.1:0 ws=1 <subscribe#9 ui_ctx_update>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:267:_do name=None ip=0.0.0.0 port=16590
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log ws-get ip=127.0.0.1:59256 uri=/api-v1
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log ws-end ip=127.0.0.1:59256 uri=/api-v1
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log ws-open ip=127.0.0.1:0 ws=1 None
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log call ip=127.0.0.1:0 ws=1 <call#10 authenticate_connection>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log reply ip=127.0.0.1:0 ws=1 <call#10 authenticate_connection>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log end ip=127.0.0.1:0 ws=1 <call#10 authenticate_connection>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log subscribe ip=127.0.0.1:0 ws=1 <subscribe#11 ui_ctx_update>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:338:_do_call exception=<subscribe#11 ui_ctx_update> invalid syntax (hello.py, line 36) stack=Traceback (most recent call last):
+  File "/home/vagrant/.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py", line 334, in _do_call
+    return await getattr(c, self._api.func_name)(self._call.api_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/vagrant/src/slaclab/slicops/slicops/ui_api.py", line 38, in api_ui_ctx_update
+    _SLICLET_KEY: slicops.sliclet.instance(api_args.sliclet, q),
+                  ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/home/vagrant/src/slaclab/slicops/slicops/sliclet/__init__.py", line 68, in instance
+    return _import(name).CLASS(name, queue)
+           ~~~~~~~^^^^^^
+  File "/home/vagrant/src/slaclab/slicops/slicops/sliclet/__init__.py", line 51, in _import
+    return importlib.import_module(n)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^
+  File "/home/vagrant/.pyenv/versions/3.13.9/lib/python3.13/importlib/__init__.py", line 88, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap>", line 1387, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1360, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1331, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 935, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 1023, in exec_module
+  File "<frozen importlib._bootstrap_external>", line 1161, in get_code
+  File "<frozen importlib._bootstrap_external>", line 1091, in source_to_code
+  File "<frozen importlib._bootstrap>", line 488, in _call_with_frames_removed
+  File "/home/vagrant/src/radiasoft/hello/hello/sliclet/hello.py", line 36
+    self.__accessor =
+                     ^
+SyntaxError: invalid syntax
+
+Exception was printed at:
+
+  File "/home/vagrant/src/radiasoft/hello/hello/sliclet/hello.py", line 36
+    self.__accessor =
+                     ^
+SyntaxError: invalid syntax
+  File "/home/vagrant/.pyenv/versions/py3/bin/slicops", line 7, in <module>
+    sys.exit(main())
+  File "/home/vagrant/src/slaclab/slicops/slicops/slicops_console.py", line 14, in main
+    return pykern.pkcli.main("slicops")
+  File "/home/vagrant/.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkcli/__init__.py", line 167, in main
+    res = argh.dispatch(parser, argv=argv)
+  File "/home/vagrant/.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/argh/dispatching.py", line 199, in dispatch
+    return run_endpoint_function(
+  File "/home/vagrant/.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/argh/dispatching.py", line 270, in run_endpoint_function
+    return _process_command_output(lines, output_file, raw_output, always_flush)
+  File "/home/vagrant/.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/argh/dispatching.py", line 290, in _process_command_output
+    for line in lines:
+  File "/home/vagrant/.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/argh/dispatching.py", line 415, in _execute_command
+    for line in result:
+  File "/home/vagrant/.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/argh/dispatching.py", line 395, in _call
+    result = function(*positional_values, **values_by_name)
+  File "/home/vagrant/src/slaclab/slicops/slicops/pkcli/service.py", line 73, in ui_api
+    server.start(
+  File "/home/vagrant/.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py", line 66, in start
+    l.start()
+  File "/home/vagrant/.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py", line 325, in start
+    asyncio.run(_do(), debug=_cfg.debug)
+  File "/home/vagrant/.pyenv/versions/3.13.9/lib/python3.13/asyncio/runners.py", line 195, in run
+    return runner.run(main)
+  File "/home/vagrant/.pyenv/versions/3.13.9/lib/python3.13/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+  File "/home/vagrant/.pyenv/versions/3.13.9/lib/python3.13/asyncio/base_events.py", line 712, in run_until_complete
+    self.run_forever()
+  File "/home/vagrant/.pyenv/versions/3.13.9/lib/python3.13/asyncio/base_events.py", line 683, in run_forever
+    self._run_once()
+  File "/home/vagrant/.pyenv/versions/3.13.9/lib/python3.13/asyncio/base_events.py", line 2042, in _run_once
+    handle._run()
+  File "/home/vagrant/.pyenv/versions/3.13.9/lib/python3.13/asyncio/events.py", line 89, in _run
+    self._context.run(self._callback, *self._args)
+  File "/home/vagrant/.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py", line 197, in handle_on_message
+    if not await m.process(msg):
+  File "/home/vagrant/.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py", line 294, in process
+    r = await self._do_call(Subscription(self))
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log reply ip=127.0.0.1:0 ws=1 <subscribe#11 ui_ctx_update>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log end ip=127.0.0.1:0 ws=1 <subscribe#11 ui_ctx_update>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:52246 uri=/hello status=200 ms=27.52
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:52246 uri=/src/main.js status=304 ms=13.49
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:52250 uri=/@vite/client status=304 ms=35.89
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:52246 uri=/src/services/router.js status=304 ms=31.32
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:52260 uri=/node_modules/.vite/deps/vue.js?v=d65ddd9f status=304 ms=18.59
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:52266 uri=/src/App.vue status=304 ms=18.49
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:52278 uri=/src/style.css status=304 ms=19.36
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:52246 uri=/node_modules/.vite/deps/bootstrap5-toggle.js?v=d65ddd9f status=304 ms=32.17
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:52294 uri=/node_modules/bootstrap5-toggle/css/bootstrap5-toggle.min.css status=304 ms=32.90
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:52250 uri=/node_modules/.vite/deps/bootstrap.js?v=d65ddd9f status=304 ms=28.12
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:52260 uri=/node_modules/bootstrap/dist/css/bootstrap.min.css status=304 ms=10.68
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:52246 uri=/node_modules/.vite/deps/vue-router.js?v=d65ddd9f status=304 ms=21.22
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:52266 uri=/src/components/VApp.vue status=304 ms=21.99
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:52278 uri=/node_modules/vite/dist/client/env.mjs status=304 ms=22.60
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:52250 uri=/node_modules/.vite/deps/chunk-XCYU7YRO.js?v=d65ddd9f status=304 ms=20.30
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:52260 uri=/node_modules/.vite/deps/chunk-HKJ2B2AA.js?v=d65ddd9f status=304 ms=21.62
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:52294 uri=/@id/__x00__plugin-vue:export-helper status=304 ms=21.72
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:52250 uri=/src/components/layout/VRows.vue status=304 ms=21.35
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:52246 uri=/src/services/api.js status=304 ms=22.64
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:52260 uri=/src/services/log.js status=304 ms=23.31
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:52266 uri=/src/components/layout/VCellGroup.vue status=304 ms=21.74
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:52278 uri=/src/components/layout/VCols.vue status=304 ms=21.03
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:52294 uri=/src/components/layout/VCell.vue status=304 ms=19.25
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:52250 uri=/node_modules/.vite/deps/@msgpack_msgpack.js?v=d65ddd9f status=304 ms=12.12
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:52246 uri=/src/components/plot/VHeatmap.vue status=304 ms=28.01
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:52260 uri=/src/components/widget/VButton.vue status=304 ms=28.74
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:52266 uri=/src/components/widget/VStatic.vue status=304 ms=30.30
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:52278 uri=/src/components/widget/VSelect.vue status=304 ms=23.34
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:52294 uri=/src/components/widget/VText.vue status=304 ms=24.03
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:52250 uri=/src/components/widget/VToggle.vue status=304 ms=5.40
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:52246 uri=/src/components/plot/VHeatmapWithLineouts.vue status=304 ms=12.81
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:52260 uri=/src/components/plot/VHeatmapCanvas.vue status=304 ms=29.84
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:52250 uri=/src/components/plot/VHeatmap.vue?vue&type=style&index=0&scoped=6126aa51&lang.css status=304 ms=24.44
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:52266 uri=/node_modules/.vite/deps/d3.js?v=d65ddd9f status=304 ms=31.12
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:52278 uri=/src/components/widget/VLabel.vue status=304 ms=32.29
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:52294 uri=/src/components/widget/validation/useValidation.js status=304 ms=26.70
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:52246 uri=/src/components/widget/validation/useNumberValidation.js status=304 ms=5.59
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:52260 uri=/src/components/plot/VHeatmapWithLineouts.vue?vue&type=style&index=0&scoped=cfebf58b&lang.css status=304 ms=11.79
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log ws-get ip=127.0.0.1:52304 uri=/api-v1
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log ws-end ip=127.0.0.1:52304 uri=/api-v1
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log ws-open ip=127.0.0.1:0 ws=2 None
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log call ip=127.0.0.1:0 ws=2 <call#1 authenticate_connection>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log reply ip=127.0.0.1:0 ws=2 <call#1 authenticate_connection>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log end ip=127.0.0.1:0 ws=2 <call#1 authenticate_connection>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log subscribe ip=127.0.0.1:0 ws=2 <subscribe#2 ui_ctx_update>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log reply ip=127.0.0.1:0 ws=2 <subscribe#2 ui_ctx_update>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log call ip=127.0.0.1:0 ws=2 <call#3 ui_ctx_write>
+slicops/sliclet/__init__.py:156:lock_for_update stack=Traceback (most recent call last):
+  File "/home/vagrant/src/slaclab/slicops/slicops/sliclet/__init__.py", line 135, in lock_for_update
+    yield txn
+  File "/home/vagrant/src/slaclab/slicops/slicops/sliclet/__init__.py", line 248, in _work_ctx_write
+    _click(tuple(_change(sorted(_updates(), key=lambda x: x.field_name))))
+    ~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/vagrant/src/slaclab/slicops/slicops/sliclet/__init__.py", line 239, in _click
+    u.pkdel("on_method").func(**u)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^
+  File "/home/vagrant/src/radiasoft/hello/hello/sliclet/hello.py", line 28, in on_click_greeting
+    f"{_MESSAGE[l]} {self.__n_col()}",
+                     ~~~~~~~~~~~~^^
+  File "/home/vagrant/src/radiasoft/hello/hello/sliclet/hello.py", line 34, in __n_col
+    self.__device = slicops.device.Device("DEV_CAMERA")
+                    ^^^^^^^^^^^^^^
+AttributeError: module 'slicops' has no attribute 'device'
+slicops/sliclet/__init__.py:157:lock_for_update ERROR error=module 'slicops' has no attribute 'device' op=ctx_write
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log reply ip=127.0.0.1:0 ws=2 <call#3 ui_ctx_write>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log end ip=127.0.0.1:0 ws=2 <call#3 ui_ctx_write>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:338:_do_call exception=<subscribe#2 ui_ctx_update> {'desc': 'error=module 'slicops' has no attribute 'device' op=ctx_write'} stack=Traceback (most recent call last):
+  File "/home/vagrant/.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py", line 334, in _do_call
+    return await getattr(c, self._api.func_name)(self._call.api_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/vagrant/src/slaclab/slicops/slicops/ui_api.py", line 48, in api_ui_ctx_update
+    raise r
+pykern.util.APIError: {'desc': 'error=module 'slicops' has no attribute 'device' op=ctx_write'}
+
+Exception was printed at:
+
+pykern.util.APIError: {'desc': 'error=module 'slicops' has no attribute 'device' op=ctx_write'}
+  File "/home/vagrant/.pyenv/versions/py3/bin/slicops", line 7, in <module>
+    sys.exit(main())
+  File "/home/vagrant/src/slaclab/slicops/slicops/slicops_console.py", line 14, in main
+    return pykern.pkcli.main("slicops")
+  File "/home/vagrant/.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkcli/__init__.py", line 167, in main
+    res = argh.dispatch(parser, argv=argv)
+  File "/home/vagrant/.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/argh/dispatching.py", line 199, in dispatch
+    return run_endpoint_function(
+  File "/home/vagrant/.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/argh/dispatching.py", line 270, in run_endpoint_function
+    return _process_command_output(lines, output_file, raw_output, always_flush)
+  File "/home/vagrant/.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/argh/dispatching.py", line 290, in _process_command_output
+    for line in lines:
+  File "/home/vagrant/.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/argh/dispatching.py", line 415, in _execute_command
+    for line in result:
+  File "/home/vagrant/.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/argh/dispatching.py", line 395, in _call
+    result = function(*positional_values, **values_by_name)
+  File "/home/vagrant/src/slaclab/slicops/slicops/pkcli/service.py", line 73, in ui_api
+    server.start(
+  File "/home/vagrant/.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py", line 66, in start
+    l.start()
+  File "/home/vagrant/.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py", line 325, in start
+    asyncio.run(_do(), debug=_cfg.debug)
+  File "/home/vagrant/.pyenv/versions/3.13.9/lib/python3.13/asyncio/runners.py", line 195, in run
+    return runner.run(main)
+  File "/home/vagrant/.pyenv/versions/3.13.9/lib/python3.13/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+  File "/home/vagrant/.pyenv/versions/3.13.9/lib/python3.13/asyncio/base_events.py", line 712, in run_until_complete
+    self.run_forever()
+  File "/home/vagrant/.pyenv/versions/3.13.9/lib/python3.13/asyncio/base_events.py", line 683, in run_forever
+    self._run_once()
+  File "/home/vagrant/.pyenv/versions/3.13.9/lib/python3.13/asyncio/base_events.py", line 2042, in _run_once
+    handle._run()
+  File "/home/vagrant/.pyenv/versions/3.13.9/lib/python3.13/asyncio/events.py", line 89, in _run
+    self._context.run(self._callback, *self._args)
+  File "/home/vagrant/.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py", line 197, in handle_on_message
+    if not await m.process(msg):
+  File "/home/vagrant/.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py", line 294, in process
+    r = await self._do_call(Subscription(self))
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log reply ip=127.0.0.1:0 ws=2 <subscribe#2 ui_ctx_update>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log end ip=127.0.0.1:0 ws=2 <subscribe#2 ui_ctx_update>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:267:_do name=None ip=0.0.0.0 port=16590
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:46390 uri=/hello status=200 ms=22.36
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:46390 uri=/src/main.js status=304 ms=11.62
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:46398 uri=/@vite/client status=304 ms=28.77
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:46390 uri=/src/App.vue status=304 ms=18.22
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:46398 uri=/node_modules/bootstrap5-toggle/css/bootstrap5-toggle.min.css status=304 ms=12.06
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:46404 uri=/node_modules/.vite/deps/vue.js?v=d65ddd9f status=304 ms=23.89
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:46410 uri=/src/services/router.js status=304 ms=23.24
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:46418 uri=/node_modules/.vite/deps/bootstrap.js?v=d65ddd9f status=304 ms=25.15
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:46422 uri=/src/style.css status=304 ms=22.06
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:46390 uri=/node_modules/bootstrap/dist/css/bootstrap.min.css status=304 ms=17.93
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:46398 uri=/node_modules/.vite/deps/bootstrap5-toggle.js?v=d65ddd9f status=304 ms=23.31
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:46404 uri=/node_modules/vite/dist/client/env.mjs status=304 ms=8.94
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:46390 uri=/@id/__x00__plugin-vue:export-helper status=304 ms=26.69
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:46410 uri=/node_modules/.vite/deps/chunk-HKJ2B2AA.js?v=d65ddd9f status=304 ms=25.92
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:46418 uri=/node_modules/.vite/deps/chunk-XCYU7YRO.js?v=d65ddd9f status=304 ms=29.62
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:46422 uri=/src/components/VApp.vue status=304 ms=24.91
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:46398 uri=/node_modules/.vite/deps/vue-router.js?v=d65ddd9f status=304 ms=11.72
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:46390 uri=/src/services/log.js status=304 ms=19.85
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:46398 uri=/src/components/layout/VRows.vue status=304 ms=19.33
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:46404 uri=/src/services/api.js status=304 ms=20.70
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:46410 uri=/src/components/layout/VCellGroup.vue status=304 ms=24.55
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:46418 uri=/src/components/layout/VCell.vue status=304 ms=23.76
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:46422 uri=/src/components/layout/VCols.vue status=304 ms=23.31
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:46390 uri=/node_modules/.vite/deps/@msgpack_msgpack.js?v=d65ddd9f status=304 ms=21.46
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:46398 uri=/src/components/widget/VButton.vue status=304 ms=32.59
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:46404 uri=/src/components/plot/VHeatmap.vue status=304 ms=33.73
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:46410 uri=/src/components/plot/VHeatmapWithLineouts.vue status=304 ms=35.05
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:46418 uri=/src/components/widget/VSelect.vue status=304 ms=26.60
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:46390 uri=/src/components/widget/VStatic.vue status=304 ms=29.03
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:46422 uri=/src/components/widget/VText.vue status=304 ms=28.21
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:46398 uri=/src/components/widget/VToggle.vue status=304 ms=12.20
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:46390 uri=/src/components/widget/VLabel.vue status=304 ms=30.64
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:46404 uri=/src/components/plot/VHeatmapCanvas.vue status=304 ms=29.79
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:46410 uri=/src/components/plot/VHeatmap.vue?vue&type=style&index=0&scoped=6126aa51&lang.css status=304 ms=29.43
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:46418 uri=/src/components/plot/VHeatmapWithLineouts.vue?vue&type=style&index=0&scoped=cfebf58b&lang.css status=304 ms=21.26
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:46422 uri=/node_modules/.vite/deps/d3.js?v=d65ddd9f status=304 ms=27.73
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:46398 uri=/src/components/widget/validation/useValidation.js status=304 ms=5.80
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:46390 uri=/src/components/widget/validation/useNumberValidation.js status=304 ms=12.79
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log ws-get ip=127.0.0.1:46436 uri=/api-v1
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log ws-end ip=127.0.0.1:46436 uri=/api-v1
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log ws-open ip=127.0.0.1:0 ws=1 None
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log call ip=127.0.0.1:0 ws=1 <call#1 authenticate_connection>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log reply ip=127.0.0.1:0 ws=1 <call#1 authenticate_connection>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log end ip=127.0.0.1:0 ws=1 <call#1 authenticate_connection>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log subscribe ip=127.0.0.1:0 ws=1 <subscribe#2 ui_ctx_update>
+Executing <Task pending name='Task-96' coro=<_ServerConnection.handle_on_message() running at /home/vagrant/.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:197> wait_for=<Future pending cb=[Task.task_wakeup()] created at /home/vagrant/.pyenv/versions/3.13.9/lib/python3.13/asyncio/base_events.py:459> cb=[set.discard()] created at /home/vagrant/.pyenv/versions/3.13.9/lib/python3.13/asyncio/tasks.py:410> took 0.222 seconds
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log reply ip=127.0.0.1:0 ws=1 <subscribe#2 ui_ctx_update>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log call ip=127.0.0.1:0 ws=1 <call#3 ui_ctx_write>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log reply ip=127.0.0.1:0 ws=1 <call#3 ui_ctx_write>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log end ip=127.0.0.1:0 ws=1 <call#3 ui_ctx_write>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/sql_db.py:76:__init__ exception=NoRows table_or_stmt=device where={'device_name': 'DEV_CAMERA'}
+slicops/sliclet/__init__.py:156:lock_for_update stack=Traceback (most recent call last):
+  File "/home/vagrant/src/slaclab/slicops/slicops/sliclet/__init__.py", line 135, in lock_for_update
+    yield txn
+  File "/home/vagrant/src/slaclab/slicops/slicops/sliclet/__init__.py", line 248, in _work_ctx_write
+    _click(tuple(_change(sorted(_updates(), key=lambda x: x.field_name))))
+    ~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/vagrant/src/slaclab/slicops/slicops/sliclet/__init__.py", line 239, in _click
+    u.pkdel("on_method").func(**u)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^
+  File "/home/vagrant/src/radiasoft/hello/hello/sliclet/hello.py", line 29, in on_click_greeting
+    f"{_MESSAGE[l]} {self.__n_col()}",
+                     ~~~~~~~~~~~~^^
+  File "/home/vagrant/src/radiasoft/hello/hello/sliclet/hello.py", line 35, in __n_col
+    self.__device = slicops.device.Device("DEV_CAMERA")
+                    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "/home/vagrant/src/slaclab/slicops/slicops/device/__init__.py", line 39, in __init__
+    self.meta = slicops.device_db.meta_for_device(device_name)
+                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/home/vagrant/src/slaclab/slicops/slicops/device_db.py", line 72, in meta_for_device
+    rv = DeviceMeta(slicops.device_sql_db.device(device_name))
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/home/vagrant/src/slaclab/slicops/slicops/device_sql_db.py", line 63, in device
+    return PKDict(s.select_one("device", PKDict(device_name=name))).pkupdate(
+                  ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/vagrant/.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/sql_db.py", line 288, in select_one
+    raise NoRows(table_or_stmt=table_or_stmt, where=where)
+pykern.sql_db.NoRows
+slicops/sliclet/__init__.py:157:lock_for_update ERROR error=<class 'pykern.sql_db.NoRows'> op=ctx_write
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:338:_do_call exception=<subscribe#2 ui_ctx_update> {'desc': 'error=<class 'pykern.sql_db.NoRows'> op=ctx_write'} stack=Traceback (most recent call last):
+  File "/home/vagrant/.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py", line 334, in _do_call
+    return await getattr(c, self._api.func_name)(self._call.api_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/vagrant/src/slaclab/slicops/slicops/ui_api.py", line 48, in api_ui_ctx_update
+    raise r
+pykern.util.APIError: {'desc': 'error=<class 'pykern.sql_db.NoRows'> op=ctx_write'}
+
+Exception was printed at:
+
+pykern.util.APIError: {'desc': 'error=<class 'pykern.sql_db.NoRows'> op=ctx_write'}
+  File "/home/vagrant/.pyenv/versions/py3/bin/slicops", line 7, in <module>
+    sys.exit(main())
+  File "/home/vagrant/src/slaclab/slicops/slicops/slicops_console.py", line 14, in main
+    return pykern.pkcli.main("slicops")
+  File "/home/vagrant/.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkcli/__init__.py", line 167, in main
+    res = argh.dispatch(parser, argv=argv)
+  File "/home/vagrant/.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/argh/dispatching.py", line 199, in dispatch
+    return run_endpoint_function(
+  File "/home/vagrant/.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/argh/dispatching.py", line 270, in run_endpoint_function
+    return _process_command_output(lines, output_file, raw_output, always_flush)
+  File "/home/vagrant/.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/argh/dispatching.py", line 290, in _process_command_output
+    for line in lines:
+  File "/home/vagrant/.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/argh/dispatching.py", line 415, in _execute_command
+    for line in result:
+  File "/home/vagrant/.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/argh/dispatching.py", line 395, in _call
+    result = function(*positional_values, **values_by_name)
+  File "/home/vagrant/src/slaclab/slicops/slicops/pkcli/service.py", line 73, in ui_api
+    server.start(
+  File "/home/vagrant/.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py", line 66, in start
+    l.start()
+  File "/home/vagrant/.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py", line 325, in start
+    asyncio.run(_do(), debug=_cfg.debug)
+  File "/home/vagrant/.pyenv/versions/3.13.9/lib/python3.13/asyncio/runners.py", line 195, in run
+    return runner.run(main)
+  File "/home/vagrant/.pyenv/versions/3.13.9/lib/python3.13/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+  File "/home/vagrant/.pyenv/versions/3.13.9/lib/python3.13/asyncio/base_events.py", line 712, in run_until_complete
+    self.run_forever()
+  File "/home/vagrant/.pyenv/versions/3.13.9/lib/python3.13/asyncio/base_events.py", line 683, in run_forever
+    self._run_once()
+  File "/home/vagrant/.pyenv/versions/3.13.9/lib/python3.13/asyncio/base_events.py", line 2042, in _run_once
+    handle._run()
+  File "/home/vagrant/.pyenv/versions/3.13.9/lib/python3.13/asyncio/events.py", line 89, in _run
+    self._context.run(self._callback, *self._args)
+  File "/home/vagrant/.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py", line 197, in handle_on_message
+    if not await m.process(msg):
+  File "/home/vagrant/.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py", line 294, in process
+    r = await self._do_call(Subscription(self))
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log reply ip=127.0.0.1:0 ws=1 <subscribe#2 ui_ctx_update>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log end ip=127.0.0.1:0 ws=1 <subscribe#2 ui_ctx_update>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:49426 uri=/hello status=200 ms=19.20
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:49426 uri=/src/main.js status=304 ms=8.49
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:49436 uri=/@vite/client status=304 ms=28.74
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:49426 uri=/src/services/router.js status=304 ms=17.59
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:49436 uri=/node_modules/bootstrap/dist/css/bootstrap.min.css status=304 ms=16.32
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:49454 uri=/node_modules/.vite/deps/vue.js?v=d65ddd9f status=304 ms=26.40
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:49442 uri=/src/App.vue status=304 ms=28.82
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:49466 uri=/node_modules/.vite/deps/bootstrap.js?v=d65ddd9f status=304 ms=29.90
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:49468 uri=/src/style.css status=304 ms=29.35
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:49426 uri=/node_modules/bootstrap5-toggle/css/bootstrap5-toggle.min.css status=304 ms=14.22
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:49436 uri=/node_modules/.vite/deps/bootstrap5-toggle.js?v=d65ddd9f status=304 ms=17.76
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:49454 uri=/node_modules/vite/dist/client/env.mjs status=304 ms=7.03
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:49426 uri=/node_modules/.vite/deps/vue-router.js?v=d65ddd9f status=304 ms=28.52
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:49442 uri=/src/components/VApp.vue status=304 ms=30.43
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:49466 uri=/node_modules/.vite/deps/chunk-HKJ2B2AA.js?v=d65ddd9f status=304 ms=29.68
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:49436 uri=/@id/__x00__plugin-vue:export-helper status=304 ms=20.82
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:49468 uri=/node_modules/.vite/deps/chunk-XCYU7YRO.js?v=d65ddd9f status=304 ms=25.06
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:49426 uri=/src/services/log.js status=304 ms=20.75
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:49436 uri=/src/components/layout/VRows.vue status=304 ms=20.01
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:49454 uri=/src/services/api.js status=304 ms=21.39
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:49442 uri=/src/components/layout/VCellGroup.vue status=304 ms=24.37
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:49426 uri=/node_modules/.vite/deps/@msgpack_msgpack.js?v=d65ddd9f status=304 ms=21.11
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:49466 uri=/src/components/layout/VCell.vue status=304 ms=20.93
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:49468 uri=/src/components/layout/VCols.vue status=304 ms=20.77
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:49436 uri=/src/components/widget/VButton.vue status=304 ms=30.59
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:49426 uri=/src/components/plot/VHeatmapWithLineouts.vue status=304 ms=30.74
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:49454 uri=/src/components/plot/VHeatmap.vue status=304 ms=32.40
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:49442 uri=/src/components/widget/VStatic.vue status=304 ms=27.95
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:49466 uri=/src/components/widget/VSelect.vue status=304 ms=27.85
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:49468 uri=/src/components/widget/VText.vue status=304 ms=22.88
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:49436 uri=/src/components/widget/VToggle.vue status=304 ms=12.76
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:49426 uri=/src/components/plot/VHeatmapWithLineouts.vue?vue&type=style&index=0&scoped=cfebf58b&lang.css status=304 ms=25.98
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:49442 uri=/src/components/widget/VLabel.vue status=304 ms=25.59
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:49454 uri=/src/components/plot/VHeatmapCanvas.vue status=304 ms=20.59
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:49466 uri=/node_modules/.vite/deps/d3.js?v=d65ddd9f status=304 ms=30.88
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:49468 uri=/src/components/plot/VHeatmap.vue?vue&type=style&index=0&scoped=6126aa51&lang.css status=304 ms=32.91
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:49436 uri=/src/components/widget/validation/useValidation.js status=304 ms=12.10
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:49426 uri=/src/components/widget/validation/useNumberValidation.js status=304 ms=12.19
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log ws-get ip=127.0.0.1:44250 uri=/api-v1
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log ws-end ip=127.0.0.1:44250 uri=/api-v1
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log ws-open ip=127.0.0.1:0 ws=2 None
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log call ip=127.0.0.1:0 ws=2 <call#1 authenticate_connection>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log reply ip=127.0.0.1:0 ws=2 <call#1 authenticate_connection>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log end ip=127.0.0.1:0 ws=2 <call#1 authenticate_connection>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log subscribe ip=127.0.0.1:0 ws=2 <subscribe#2 ui_ctx_update>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log reply ip=127.0.0.1:0 ws=2 <subscribe#2 ui_ctx_update>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log call ip=127.0.0.1:0 ws=2 <call#3 ui_ctx_write>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log reply ip=127.0.0.1:0 ws=2 <call#3 ui_ctx_write>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log end ip=127.0.0.1:0 ws=2 <call#3 ui_ctx_write>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log reply ip=127.0.0.1:0 ws=2 <subscribe#2 ui_ctx_update>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log call ip=127.0.0.1:0 ws=2 <call#4 ui_ctx_write>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log reply ip=127.0.0.1:0 ws=2 <call#4 ui_ctx_write>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log end ip=127.0.0.1:0 ws=2 <call#4 ui_ctx_write>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log reply ip=127.0.0.1:0 ws=2 <subscribe#2 ui_ctx_update>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log call ip=127.0.0.1:0 ws=2 <call#5 ui_ctx_write>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log reply ip=127.0.0.1:0 ws=2 <call#5 ui_ctx_write>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log end ip=127.0.0.1:0 ws=2 <call#5 ui_ctx_write>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log reply ip=127.0.0.1:0 ws=2 <subscribe#2 ui_ctx_update>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log call ip=127.0.0.1:0 ws=2 <call#6 ui_ctx_write>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log reply ip=127.0.0.1:0 ws=2 <call#6 ui_ctx_write>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log end ip=127.0.0.1:0 ws=2 <call#6 ui_ctx_write>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log reply ip=127.0.0.1:0 ws=2 <subscribe#2 ui_ctx_update>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:267:_do name=None ip=0.0.0.0 port=16590
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log ws-get ip=127.0.0.1:48206 uri=/api-v1
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log ws-end ip=127.0.0.1:48206 uri=/api-v1
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log ws-open ip=127.0.0.1:0 ws=1 None
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log call ip=127.0.0.1:0 ws=1 <call#7 authenticate_connection>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log reply ip=127.0.0.1:0 ws=1 <call#7 authenticate_connection>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log end ip=127.0.0.1:0 ws=1 <call#7 authenticate_connection>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log subscribe ip=127.0.0.1:0 ws=1 <subscribe#8 ui_ctx_update>
+Executing <Task pending name='Task-13' coro=<_ServerConnection.handle_on_message() running at /home/vagrant/.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:197> wait_for=<Future pending cb=[Task.task_wakeup()] created at /home/vagrant/.pyenv/versions/3.13.9/lib/python3.13/asyncio/base_events.py:459> cb=[set.discard()] created at /home/vagrant/.pyenv/versions/3.13.9/lib/python3.13/asyncio/tasks.py:410> took 0.203 seconds
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log reply ip=127.0.0.1:0 ws=1 <subscribe#8 ui_ctx_update>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log call ip=127.0.0.1:0 ws=1 <call#9 ui_ctx_write>
+slicops/sliclet/__init__.py:156:lock_for_update stack=Traceback (most recent call last):
+  File "/home/vagrant/src/slaclab/slicops/slicops/sliclet/__init__.py", line 135, in lock_for_update
+    yield txn
+  File "/home/vagrant/src/slaclab/slicops/slicops/sliclet/__init__.py", line 248, in _work_ctx_write
+    _click(tuple(_change(sorted(_updates(), key=lambda x: x.field_name))))
+    ~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/vagrant/src/slaclab/slicops/slicops/sliclet/__init__.py", line 239, in _click
+    u.pkdel("on_method").func(**u)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^
+  File "/home/vagrant/src/radiasoft/hello/hello/sliclet/hello.py", line 34, in on_click_greeting
+    f"{_MESSAGE[l]} {self.__n_col()}",
+                     ^^^^^^^^^^^^
+AttributeError: 'Hello' object has no attribute '_Hello__n_col'
+slicops/sliclet/__init__.py:157:lock_for_update ERROR error='Hello' object has no attribute '_Hello__n_col' op=ctx_write
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log reply ip=127.0.0.1:0 ws=1 <call#9 ui_ctx_write>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log end ip=127.0.0.1:0 ws=1 <call#9 ui_ctx_write>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:338:_do_call exception=<subscribe#8 ui_ctx_update> {'desc': 'error='Hello' object has no attribute '_Hello__n_col' op=ctx_write'} stack=Traceback (most recent call last):
+  File "/home/vagrant/.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py", line 334, in _do_call
+    return await getattr(c, self._api.func_name)(self._call.api_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/vagrant/src/slaclab/slicops/slicops/ui_api.py", line 48, in api_ui_ctx_update
+    raise r
+pykern.util.APIError: {'desc': 'error='Hello' object has no attribute '_Hello__n_col' op=ctx_write'}
+
+Exception was printed at:
+
+pykern.util.APIError: {'desc': 'error='Hello' object has no attribute '_Hello__n_col' op=ctx_write'}
+  File "/home/vagrant/.pyenv/versions/py3/bin/slicops", line 7, in <module>
+    sys.exit(main())
+  File "/home/vagrant/src/slaclab/slicops/slicops/slicops_console.py", line 14, in main
+    return pykern.pkcli.main("slicops")
+  File "/home/vagrant/.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkcli/__init__.py", line 167, in main
+    res = argh.dispatch(parser, argv=argv)
+  File "/home/vagrant/.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/argh/dispatching.py", line 199, in dispatch
+    return run_endpoint_function(
+  File "/home/vagrant/.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/argh/dispatching.py", line 270, in run_endpoint_function
+    return _process_command_output(lines, output_file, raw_output, always_flush)
+  File "/home/vagrant/.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/argh/dispatching.py", line 290, in _process_command_output
+    for line in lines:
+  File "/home/vagrant/.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/argh/dispatching.py", line 415, in _execute_command
+    for line in result:
+  File "/home/vagrant/.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/argh/dispatching.py", line 395, in _call
+    result = function(*positional_values, **values_by_name)
+  File "/home/vagrant/src/slaclab/slicops/slicops/pkcli/service.py", line 73, in ui_api
+    server.start(
+  File "/home/vagrant/.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py", line 66, in start
+    l.start()
+  File "/home/vagrant/.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py", line 325, in start
+    asyncio.run(_do(), debug=_cfg.debug)
+  File "/home/vagrant/.pyenv/versions/3.13.9/lib/python3.13/asyncio/runners.py", line 195, in run
+    return runner.run(main)
+  File "/home/vagrant/.pyenv/versions/3.13.9/lib/python3.13/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+  File "/home/vagrant/.pyenv/versions/3.13.9/lib/python3.13/asyncio/base_events.py", line 712, in run_until_complete
+    self.run_forever()
+  File "/home/vagrant/.pyenv/versions/3.13.9/lib/python3.13/asyncio/base_events.py", line 683, in run_forever
+    self._run_once()
+  File "/home/vagrant/.pyenv/versions/3.13.9/lib/python3.13/asyncio/base_events.py", line 2042, in _run_once
+    handle._run()
+  File "/home/vagrant/.pyenv/versions/3.13.9/lib/python3.13/asyncio/events.py", line 89, in _run
+    self._context.run(self._callback, *self._args)
+  File "/home/vagrant/.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py", line 197, in handle_on_message
+    if not await m.process(msg):
+  File "/home/vagrant/.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py", line 294, in process
+    r = await self._do_call(Subscription(self))
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log reply ip=127.0.0.1:0 ws=1 <subscribe#8 ui_ctx_update>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log end ip=127.0.0.1:0 ws=1 <subscribe#8 ui_ctx_update>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:267:_do name=None ip=0.0.0.0 port=16590
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log ws-get ip=127.0.0.1:48984 uri=/api-v1
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log ws-end ip=127.0.0.1:48984 uri=/api-v1
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log ws-open ip=127.0.0.1:0 ws=1 None
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log call ip=127.0.0.1:0 ws=1 <call#10 authenticate_connection>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log reply ip=127.0.0.1:0 ws=1 <call#10 authenticate_connection>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log end ip=127.0.0.1:0 ws=1 <call#10 authenticate_connection>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log subscribe ip=127.0.0.1:0 ws=1 <subscribe#11 ui_ctx_update>
+Executing <Task pending name='Task-13' coro=<_ServerConnection.handle_on_message() running at /home/vagrant/.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:197> wait_for=<Future pending cb=[Task.task_wakeup()] created at /home/vagrant/.pyenv/versions/3.13.9/lib/python3.13/asyncio/base_events.py:459> cb=[set.discard()] created at /home/vagrant/.pyenv/versions/3.13.9/lib/python3.13/asyncio/tasks.py:410> took 0.218 seconds
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log reply ip=127.0.0.1:0 ws=1 <subscribe#11 ui_ctx_update>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:267:_do name=None ip=0.0.0.0 port=16590
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:48996 uri=/hello status=304 ms=23.20
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:48996 uri=/@vite/client status=304 ms=25.96
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:38544 uri=/src/main.js status=304 ms=11.78
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:48996 uri=/node_modules/vite/dist/client/env.mjs status=304 ms=11.48
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:38544 uri=/src/App.vue status=304 ms=17.83
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:48996 uri=/node_modules/bootstrap5-toggle/css/bootstrap5-toggle.min.css status=304 ms=11.20
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:38546 uri=/node_modules/.vite/deps/vue.js?v=d65ddd9f status=304 ms=23.52
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:38556 uri=/src/services/router.js status=304 ms=22.96
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:38566 uri=/node_modules/.vite/deps/bootstrap.js?v=d65ddd9f status=304 ms=24.98
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:38568 uri=/node_modules/bootstrap/dist/css/bootstrap.min.css status=304 ms=26.90
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:38544 uri=/src/style.css status=304 ms=4.23
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:48996 uri=/node_modules/.vite/deps/bootstrap5-toggle.js?v=d65ddd9f status=304 ms=19.65
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:38546 uri=/@id/__x00__plugin-vue:export-helper status=304 ms=20.63
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:38556 uri=/node_modules/.vite/deps/chunk-HKJ2B2AA.js?v=d65ddd9f status=304 ms=19.63
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:38566 uri=/node_modules/.vite/deps/chunk-XCYU7YRO.js?v=d65ddd9f status=304 ms=22.63
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:38568 uri=/src/components/VApp.vue status=304 ms=15.77
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:48996 uri=/node_modules/.vite/deps/vue-router.js?v=d65ddd9f status=304 ms=14.54
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:38544 uri=/src/services/api.js status=304 ms=20.40
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:38546 uri=/src/services/log.js status=304 ms=21.01
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:38556 uri=/src/components/layout/VRows.vue status=304 ms=14.85
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:38566 uri=/node_modules/.vite/deps/@msgpack_msgpack.js?v=d65ddd9f status=304 ms=25.65
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:48996 uri=/src/components/layout/VCols.vue status=304 ms=21.51
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:38544 uri=/src/components/layout/VCell.vue status=304 ms=21.78
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:38568 uri=/src/components/layout/VCellGroup.vue status=304 ms=22.00
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:38546 uri=/src/components/widget/VButton.vue status=304 ms=32.54
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:38556 uri=/src/components/plot/VHeatmap.vue status=304 ms=30.39
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:38566 uri=/src/components/widget/VStatic.vue status=304 ms=30.05
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:48996 uri=/src/components/widget/VSelect.vue status=304 ms=27.15
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:38544 uri=/src/components/widget/VText.vue status=304 ms=28.00
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:38568 uri=/src/components/widget/VToggle.vue status=304 ms=27.73
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:38546 uri=/src/components/plot/VHeatmapWithLineouts.vue status=304 ms=13.22
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:48996 uri=/src/components/widget/VLabel.vue status=304 ms=24.82
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:38544 uri=/src/components/widget/validation/useValidation.js status=304 ms=25.72
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:38556 uri=/src/components/plot/VHeatmap.vue?vue&type=style&index=0&scoped=6126aa51&lang.css status=304 ms=25.34
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:38566 uri=/src/components/widget/validation/useNumberValidation.js status=304 ms=20.49
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:38568 uri=/src/components/plot/VHeatmapCanvas.vue status=304 ms=21.50
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:38546 uri=/node_modules/.vite/deps/d3.js?v=d65ddd9f status=304 ms=16.63
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log end ip=127.0.0.1:48996 uri=/src/components/plot/VHeatmapWithLineouts.vue?vue&type=style&index=0&scoped=cfebf58b&lang.css status=304 ms=10.89
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log ws-get ip=127.0.0.1:38578 uri=/api-v1
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log ws-end ip=127.0.0.1:38578 uri=/api-v1
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log ws-open ip=127.0.0.1:0 ws=1 None
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log call ip=127.0.0.1:0 ws=1 <call#1 authenticate_connection>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log reply ip=127.0.0.1:0 ws=1 <call#1 authenticate_connection>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log end ip=127.0.0.1:0 ws=1 <call#1 authenticate_connection>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log subscribe ip=127.0.0.1:0 ws=1 <subscribe#2 ui_ctx_update>
+Executing <Task pending name='Task-106' coro=<_ServerConnection.handle_on_message() running at /home/vagrant/.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:197> wait_for=<Future pending cb=[Task.task_wakeup()] created at /home/vagrant/.pyenv/versions/3.13.9/lib/python3.13/asyncio/base_events.py:459> cb=[set.discard()] created at /home/vagrant/.pyenv/versions/3.13.9/lib/python3.13/asyncio/tasks.py:410> took 0.197 seconds
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log reply ip=127.0.0.1:0 ws=1 <subscribe#2 ui_ctx_update>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log call ip=127.0.0.1:0 ws=1 <call#3 ui_ctx_write>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log reply ip=127.0.0.1:0 ws=1 <call#3 ui_ctx_write>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log end ip=127.0.0.1:0 ws=1 <call#3 ui_ctx_write>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log reply ip=127.0.0.1:0 ws=1 <subscribe#2 ui_ctx_update>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:267:_do name=None ip=0.0.0.0 port=16590
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log ws-get ip=127.0.0.1:46858 uri=/api-v1
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log ws-end ip=127.0.0.1:46858 uri=/api-v1
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log ws-open ip=127.0.0.1:0 ws=1 None
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log call ip=127.0.0.1:0 ws=1 <call#4 authenticate_connection>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log reply ip=127.0.0.1:0 ws=1 <call#4 authenticate_connection>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log end ip=127.0.0.1:0 ws=1 <call#4 authenticate_connection>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log subscribe ip=127.0.0.1:0 ws=1 <subscribe#5 ui_ctx_update>
+Executing <Task pending name='Task-17' coro=<_ServerConnection.handle_on_message() running at /home/vagrant/.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:197> wait_for=<Future pending cb=[Task.task_wakeup()] created at /home/vagrant/.pyenv/versions/3.13.9/lib/python3.13/asyncio/base_events.py:459> cb=[set.discard()] created at /home/vagrant/.pyenv/versions/3.13.9/lib/python3.13/asyncio/tasks.py:410> took 0.230 seconds
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log reply ip=127.0.0.1:0 ws=1 <subscribe#5 ui_ctx_update>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:267:_do name=None ip=0.0.0.0 port=16590
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log ws-get ip=127.0.0.1:38028 uri=/api-v1
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log ws-end ip=127.0.0.1:38028 uri=/api-v1
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log ws-open ip=127.0.0.1:0 ws=1 None
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log call ip=127.0.0.1:0 ws=1 <call#6 authenticate_connection>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log reply ip=127.0.0.1:0 ws=1 <call#6 authenticate_connection>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log end ip=127.0.0.1:0 ws=1 <call#6 authenticate_connection>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log subscribe ip=127.0.0.1:0 ws=1 <subscribe#7 ui_ctx_update>
+Executing <Task pending name='Task-12' coro=<_ServerConnection.handle_on_message() running at /home/vagrant/.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:197> wait_for=<Future pending cb=[Task.task_wakeup()] created at /home/vagrant/.pyenv/versions/3.13.9/lib/python3.13/asyncio/base_events.py:459> cb=[set.discard()] created at /home/vagrant/.pyenv/versions/3.13.9/lib/python3.13/asyncio/tasks.py:410> took 0.211 seconds
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log reply ip=127.0.0.1:0 ws=1 <subscribe#7 ui_ctx_update>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:267:_do name=None ip=0.0.0.0 port=16590
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log ws-get ip=127.0.0.1:46782 uri=/api-v1
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log ws-end ip=127.0.0.1:46782 uri=/api-v1
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log ws-open ip=127.0.0.1:0 ws=1 None
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log call ip=127.0.0.1:0 ws=1 <call#8 authenticate_connection>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log reply ip=127.0.0.1:0 ws=1 <call#8 authenticate_connection>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log end ip=127.0.0.1:0 ws=1 <call#8 authenticate_connection>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log subscribe ip=127.0.0.1:0 ws=1 <subscribe#9 ui_ctx_update>
+Executing <Task pending name='Task-13' coro=<_ServerConnection.handle_on_message() running at /home/vagrant/.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:197> wait_for=<Future pending cb=[Task.task_wakeup()] created at /home/vagrant/.pyenv/versions/3.13.9/lib/python3.13/asyncio/base_events.py:459> cb=[set.discard()] created at /home/vagrant/.pyenv/versions/3.13.9/lib/python3.13/asyncio/tasks.py:410> took 0.233 seconds
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log reply ip=127.0.0.1:0 ws=1 <subscribe#9 ui_ctx_update>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:267:_do name=None ip=0.0.0.0 port=16590
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log ws-get ip=127.0.0.1:59706 uri=/api-v1
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log ws-end ip=127.0.0.1:59706 uri=/api-v1
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log ws-open ip=127.0.0.1:0 ws=1 None
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log call ip=127.0.0.1:0 ws=1 <call#10 authenticate_connection>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log reply ip=127.0.0.1:0 ws=1 <call#10 authenticate_connection>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log end ip=127.0.0.1:0 ws=1 <call#10 authenticate_connection>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log subscribe ip=127.0.0.1:0 ws=1 <subscribe#11 ui_ctx_update>
+Executing <Task pending name='Task-12' coro=<_ServerConnection.handle_on_message() running at /home/vagrant/.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:197> wait_for=<Future pending cb=[Task.task_wakeup()] created at /home/vagrant/.pyenv/versions/3.13.9/lib/python3.13/asyncio/base_events.py:459> cb=[set.discard()] created at /home/vagrant/.pyenv/versions/3.13.9/lib/python3.13/asyncio/tasks.py:410> took 0.227 seconds
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log reply ip=127.0.0.1:0 ws=1 <subscribe#11 ui_ctx_update>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:267:_do name=None ip=0.0.0.0 port=16590
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log ws-get ip=127.0.0.1:47440 uri=/api-v1
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:296:http_log ws-end ip=127.0.0.1:47440 uri=/api-v1
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log ws-open ip=127.0.0.1:0 ws=1 None
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log call ip=127.0.0.1:0 ws=1 <call#12 authenticate_connection>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log reply ip=127.0.0.1:0 ws=1 <call#12 authenticate_connection>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log end ip=127.0.0.1:0 ws=1 <call#12 authenticate_connection>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log subscribe ip=127.0.0.1:0 ws=1 <subscribe#13 ui_ctx_update>
+Executing <Task pending name='Task-13' coro=<_ServerConnection.handle_on_message() running at /home/vagrant/.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:197> wait_for=<Future pending cb=[Task.task_wakeup()] created at /home/vagrant/.pyenv/versions/3.13.9/lib/python3.13/asyncio/base_events.py:459> cb=[set.discard()] created at /home/vagrant/.pyenv/versions/3.13.9/lib/python3.13/asyncio/tasks.py:410> took 0.228 seconds
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/api/server.py:215:log reply ip=127.0.0.1:0 ws=1 <subscribe#13 ui_ctx_update>
+../../../.pyenv/versions/3.13.9/envs/py3/lib/python3.13/site-packages/pykern/pkasyncio.py:267:_do name=None ip=0.0.0.0 port=16590
