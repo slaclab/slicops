@@ -245,7 +245,7 @@ _globals() {
         [server]=3
         [vue]=1
     )
-    _python_version=3.13.9
+    _python_version=3.12
     _sif=${SLICOPS_APPTAINER_SIF:-}
     if [[ ! $_sif ]]; then
         # POSIT: path defined by SLAC
@@ -313,6 +313,8 @@ _op_vue() {
     cd "$_vue_dir"
     # Need to do every time if code has changed
     _msg 'Updating ui/node_modules'
+    which node
+    echo $PATH
     npm install --quiet
     declare v=$(_port vue assert)
     if [[ ! $v ]]; then
