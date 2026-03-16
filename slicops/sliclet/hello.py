@@ -8,7 +8,8 @@ import slicops.sliclet
 
 
 class Hello(slicops.sliclet.Base):
-    pass
+    def on_click_bye(self, txn, **kwargs):
+        pass
 
 
 CLASS = Hello
