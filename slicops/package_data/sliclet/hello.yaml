@@ -1,9 +1,17 @@
 fields:
+  greeting:
+    prototype: Button
+    ui:
+      label: Bye
   message:
     prototype: String
     ui:
       writable: false
     value: Hello World!
+  bye:
+    prototype: Button
+    
 
 ui_layout:
   - message
+  - greeting
