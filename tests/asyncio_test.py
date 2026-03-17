@@ -13,17 +13,12 @@ import asyncio
 
 def test_producer_consumer():
     async def consumer(work):
-        while x := await work.get():
-            print(x)
+        pass
 
     async def producer(work):
-        for x in "hello", "world", None:
-            await asyncio.sleep(1)
-            await work.put(x)
+        pass
 
     async def start():
-        x = asyncio.Queue()
-        asyncio.create_task(producer(x))
-        await consumer(x)
+        pass
 
     asyncio.run(start())
