@@ -1,15 +1,10 @@
 fields:
-  greeting:
-    prototype: Button
-    ui:
-      label: Bye
-  message:
+  status:
     prototype: String
     ui:
       writable: false
-    value: Hello World!
+    value: Initializing
 
 ui_layout:
-  - message
-  - greeting
+  - status
 
