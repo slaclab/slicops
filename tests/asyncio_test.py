@@ -8,17 +8,25 @@
 # In tests we defer imports (put inside test functions) so import errors have correct context.
 from pykern import pkunit, pkio, pkdebug
 from pykern.pkcollections import PKDict
+import queue
+import threading
+import time
+
+
 import asyncio
 
 
 def test_producer_consumer():
-    async def consumer(work):
+    def consumer(work):
+        # TODO
         pass
 
-    async def producer(work):
+    def producer(work):
+        # TODO
         pass
 
-    async def start():
+    def start():
+        # TODO
         pass
 
-    asyncio.run(start())
+    start()
