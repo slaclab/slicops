@@ -20,16 +20,28 @@ class Hello(slicops.sliclet.Base):
         self.__device = None
 
     def handle_start(self, txn):
+        # in sliclet thread - manages work, you shouldn't have to lock, has transaction (txn)
+        # in here we're already in lock
         self.__device = slicops.device.Device("DEV_CAMERA")
-        # TODO
+        self.__device.accessor("acquire").monitor(self.__handle_acquire)
 
     def __handle_acquire(self, change):
         def _msg():
-            # TODO
+            # no txn, external callback, outside sliclet thread, should not do any work,
+            # should use a queue only
+            if "connected" in change:
+                return "Connected"
+            if "error" in change:
+                return f"Error: {change.error}"
+            if change.value:
+                return "Acquiring"
             return "Idle"
 
-        # TODO
-        pass
+        if (m:= _msg()) is None:
+            return
+
+        with self.lock_for_update() as txn:
+            txn.field_value_set("status", m)
 
 
 CLASS = Hello
