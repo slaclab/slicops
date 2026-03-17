@@ -4,15 +4,14 @@
 :license: http://github.com/slaclab/slicops/LICENSE
 """
 
+from pykern.pkcollections import PKDict
+from pykern.pkdebug import pkdc, pkdexc, pkdlog, pkdp
 import slicops.sliclet
 import slicops.device
-from pykern.pkcollections import PKDict
-
-_MESSAGE = PKDict(Bye="Ta Ta!", Hello="Hello World!")
-_LABEL_FLIP = PKDict(Bye="Hello", Hello="Bye")
 
 
 class Hello(slicops.sliclet.Base):
+
     def handle_destroy(self):
         if self.__device:
             self.__device.destroy()
@@ -20,14 +19,17 @@ class Hello(slicops.sliclet.Base):
     def handle_init(self, txn):
         self.__device = None
 
-    def on_click_greeting(self, txn, **kwargs):
-        def _n_col():
-            if self.__device is None:
-                self.__device = slicops.device.Device("DEV_CAMERA")
-            return self.__device.accessor("n_col").get()
-        x = txn.group_attr("greeting.ui.label")
-        txn.field_value_set("message", f"{_MESSAGE[x]} {_n_col()}")
-        txn.group_attr_set("greeting.ui.label", _LABEL_FLIP[x])
+    def handle_start(self, txn):
+        self.__device = slicops.device.Device("DEV_CAMERA")
+        # TODO
+
+    def __handle_acquire(self, change):
+        def _msg():
+            # TODO
+            return "Idle"
+
+        # TODO
+        pass
 
 
 CLASS = Hello
