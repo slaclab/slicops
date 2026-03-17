@@ -1,9 +1,14 @@
 fields:
-  message:
-    prototype: String
+  greeting: 
+    prototype: Button
     ui:
-      writable: false
+      label: Bye 
+  message: 
+    prototype: String
+    ui: 
+      writeable: false
     value: Hello World!
 
 ui_layout:
   - message
+  - greeting
