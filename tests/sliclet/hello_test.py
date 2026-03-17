@@ -8,10 +8,13 @@ import pytest
 
 
 @pytest.mark.asyncio(loop_scope="module")
-async def test_greeting():
+async def test_status():
     from slicops import unit_util
 
-    async with unit_util.SlicletSetup("hello") as s:
-        from pykern import pkunit
+    with unit_util.start_ioc("cam1"):
+        async with unit_util.SlicletSetup("hello") as s:
+            from pykern import pkunit
 
-        pass
+            r = await s.ctx_update()
+            pkunit.pkeq("Initializing", r.fields.status.value)
+            # TODO
