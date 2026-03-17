@@ -10,8 +10,11 @@ fields:
     value: Hello World!
   bye:
     prototype: Button
-    
+  status:
+    prototype: String
+    ui:
+      writable: false
+    value: Initializing
 
 ui_layout:
-  - message
-  - greeting
+  - status
