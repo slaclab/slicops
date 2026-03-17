@@ -8,6 +8,11 @@ fields:
     ui:
       writable: False
     value: Hello World!
+  status:
+    prototype: String
+    ui:
+      writabel: False
+    
 
 ui_layout:
   - message
