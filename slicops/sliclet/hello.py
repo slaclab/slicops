@@ -4,11 +4,31 @@
 :license: http://github.com/slaclab/slicops/LICENSE
 """
 
+from pykern.pkcollections import PKDict
+from pykern.pkdebug import pkdc, pkdexc, pkdlog, pkdp
 import slicops.sliclet
+import slicops.device
 
 
 class Hello(slicops.sliclet.Base):
-    def on_click_bye(self, txn, **kwargs):
+
+    def handle_destroy(self):
+        if self.__device:
+            self.__device.destroy()
+
+    def handle_init(self, txn):
+        self.__device = None
+
+    def handle_start(self, txn):
+        self.__device = slicops.device.Device("DEV_CAMERA")
+        # TODO
+
+    def __handle_acquire(self, change):
+        def _msg():
+            # TODO
+            return "Idle"
+
+        # TODO
         pass
 
 
