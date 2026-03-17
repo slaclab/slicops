@@ -6,23 +6,18 @@
 
 import pytest
 
+
 @pytest.mark.asyncio(loop_scope="module")
-async def test_greeting():
-    from slicops import mock_epics
-    mock_epics.reset_state()
+async def test_status():
     from slicops import unit_util
 
-    async with unit_util.SlicletSetup("hello") as s:
-        from pykern import pkunit
+    with unit_util.start_ioc("cam1"):
+        async with unit_util.SlicletSetup("hello") as s:
+            from pykern import pkunit
 
-        # get first ctx_update; vue bootstrap; all fields and ui_layout
-        r = await s.ctx_update()
-        pkunit.pkeq("Hello World!", r.fields.message.value)
-        
-        # click greeting button (value required and must be None)
-        await s.ctx_field_value_set(greeting=None)
-        
-        # next update should contain changed message
-        r = await s.ctx_update()
-        pkunit.pkre(r"Ta Ta! \d+", r.fields.message.value)
-
+            r = await s.ctx_update()
+            pkunit.pkeq("Initializing", r.fields.status.value)
+            r = await s.ctx_update()
+            pkunit.pkeq("Connected", r.fields.status.value)
+            r = await s.ctx_update()
+            pkunit.pkeq("Idle", r.fields.status.value)

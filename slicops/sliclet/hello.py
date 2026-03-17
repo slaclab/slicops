@@ -4,37 +4,47 @@
 :license: http://github.com/slaclab/slicops/LICENSE
 """
 
-import slicops.sliclet
 from pykern.pkcollections import PKDict
+from pykern.pkdebug import pkdc, pkdexc, pkdlog, pkdp
+import slicops.sliclet
 import slicops.device
-
-_MESSAGE = PKDict(Bye="Ta Ta!", Hello="Hello World!")
-_LABEL_FLIP = PKDict(Bye="Hello", Hello="Bye")
+import queue
+import threading
 
 class Hello(slicops.sliclet.Base):
+
     def handle_destroy(self):
         if self.__device:
             self.__device.destroy()
+        self.__acquire_q.put_nowait(None) # put None work tell worker to stop
 
     def handle_init(self, txn):
         self.__device = None
+        self.__acquire_q = queue.Queue() # create a work queue
 
-    def on_click_greeting(self, txn, **kwargs):
-        def _n_col():
-            if not hasattr(self, "__device"):
-                self.__device = slicops.device.Device(
-                        "DEV_CAMERA")
-            return self.__device.accessor(
-                    "n_col").get()
-        x = txn.group_attr("greeting", "ui", "label")
-        txn.field_value_set(
-                "message",
-                f"{_MESSAGE[x]} {_n_col()}",
-                )
+    def handle_start(self, txn):
+        self.__device = slicops.device.Device("DEV_CAMERA")
+        self.__acquire_thread = threading.Thread(target=self.__acquire_worker, daemon=True)
+        self.__acquire_thread.start()
+        self.__device.accessor("acquire").monitor(self.__handle_acquire)
 
-        #x = txn.group_attr("greeting.ui.label")
-        #txn.field_value_set("message", _MESSAGE[x])
-        txn.group_attr_set("greeting.ui.label", _LABEL_FLIP[x])
+    def __acquire_worker(self):
+        def _msg(change):
+            if "connected" in change:
+                return "Connected"
+            if "error" in change:
+                return f"Error: {change.error}"
+            if change.value:
+                return "Acquiring"
+            return "Idle"
+        
+        while (w := self.__acquire_q.get()) is not None:
+            with self.lock_for_update() as txn:
+                txn.field_value_set("status", _msg(w))
+
+
+    def __handle_acquire(self, change):
+        self.__acquire_q.put_nowait(change)
 
 
 CLASS = Hello
