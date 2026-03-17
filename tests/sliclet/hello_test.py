@@ -17,4 +17,8 @@ async def test_status():
 
             r = await s.ctx_update()
             pkunit.pkeq("Initializing", r.fields.status.value)
-            # TODO
+            r = await s.ctx_update()
+            pkunit.pkeq("Connected", r.fields.status.value)
+            r = await s.ctx_update()
+            pkunit.pkeq("Idle", r.fields.status.value)
+            

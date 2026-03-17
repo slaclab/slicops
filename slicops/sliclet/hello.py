@@ -23,20 +23,33 @@ class Hello(slicops.sliclet.Base):
         self.__device = slicops.device.Device("DEV_CAMERA")
         self.__device.accessor("acquire").monitor(self.__handle_acquire)
 
+    # def __handle_acquire(self, change):
+    #     def _msg():
+    #         if "connected" in change:
+    #             return None
+    #         if "error" in change:
+    #             return f"Error: {change.error}"
+    #         if change.value:
+    #             return "Acquiring"
+    #         return "Idle"
+
+    #     if (m := _msg()) is None:
+    #         return
+    #     with self.lock_for_update() as txn:
+    #         txn.field_value_set("status", m)
+
     def __handle_acquire(self, change):
         def _msg():
             if "connected" in change:
-                return None
+                return "Connected"
             if "error" in change:
                 return f"Error: {change.error}"
             if change.value:
                 return "Acquiring"
             return "Idle"
 
-        if (m := _msg()) is None:
-            return
         with self.lock_for_update() as txn:
-            txn.field_value_set("status", m)
+            txn.field_value_set("status", _msg())
 
 
 CLASS = Hello
