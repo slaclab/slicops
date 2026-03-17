@@ -3,7 +3,7 @@ fields:
     prototype: String
     ui:
       writable: false
-    value: Idle
+    value: Initializing
 
 ui_layout:
   - status
