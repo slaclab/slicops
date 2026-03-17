@@ -1,4 +1,8 @@
 fields:
+  greeting:
+    prototype: Button
+    ui:
+      label: Bye
   message:
     prototype: String
     ui:
@@ -7,3 +11,5 @@ fields:
 
 ui_layout:
   - message
+  - greeting
+
