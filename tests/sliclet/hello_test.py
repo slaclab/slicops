@@ -11,11 +11,13 @@ import pytest
 async def test_greeting():
     from slicops import unit_util
 
-    async with unit_util.SlicletSetup("hello") as s:
-        from pykern import pkunit
+    with unit_util.start_ioc("cam1"):
+        async with unit_util.SlicletSetup("hello") as s:
+            from pykern import pkunit
 
-        r = await s.ctx_update()
-        pkunit.pkeq("Hello World!", r.fields.message.value)
-        await s.ctx_field_value_set(greeting=None)
-        r = await s.ctx_update()
-        pkunit.pkre(r"Bye Bye! \d+", r.fields.message.value)
+            r = await s.ctx_update()
+            pkunit.pkeq("Initializing", r.fields.status.value)
+            r = await s.ctx_update()
+            pkunit.pkeq("Connected", r.fields.status.value)
+            r = await s.ctx_update()
+            pkunit.pkeq("Idle", r.fields.status.value)
