@@ -17,4 +17,4 @@ async def test_greeting():
         pkunit.pkeq("Hello World!", r.fields.message.value)
         await s.ctx_field_value_set(greeting=None)
         r = await s.ctx_update()
-        pkunit.pkeq("Ta Ta! \d+", r.fields.message.value)
+        pkunit.pkeq(r"Ta Ta! \d+", r.fields.message.value)
