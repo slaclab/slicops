@@ -100,6 +100,28 @@ def recreate(parser):
     return _Inserter(parser).counts
 
 
+def upstream_screens(beam_path, end_device):
+    # Copy of device_names
+    device_type = "PROF"
+    with _session() as s:
+        c = s.t.device.c.device_name
+        return tuple(
+            r.device_name
+            for r in s.select(
+                sqlalchemy.select(c)
+                .join(
+                    s.t.beam_path,
+                    s.t.beam_path.c.beam_area == s.t.device.c.beam_area,
+                )
+                .where(
+                    s.t.beam_path.c.beam_path == beam_path,
+                    s.t.device.c.device_type == device_type,
+                )
+                .order_by(c)
+            )
+        )
+
+
 def _assert_on_beampath(device, beam_path, select):
     c = select.t.device.c.device_name
     v = select.select_one_or_none(

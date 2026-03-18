@@ -8,7 +8,7 @@ from pykern import pkunit, pkio, pkdebug
 from pykern.pkcollections import PKDict
 
 
-def test_upstream_devices():
+def test_upstream_screens():
     from slicops import device_sql_db
 
     # TODO
