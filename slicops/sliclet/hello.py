@@ -8,6 +8,8 @@ from pykern.pkcollections import PKDict
 from pykern.pkdebug import pkdc, pkdexc, pkdlog, pkdp
 import slicops.sliclet
 import slicops.device
+import threading
+import queue
 
 
 class Hello(slicops.sliclet.Base):
@@ -15,16 +17,20 @@ class Hello(slicops.sliclet.Base):
     def handle_destroy(self):
         if self.__device:
             self.__device.destroy()
+        self.__acquire_q.put_nowait(None)
 
     def handle_init(self, txn):
         self.__device = None
+        self.__acquire_Q = queue.Queue()
 
     def handle_start(self, txn):
         self.__device = slicops.device.Device("DEV_CAMERA")
+        self.__acquire_thread = threading.Thread(target=self.__acquire_worker, daemon=True)
+        self.__acquire_thread.start()
         self.__device.accessor("acquire").monitor(self.__handle_acquire)
 
-    def __handle_acquire(self, change):
-        def _msg():
+    def __acquire_worker(self, change):
+        def _msg(change):
             if "connected" in change:
                 return "Connected"
             if "error" in change:
@@ -33,8 +39,12 @@ class Hello(slicops.sliclet.Base):
                 return "Acquiring"
             return "Idle"
 
-        with self.lock_for_update() as txn:
-            txn.field_value_set("status", _msg())
+        while (w := self.__acquire_q.get()) is not None:
+            with self.lock_for_update() as txn:
+                txn.field_value_set("status", _msg(w))
+
+    def __handle_acquire(self, change):
+        self.__acquire_q.put_nowait(change)
 
 
 CLASS = Hello
