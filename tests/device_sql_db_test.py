@@ -11,9 +11,7 @@ from pykern.pkcollections import PKDict
 def test_upstream_screens():
     from slicops import device_sql_db
 
-    r = device_sql_db.device_names("PROF", "CU_HXR")
-    pkunit.pkok(
-            "OTR2" in r,
-            "Miossing OTR2 screen: ()",
-            r,
-            )
+    r = device_sql_db.upstream_screens("CU_HXR", "OTR3")
+    pkunit.pkeq('VCC', r[0][0])
+    pkunit.pkeq(0, r[0][1])
+

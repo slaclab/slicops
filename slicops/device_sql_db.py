@@ -99,6 +99,34 @@ def recreate(parser):
     pkdlog(_path())
     return _Inserter(parser).counts
 
+def upstream_screens(beam_path, end_device):
+    # Copy of device_names
+    device_type = "PROF"
+    with _session() as s:
+        return tuple(
+            r
+            for r in s.select(
+                sqlalchemy.select(
+                    s.t.device.c.device_name,
+                    s.t.device_meta_float.c.device_meta_value,
+                )
+                .join(
+                    s.t.beam_path,
+                    s.t.beam_path.c.beam_area == s.t.device.c.beam_area,
+                )
+                .join(
+                    s.t.device_meta_float,
+                    s.t.device_meta_float.c.device_name == s.t.device.c.device_name,
+                    s.t.device_meta_float.c.device_meta_name == "sum_l_meters",
+                    )
+                .where(
+                    s.t.beam_path.c.beam_path == beam_path,
+                    s.t.device.c.device_type == device_type,
+                )
+                .order_by(s.t.device_meta_float.c.device_meta_value)
+            )
+        )
+
 
 def _assert_on_beampath(device, beam_path, select):
     c = select.t.device.c.device_name
