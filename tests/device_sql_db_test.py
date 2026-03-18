@@ -1,0 +1,19 @@
+"""Test device_sql_db
+
+:copyright: Copyright (c) 2026 The Board of Trustees of the Leland Stanford Junior University, through SLAC National Accelerator Laboratory (subject to receipt of any required approvals from the U.S. Dept. of Energy).  All Rights Reserved.
+:license: http://github.com/slaclab/slicops/LICENSE
+"""
+
+from pykern import pkunit, pkio, pkdebug
+from pykern.pkcollections import PKDict
+
+
+def test_upstream_screens():
+    from slicops import device_sql_db
+
+    r = device_sql_db.device_names("PROF", "CU_HXR")
+    pkunit.pkok(
+            "OTR2" in r,
+            "Miossing OTR2 screen: ()",
+            r,
+            )
