@@ -15,6 +15,7 @@ import slicops.device_db
 
 _TARGET_OUT = 1
 
+
 class Screen(slicops.device.Device):
     """Augment `Device` with screen specific operations"""
 
@@ -153,8 +154,8 @@ class _Worker(pykern.pkasyncio.ActionLoop):
                 upstream.destroy()
 
         def _names():
-            return slicops.device_db.upstream_devices(
-                "PROF", "target_control", self.beam_path, self.device.device_name
+            return slicops.device_db.upstream_screens(
+                self.beam_path, self.device.device_name
             )
 
         self.__state_machine.event("upstream_check_done", list(_blocking()))
