@@ -9,6 +9,11 @@ from pykern.pkcollections import PKDict
 
 
 def test_upstream_screens():
+    from pykern import pkdebug, pkunit
     from slicops import device_sql_db
 
-    # TODO
+    r = device_sql_db.upstream_screens("CU_HXR", "OTR3")
+    pkunit.pkeq("YAG01", r[0][0], "r={}", r)
+    pkunit.pkeq(0.1 < r[0][1] < 10, "not in range r[0][1]={}", r[0][1])
+    pkunit.pkeq(15, len(r))
+    pkunit.pkok("OTR3" not in (x[0] for x in r), "r={}", r)

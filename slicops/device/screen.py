@@ -23,6 +23,9 @@ class Screen(slicops.device.Device):
             )
         self.__worker = _Worker(beam_path, handler, self)
 
+    def start_acquire(self, arg):
+        self.__worker.action("event",PKDict(event="start_acquire", arg=None))
+                
     def destroy(self):
         self.__worker.destroy()
         super().destroy()
@@ -56,6 +59,30 @@ class ScreenError(Exception):
 
         super().__init__(_arg_str())
 
+class _StateMachine:
+    def __init__(self, worker):
+        self.worker = worker
+        self.curr = PKDict(acquire=None)
+
+    def event(self, name, arg):
+        if u := getattr(self, f"_event_{name}")(arg):
+            self.curr.pkupdate(u)
+
+    def _event_acquire(self, arg):
+        self.worker.action(
+            "call_handler",
+            PKDict(
+                accessor_name=arg.accessor.accessor_name,
+                value=arg.value,
+            ),
+        )
+        return PKDict(acquire=arg.value, acquire_started=arg.value) 
+
+    def _event_start_acquire(self, arg):
+        if self.curr.acquire_started:
+            return None
+        self.worker.action("device_put", PKDict(accessor_name="acquire", value=True))
+        return PKDict(acquire_started=True)
 
 class _Worker(pykern.pkasyncio.ActionLoop):
     """Action loop for Screen
@@ -71,6 +98,7 @@ class _Worker(pykern.pkasyncio.ActionLoop):
         self.device = device
         self.__handler = handler
         self.__status = None
+        self.__state_machine = _StateMachine(self)
         self._loop_timeout_secs = 0
         super().__init__()
 
@@ -86,6 +114,14 @@ class _Worker(pykern.pkasyncio.ActionLoop):
         else:
             return lambda: m(arg)
 
+    def action_device_put(self, arg):
+        self.device.put(**arg)
+        return None
+
+    def action_event(self, arg):
+        self.__state_machine.event(arg.event, arg.arg)
+        return None
+
     def action_handle_monitor(self, arg):
         n = arg.accessor.accessor_name
         if "error" in arg:
@@ -99,11 +135,16 @@ class _Worker(pykern.pkasyncio.ActionLoop):
                 ),
             )
             return
-        if "connected" in arg:
+        elif "connected" in arg:
             return
-        if n not in self._MONITORS:
+        elif "image" == n:
+            self.action(
+                "call_handler", PKDict(accessor_name=n, value=arg.value))
+        elif "acquire" == n:
+            self.__state_machine.event("acquire",arg)
+        else:
             raise AssertionError(f"unsupported accessor={n} {self}")
-        self.action("call_handler", PKDict(accessor_name=n, value=arg.value))
+        return None
 
     def req_action(self, method, arg):
         """Called by DeviceScreen which has separate life cycle"""

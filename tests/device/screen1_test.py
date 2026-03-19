@@ -4,12 +4,17 @@
 :license: http://github.com/slaclab/slicops/LICENSE
 """
 
-from slicops import unit_util
-
-
-def test_upstream_ok():
+def test_upstream_blocked():
     from pykern import pkdebug, pkunit
+    from slicops import unit_util
+    from slicops.device.screen import ScreenError, ErrorKind
 
     with unit_util.setup_screen("CU_HXR", "YAG03") as s:
-        s.handler.test_get("image")
-        pkunit.pkeq(False, s.handler.test_get("acquire"))
+        s.device.move_target(want_in=True)
+        e = s.handler.test_get("error")
+        s = ScreenError(
+            device="YAG03",
+            error_kind=ErrorKind.upstream,
+            error_msg="{'YAG02': 'upstream target is IN'}",
+        )
+        pkunit.pkeq(repr(s), repr(e.exception))  # pkunit magic?

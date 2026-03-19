@@ -100,6 +100,76 @@ def recreate(parser):
     return _Inserter(parser).counts
 
 
+def upstream_screens(beam_path, end_device):
+    s = None
+
+    def _beam_path(stmt):
+        nonlocal s
+
+        return stmt.join(
+            s.t.beam_path,
+            sqlalchemy.and_(
+                s.t.beam_path.c.beam_area == s.t.device.c.beam_area,
+                s.t.beam_path.c.beam_path == beam_path,
+            ),
+        )
+
+    def _sum_l_meters(stmt):
+        nonlocal s
+
+        return stmt.join(
+            s.t.device_meta_float,
+            sqlalchemy.and_(
+                s.t.device_meta_float.c.device_name == s.t.device.c.device_name,
+                s.t.device_meta_float.c.device_meta_name == "sum_l_meters",
+                s.t.device_meta_float.c.device_meta_value < _sum_l_meters_limit(),
+            ),
+        )
+
+    def _target_control(stmt):
+        nonlocal s
+
+        return stmt.join(
+            s.t.device_accessor,
+            sqlalchemy.and_(
+                s.t.device_accessor.c.device_name == s.t.device.c.device_name,
+                s.t.device_accessor.c.accessor_name == "target_control",
+            ),
+        )
+
+    def _sum_l_meters_limit():
+        nonlocal s
+
+        return s.select_one(
+            sqlalchemy.select(s.t.device_meta_float.c.device_meta_value)
+            .select_from(s.t.device_meta_float)
+            .where(
+                s.t.device_meta_float.c.device_name == end_device,
+                s.t.device_meta_float.c.device_meta_name == "sum_l_meters",
+            )
+        )[0]
+
+    device_type = "PROF"
+    with _session() as s:
+        return tuple(
+            r[0]
+            for r in s.select(
+                _target_control(
+                    _sum_l_meters(
+                        _beam_path(
+                            sqlalchemy.select(
+                                s.t.device.c.device_name,
+                            ).select_from(s.t.device)
+                        ),
+                    )
+                )
+                .where(
+                    s.t.device.c.device_type == device_type,
+                )
+                .order_by(s.t.device_meta_float.c.device_meta_value),
+            )
+        )
+
 def _assert_on_beampath(device, beam_path, select):
     c = select.t.device.c.device_name
     v = select.select_one_or_none(
