@@ -77,6 +77,8 @@ def meta_for_device(device_name):
         )
     return rv
 
+def upstream_screens(beam_path, end_device):
+    return slicops.device_sql_db.upstream_screens(beam_path, end_device)
 
 def _assert_device_type(value):
     if value not in slicops.const.DEVICE_TYPES:
