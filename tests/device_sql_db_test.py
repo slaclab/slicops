@@ -14,8 +14,6 @@ def test_upstream_screens():
 
     r = device_sql_db.upstream_screens("CU_HXR", "OTR3")
     pkunit.pkeq("YAG01", r[0], "r={}", r)
-    # pkunit.pkeq(float, type(r[0][1]))
-    # pkunit.pkok(0.1 < r[0][1] < 10, "not in range r[0][1]={}", r[0][1])
     pkunit.pkeq(7, len(r))
-    pkunit.pkok("OTR3" not in r, "unexpected screen name={}", r)
+    pkunit.pkok("OTR3" not in r, "OTR3 in r={}", r)
 
