@@ -1,0 +1,9 @@
+---
+# Initial values only: `slicops watcher_demo writer` updates each PV at its
+# own rate (see _PVS in slicops/pkcli/watcher_demo.py).
+DEMO:WF:SMALL: waveform(1000)
+DEMO:WF:MEDIUM: waveform(20000)
+DEMO:WF:IMAGE: waveform(3250)
+# Above epics.ca.AUTOMONITOR_MAXLENGTH (65536), so caget() does not monitor it
+DEMO:WF:LARGE: waveform(100000)
+DEMO:SCALAR: 0.0
