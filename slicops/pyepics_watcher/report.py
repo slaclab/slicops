@@ -2,6 +2,7 @@
 header-writing function, and a row-appending function.
 """
 
+from pykern.pkdebug import pkdc, pkdlog, pkdp
 import csv
 
 CSV_COLUMNS = [
@@ -30,8 +31,8 @@ def append_rows(csv_path: str, snapshot, elapsed_s: float) -> None:
 
 def print_snapshot(snapshot) -> None:
     """Full per-PV breakdown. See print_summary() for a one-line aggregate."""
-    for line in _snapshot_lines(snapshot):
-        print(line)
+    # One message so the table's lines stay together under one log prefix
+    pkdlog("{}", "\n".join(_snapshot_lines(snapshot)))
 
 
 def print_summary(snapshot) -> None:
@@ -39,13 +40,7 @@ def print_summary(snapshot) -> None:
     PVs touched, how many are monitored/unmonitored, total cache
     memory, and total bytes received. See print_snapshot() for the full
     per-PV breakdown."""
-    print(_summary_line(snapshot))
-
-
-def print_tick(snapshot, elapsed_s: float) -> None:
-    """One status line per PVTracker.start() poll -- used internally by
-    tracker._run(). For a one-off terse summary, see print_summary()."""
-    print(_summary_line(snapshot, elapsed_s))
+    pkdlog("{}", _summary_line(snapshot))
 
 
 def write_header(csv_path: str) -> None:
