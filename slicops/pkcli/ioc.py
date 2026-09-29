@@ -65,6 +65,9 @@ class _PVGroup(caproto.server.PVGroup):
                     await self.pvdb[k].write(u)
 
         def _un_numpy(v, name):
+            if isinstance(v, numpy.ndarray):
+                # Arrays can't be compared with != and aren't YAML dumpable
+                return v.tolist()
             if not isinstance(v, numpy.generic):
                 return v
             if isinstance(v, numpy.integer):
@@ -76,8 +79,9 @@ class _PVGroup(caproto.server.PVGroup):
             raise AssertionError(f"unhandled type={type(v)} pv={name}")
 
         try:
-            if self.__db[instance.pvname] != value:
-                self.__db[instance.pvname] = _un_numpy(value, instance.pvname)
+            u = _un_numpy(value, instance.pvname)
+            if self.__db[instance.pvname] != u:
+                self.__db[instance.pvname] = u
                 await _dispatch(self.__config[instance.pvname].dispatch)
                 self.__write_db()
             return await super().group_write(instance, value, **kwargs)
